@@ -166,14 +166,14 @@ XPSVBFermi <- function() {
 
   do.VBFermi <- function(h, ...) {
       Ef.Posx <- Object[[coreline]]@Components[[1]]@param[2,1]
+      Ef.Posx <- round(Ef.Posx, digits=4)
       idx <- findXIndex(Object[[coreline]]@RegionToFit$x, Ef.Posx)
       Ef.Posy <- Object[[coreline]]@Fit$y[idx]
       Object[[coreline]]@Components[[1]]@label <<- "VBFermi"        #Label indicating the VBFermi in the plot
       Ef.Pos <- list(x=Ef.Posx, y=Ef.Posy)
       plot(Object[[coreline]])
       points(Ef.Pos, col="orange", cex=2, lwd=2, pch=3)
-print(Ef.Pos)
-      txt <- paste("Estimated position of Fermi Level : ", Ef.Posx, sep="")
+      txt <- paste("==> Estimated position of Fermi Level : ", Ef.Posx, sep="")
       svalue(sb) <- txt
       cat("\n", txt)
   }
@@ -262,7 +262,7 @@ print(Ef.Pos)
 
 #----- Fermi Sigmoid
 
-  add2_btn1 <- gbutton("Add Fermi Sigmoid", handler = add.FitFunct, container = T1Frame1)
+  add2_btn1 <- gbutton("Add Fermi-Dirac function", handler = add.FitFunct, container = T1Frame1)
   Fit2_btn1 <- gbutton("Fit", expand=FALSE, handler = do.Fit, container = T1Frame1 )
   Fit2_GetFermi <- gbutton("Get Fermi Edge Position", expand=FALSE, handler = do.VBFermi, container = T1Frame1 )
   Reset2_btn1 <- gbutton("Reset Fit", expand=FALSE, handler = function(h, ...){
