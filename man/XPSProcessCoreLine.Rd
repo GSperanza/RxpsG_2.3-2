@@ -2,20 +2,20 @@
 % Please edit documentation in R/XPSProcessCoreLineGUI.r
 \name{XPSProcessCoreLine}
 \alias{XPSProcessCoreLine}
-\title{Add a CoreLine (with fit if existing)to an XPS-Sample, or just BaseLine and Fit
-or remove a Coreline from a XPS-Sample}
+\title{XPSProcessCoreLine}
 \usage{
 XPSProcessCoreLine()
 }
 \description{
-Add a Coreline from a source XPS-Sample into a destination XPS-Sample or
-Add a just a BaseLine and Fit from a source XPS-Sample into a destination XPS-Sample or
-remove a CoreLine from a XPS-Sample. No parameters are passed to this function
+XPSProcessCoreLine function adds a CoreLine (with fit if existing)
+  to an object of class XPSSample, or just a BaseLine and Fit to an existing CoreLine
+  (class XPSCoreLine) or remove a CoreLine from an object of class XPSSample
+  XPSProcessCoreLine may be used to perform some simple math operations on CoreLines
+  (class XPSCoreLine) like addition, subtraction, multiplication by a constant value
+   normalization, differentiation, combination of two CoreLines.
 }
 \examples{
-
 \dontrun{
-XPSProcessCoreLine()
+	XPSProcessCoreLine()
 }
-
 }

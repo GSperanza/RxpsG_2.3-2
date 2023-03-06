@@ -2,17 +2,17 @@
 % Please edit documentation in R/XPSSpectNameChangeGUI.r
 \name{XPSSpectNameChange}
 \alias{XPSSpectNameChange}
-\title{GUI to change the name of the XPSSample and/or the name associated to corelines}
+\title{XPSSpectNameChange}
 \usage{
 XPSSpectNameChange()
 }
 \description{
-GUI to change the name of the XPSSample and/or the name associated to corelines
+XPSSpectNameChange is a functin to change the name of
+  obects of class XPSSample and/or the name associated to CoreLines
+  of class XPSCoreLine
 }
 \examples{
-
 \dontrun{
-XPSSpectNameChange()
+	XPSSpectNameChange()
 }
-
 }

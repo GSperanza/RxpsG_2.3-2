@@ -7,18 +7,16 @@
 XPSImport.Ascii()
 }
 \value{
-Returns the processed \code{object}.
+XPSImport.Ascii returns and object of class 'XPSSample' with
+  data loaded into a XPSCoreLine slot
 }
 \description{
 Function allowing import of textual (ascii) file data
-Options are available to account for header and data separator
-Options are also provided to store data in a XPS-Sample data-structure.
-No parameters are passed to this function
+  Options are available to account for header and data separator
+  Options are also provided to store data in an object of class 'XPSSample'
 }
 \examples{
-
 \dontrun{
-XPSImport.Ascii()
+ XPSImport.Ascii()
 }
-
 }

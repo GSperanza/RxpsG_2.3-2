@@ -2,25 +2,18 @@
 ## 		XPSfit
 ## call th XPSdofit AND plot the result
 ## ===========================================================
-
-
-
-
 #---showListParam  prints a list of parameters in a formatted style
-#'showListParam prints a list of parameters in a formatted style
-#'
-#'@param lista list of parameter to be plotted
-#'@param decimals numeric value number of decimals to be printed
-#'@param ParamNames list of parameter names
-#'@return returns the formatted print of parameters
-#'
-#'@examples
-#'
-#'\dontrun{
-#' XPSfit(SampData[["C1s"]])
-#'}
-#'
-#'@export
+
+#' @title showListParam
+#' @description showListParam prints a list of parameters in a formatted style
+#' @param lista list of parameter to be plotted
+#' @param decimals numeric value number of decimals to be printed
+#' @param ParamNames list of parameter names
+#' @return returns the formatted print of parameters
+#' @examples
+#' \dontrun{
+#'  XPSfit(SampData[["C1s"]])
+#' }
 #'
 
 showListParam <- function(lista, decimals, ParamNames){
@@ -49,30 +42,28 @@ showListParam <- function(lista, decimals, ParamNames){
 ## Esegue il FIT della curva originale-BGND
 ## Salva le componenti del Fit
 ## ===========================================================
-#'Perform the fit of a Core Line
+
+#' @title XPSFitLM
+#' @description XPSFitLM function to perform the fit of a Core Line
+#'   Calculate the fit of a XPSCoreLine object. The \code{XPSFitLM} performs the
+#'   fit and stop. This function is the main function for performing the fit. The
+#'   \code{XPSfit} is the main function which calls the \code{XPSFitLM} and
+#'   displays the result.
+#' @param Object XPSCoreLine object
+#' @param plt logical if TRUE residual plot is drawn
+#' @param verbose logical by default TRUE to print fit interation information
+#' @param \dots  further parameters to the fitting function
+#' @return XPSFitLM returns the slot Object@Fit filled with the result of the
+#'   calculation. All the fitting parameters and Y values of all the fit components
+#'   will be updated
+#' @seealso \link{nlsLM}
+#' @examples
+#' \dontrun{
+#'  XPSFitLM(SampData[["C1s"]], plt=TRUE, verbose=TRUE ) 
+#' }
+#' @export
 #'
-#'Calculate the fit of a XPSCoreLine object. The \code{XPSFitLM} performs the
-#'fit and stop. This function is the main function for performing the fit. The
-#'\code{XPSfit} is the main function which calls the \code{XPSFitLM} and
-#'displays the result.
-#'
-#'
-#'@param Object XPSCoreLine object
-#'@param plt logical if TRUE residual plot is drawn
-#'@param verbose logical by default TRUE to print fit interation information
-#'@param \dots  further parameters to the fitting function
-#'@return The Object slot \code{FitLM} will be filled with the result of the
-#'calculation. All the values of the components will be update and the result
-#'will be displyed.
-#'@seealso \link{nlsLM}
-#'@examples
-#'
-#'\dontrun{
-#' showListParam(c(1271, 285, 1.4), 3, c("h", "mu", "sigma" ) )
-#'}
-#'
-#'@export
-#'
+
 
 XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
 

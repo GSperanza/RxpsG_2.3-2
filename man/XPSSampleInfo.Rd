@@ -2,17 +2,16 @@
 % Please edit documentation in R/XPSSampleInfoGUI.r
 \name{XPSSampleInfo}
 \alias{XPSSampleInfo}
-\title{XPSSampleInfo to show/modify XPSSample INFOs is saved during acquisition}
+\title{XPSSampleInfo}
 \usage{
 XPSSampleInfo()
 }
 \description{
-XPSSampleInfo to show/modify XPSSample INFOs is saved during acquisition
+XPSSampleInfo to show/modify INFOs saved in objects of class XPSSample
+  during acquisition
 }
 \examples{
-
 \dontrun{
-XPSSampleInfo()
+	XPSSampleInfo()
 }
-
 }

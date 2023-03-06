@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSSaveDataGUI.r
 \name{XPSSaveData}
 \alias{XPSSaveData}
-\title{To Save data in the Hard Disk}
+\title{XPSSaveData}
 \usage{
 XPSSaveData()
 }
 \description{
-Provides a userfriendly interface to select a FileName and Directory
-to save the analyzed XPS-Sample data.
-Analyzed data by default have extension .Rdata.
-No parameters are passed to this function
+To Save data in the Hard Disk
+  Provides a userfriendly interface to select a FileName and Directory
+  to save the analyzed object of class XPSSample.
+  Analyzed data by default have extension .RData.
 }
 \examples{
-
 \dontrun{
-XPSSaveData()
+	XPSSaveData()
 }
-
 }

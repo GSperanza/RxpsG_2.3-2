@@ -2,9 +2,7 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{MakeTable}
 \alias{MakeTable}
-\title{Font=GCourierNew is the CourierNew modified with symbols for drawing tab borders.
-Provides commands to print borders and cell text alignment (left, center, right)
-Borders are made using ascii characters}
+\title{MakeTable}
 \usage{
 MakeTable(Type, txt, CellLength, align)
 }
@@ -21,16 +19,15 @@ MakeTable(Type, txt, CellLength, align)
 Returns the processed \code{object}.
 }
 \description{
-Font=GCourierNew is the CourierNew modified with symbols for drawing tab borders.
-Provides commands to print borders and cell text alignment (left, center, right)
-Borders are made using ascii characters
+MakeTable function to construct table rows in a formatted
+  Font=GCourierNew is the CourierNew with symbols for drawing tab borders.
+  MakeTable print cell text aligned (left, center, right) cell borders and
+  row separators
 }
 \examples{
-
 \dontrun{
-  txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(\%)")    #Voci Tabella
-  CellLgth<-c(12, 15, 8, 7, 8, 9)
-  cell<-MakeTable("MultiCell", txt,CellLength, "center")
+   txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(\%)")    #Voci Tabella
+   CellLgth<-c(12, 15, 8, 7, 8, 9)
+   cell<-MakeTable("MultiCell", txt,CellLength, "center")
 }
-
 }

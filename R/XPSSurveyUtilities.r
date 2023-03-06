@@ -33,10 +33,11 @@ ReadElmtList<-function(SpectrumType){
 peakDetection <- function(object, snmin , Ewin) {
  	 #- find peaks: DO NOT use baseline(object, method = "peakDetection")
  	 #- because it does not return the peaks index
+ 	 import::from(baselin, baseline.peakDetection)
  	 peaks <- baseline.peakDetection(matrix(data=object[[2]], nrow=1),
- 									snminimum = snmin,
- 									left.right = Ewin,
- 									lwin.rwin = Ewin)
+                        snminimum = snmin,
+                        left.right = Ewin,
+                        lwin.rwin = Ewin)
  	 #- subset peaks
  	 peaks <- peaks[c("baseline","corrected", "peaks")]
  	 idx <- unlist(peaks$peaks) ## peaks index
@@ -49,13 +50,11 @@ peakDetection <- function(object, snmin , Ewin) {
 
    #- peaks ordered from High BE to low BE
    idx <- c(1:length(positionsCorr$x))
-  	peaks$table <- list(BE=positionsCorr$x[idx],
- 		    					corr=positionsCorr$y[idx],
- 						    	orig=positionsOrig$y[idx]
- 						   )
-
-	  names(peaks$table$BE) <- rep(NA, length(peaks$table$BE))
-	  return(invisible(peaks))
+  	 peaks$table <- list(BE=positionsCorr$x[idx],
+ 		    	    corr=positionsCorr$y[idx],
+ 			    orig=positionsOrig$y[idx])
+	 names(peaks$table$BE) <- rep(NA, length(peaks$table$BE))
+	 return(invisible(peaks))
 }
 
 

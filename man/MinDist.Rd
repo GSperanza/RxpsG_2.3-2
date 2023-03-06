@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{MinDist}
 \alias{MinDist}
-\title{finds the minimum distance between point P0 and points P1, P2}
+\title{MinDist}
 \usage{
 MinDist(posP0, posP1, posP2)
 }
@@ -17,12 +17,10 @@ MinDist(posP0, posP1, posP2)
 Returns index 1 or 2 indicating min distance from P1 or P2
 }
 \description{
-finds the minimum distance between point P0 and points P1, P2
+MinDist finds which is the minimum distance between point P0 and points P1, P2
 }
 \examples{
-
 \dontrun{
 MinDist(posP0, posP1, posP2)
 }
-
 }

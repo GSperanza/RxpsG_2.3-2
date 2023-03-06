@@ -2,19 +2,18 @@
 % Please edit documentation in R/XPSVBTopGUI.r
 \name{XPSVBTop}
 \alias{XPSVBTop}
-\title{GUI to estimate the position of the Valence Band Top}
+\title{XPSVBTop}
 \usage{
 XPSVBTop()
 }
 \description{
-Interactive GUI to add BaseLines and Fitting components to
-the region of the VB proximal to the Fermi Edge needed
-for the estimation of the VB-Top position
+XPSVBTop function to estimate the position of the Valence Band Top
+  the interactive GUI adds a BaseLines and Fitting components to
+  the region of the VB proximal to the Fermi Edge needed
+  for the estimation of the VB-Top position
 }
 \examples{
-
 \dontrun{
-XPSVBTop()
+ XPSVBTop()
 }
-
 }

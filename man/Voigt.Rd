@@ -15,8 +15,10 @@ Voigt(x, h, mu, sigma, lg)
 
 \item{sigma}{function full width at half maximum}
 
-\item{lg}{mix Gauss-Lorentz}
+\item{lg}{mix Gauss-Lorentz obtained via FFT convolution}
 }
 \description{
-Voigt function
+The Voigt function is obtained by convolution of
+  a Gauss and a Lorentz functions using the convolve() function
+  based on FFT
 }

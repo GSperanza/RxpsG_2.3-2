@@ -1,19 +1,15 @@
 #Setting the Graphic device for different Operating Systems
 
-#'To select the kind of graphic device compatible with the operating system in use
-#'
-#'To select the kind of graphic device compatible with the operating system in use
-#'Also a list of graphic formats is provided to save the content of the current
-#'No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSSetGraphDev()
-#'}
-#'
-#'@export
+#' @title XPSSetGraphDev
+#' @description function to select the kind of graphic device compatible
+#'   with the operating system in use.
+#'   Also a list of graphic formats is provided to save the content 
+#'   of the current graphic device.
+#' @examples
+#' \dontrun{
+#' 	XPSSetGraphDev()
+#' }
+#' @export
 #'
 
 
@@ -45,23 +41,22 @@ XPSSetGraphDev <- function() {
 
 #--- variables
    OSList <- c("Windows", "MacOS-X", "Linux")
-   FormatList <- c("png", "jpeg", "bmp","tiff","eps", "pdf")
+   FormatList <- c("jpeg", "png", "bmp", "tiff", "eps", "pdf")
    pathName <- getwd()
    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    if (length(activeFName) == 0) activeFName <- " "   #no XPSSample are loaded
 
 # --- Widget ---
-
-   GDwin <- gwindow("GRAPHIC DEVICE ", parent=c(0, 200), visible=FALSE)
+   GDwin <- gwindow("GRAPHIC DEVICE ", parent=c(200, 5), visible=FALSE)
    GDgroup <- ggroup(label="GRAPHIC DEVICE OPTIONS", horizontal=FALSE, container=GDwin)
 
    frame1 <- gframe(" SELECT your Operating System ", spacing=5, container=GDgroup)
 
-   obj1 <- gradio(OSList, selected=-1, horizontal=FALSE, handler=function(h,...){
+   obj1 <- gradio(OSList, selected=1, horizontal=FALSE, handler=function(h,...){
                       OS <- svalue(obj1)
                       switch (OS,
-                          "Linux"   = {Gdev <- "x11(type='Xlib', xpos=600, ypos=5, title=' ')" },
-                          "Windows" = {Gdev <- "x11(xpos=600, ypos=5, title=' ')"},
+                          "Linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ')" },
+                          "Windows" = {Gdev <- "windows(xpos=700, ypos=20, title=' ')"},
                           "MacOS-X" = {Gdev <- "quartz(title=' ')" },  #quartz() does allow setting the opening position
                           "Mac OS"  = {Gdev <- "quartz(title=' ')" },
                           "macOS"   = {Gdev <- "quartz(title=' ')" },
@@ -73,7 +68,7 @@ XPSSetGraphDev <- function() {
 
    frame2 <- gframe("FILE FORMAT TO SAVE", horizontal=FALSE, spacing=5, container=GDgroup)
 
-   obj2 <- gradio(FormatList, selected=-1, horizontal=FALSE, container=frame2)
+   obj2 <- gradio(FormatList, selected=1, horizontal=FALSE, container=frame2)
    glabel(text="File Name (No extension):", container=frame2)
    obj3 <- gedit(text="", container=frame2)
 

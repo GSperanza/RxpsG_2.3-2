@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSLatticeAnnotateGUI.r
 \name{XPSLattAnnotate}
 \alias{XPSLattAnnotate}
-\title{Adds text to a plot produced using the Lattice package
-This function is called by (\code{XPSOverlay}) and (\code{XPSCustomPlot})}
+\title{XPSLattAnnotate}
 \usage{
 XPSLattAnnotate(Xlim, Ylim)
 }
@@ -13,13 +12,12 @@ XPSLattAnnotate(Xlim, Ylim)
 \item{Ylim}{the limits of the Y axis}
 }
 \description{
-Adds text to a plot produced using the Lattice package
-This function is called by (\code{XPSOverlay}) and (\code{XPSCustomPlot})
+XPSLattAnnotate function adds text to a plot produced
+  using the Lattice package
+  This function is called by (\code{XPSOverlay}) and (\code{XPSCustomPlot})
 }
 \examples{
-
 \dontrun{
-XPSLattAnnotate(Xlim, Ylim)
+ 	XPSLattAnnotate(Xlim, Ylim)
 }
-
 }

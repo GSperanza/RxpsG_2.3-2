@@ -2,19 +2,18 @@
 % Please edit documentation in R/XPSSetGraphDevGUI.r
 \name{XPSSetGraphDev}
 \alias{XPSSetGraphDev}
-\title{To select the kind of graphic device compatible with the operating system in use}
+\title{XPSSetGraphDev}
 \usage{
 XPSSetGraphDev()
 }
 \description{
-To select the kind of graphic device compatible with the operating system in use
-Also a list of graphic formats is provided to save the content of the current
-No parameters are passed to this function
+function to select the kind of graphic device compatible
+  with the operating system in use.
+  Also a list of graphic formats is provided to save the content 
+  of the current graphic device.
 }
 \examples{
-
 \dontrun{
-XPSSetGraphDev()
+	XPSSetGraphDev()
 }
-
 }

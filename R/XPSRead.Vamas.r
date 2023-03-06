@@ -20,13 +20,11 @@
 ## --------------------------------------------------------------------------
 ## --------------------------------------------------------------------------
 
-
-#'read.vamas function reads data in standard vamas format
-#'
-#'@param file File
-#'@param debug debug switch
-#'
-#'@export
+#' @title read.vamas
+#' @description read.vamas function reads data in standard vamas format
+#' @param file File
+#' @param debug debug switch
+#' @export
 
 read.vamas <- function(file = NULL, debug = FALSE) {
 

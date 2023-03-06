@@ -2,18 +2,15 @@
 % Please edit documentation in R/XPSZoomCurGUI.r
 \name{XPSZoomCur}
 \alias{XPSZoomCur}
-\title{To zoom a plotted spectrum}
+\title{XPSZoomCur}
 \usage{
 XPSZoomCur()
 }
 \description{
-To zoom a plotted spectrum.
-No parameters are passed to this function
+XPSZoomCur for zooming a portion of a plotted spectrum.
 }
 \examples{
-
 \dontrun{
-XPSZoomCur()
+	XPSZoomCur()
 }
-
 }

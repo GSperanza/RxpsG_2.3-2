@@ -1,15 +1,10 @@
-#'Identify Elements on the Survey
-#'
-#'GUI to Identify Elements on the Survey.
-#'
-#'No parameters are passed to this function
-#'
+
+#'@title XPSSurveyElementIdentify
+#'@description function to Identify Elements present in a Survey spectrum.
 #'@examples
-#'
 #'\dontrun{
 #'	XPSSurveyElementIdentify()
 #'}
-#' 
 #'@export
 #'
 
@@ -29,9 +24,6 @@ reset.boundaries <- function(h, ...) {
 	  slot(newcoreline,"Boundaries") <<- point.coords
 	  newcoreline <<- XPSsetRegionToFit(newcoreline)
 }
-
-
-
 
 
 #---- Var-Initialization
@@ -78,45 +70,37 @@ reset.boundaries <- function(h, ...) {
 #--- TAB1
 	gtab1 <- ggroup(label = "Survey", horizontal=FALSE, spacing = 5, container = nb)
    gframe11 <- gframe(text = " Peak Detection ", horizontal = TRUE, spacing = 5, container = gtab1)
-   glyt1<-glayout(homogeneous=FALSE, spacing=1, container=gframe11)
+   glyt1 <- glayout(homogeneous=FALSE, spacing=1, container=gframe11)
 
-   glyt1[1,1]<-glabel(text = " Noise Level:", container=glyt1)
-   glyt1[1,2]<-glabel(text = " Energy Window:", container=glyt1)
-   glyt1[2,1]<-noiseLevel<-gedit(text = "7", width = 5, coerce.with=as.numeric, container=glyt1)
-   glyt1[2,2]<-Erange<-gedit(text = "5", width = 5, coerce.with=as.numeric, container=glyt1)
+   glyt1[1,1] <- glabel(text = " Noise Level:", container=glyt1)
+   glyt1[1,2] <- glabel(text = " Energy Window:", container=glyt1)
+   glyt1[2,1] <- noiseLevel<-gedit(text = "7", width = 5, coerce.with=as.numeric, container=glyt1)
+   glyt1[2,2] <- Erange<-gedit(text = "5", width = 5, coerce.with=as.numeric, container=glyt1)
 
    glyt1[3,1]<-detectionButton <- gbutton("  Detection  ", handler = function(h, ...) {
-                      snmin<-svalue(noiseLevel)
-                      Ewin<-svalue(Erange)
+                    snmin <- svalue(noiseLevel)
+                    Ewin <- svalue(Erange)
 	                   Peaks <<- peakDetection(newcoreline, snmin, Ewin)
 	                   plotPeaks(newcoreline, Peaks)
 	                   svalue(sb) <- sprintf("Element detection done.")
 	                   enabled(identificationButton) <- TRUE
-	                   enabled(grfame13) <- TRUE
-                      RecPlot <<- recordPlot()   #save graph for Refresh
+	                   enabled(gframe13) <- TRUE
+                    RecPlot <<- recordPlot()   #save graph for Refresh
                }, container = glyt1)
 
    gframe12 <- gframe(text = " Peak Identification ", horizontal = TRUE, spacing = 5, container = gtab1)
-   glyt2<-glayout(homogeneous=FALSE, spacing=1, container=gframe12)
+   glyt2 <- glayout(homogeneous=FALSE, spacing=1, container=gframe12)
 
-   glyt2[1,1]<-glabel(text = "  Precision (eV)  ", container = glyt2)
-   glyt2[2,1]<-DEnergy<-gedit(text = "1", width = 5, container=glyt2)
-	  glyt2[2,2]<-identificationButton <- gbutton("   Identification   ", handler = function(h, ...) {
+   glyt2[1,1] <- glabel(text = "  Precision (eV)  ", container = glyt2)
+   glyt2[2,1] <- DEnergy<-gedit(text = "1", width = 5, container=glyt2)
+	  glyt2[2,2] <- identificationButton <- gbutton("   Identification   ", handler = function(h, ...) {
                     DEnergy <- as.numeric(svalue(DEnergy))
                     IdPeaks <<- peakIdentification(Peaks, DEnergy, newcoreline, svalue(SpectType1), ElmtList)
                     ShowTablePeaks(IdPeaks, svalue(SpectType1))   #show table on the consolle
 	              }, container = glyt2)
    enabled(identificationButton) <- FALSE
 
-	  grfame13 <- gframe(text = " Plot ", container = gtab1, horizontal = TRUE, spacing = 5)
-	  plotType <- gradio(items=c("normal", "corrected"), selected=1, handler = function(h, ...) {
-		                  if (! is.null(Peaks)) {
-		   	                 plotPeaks(newcoreline, Peaks, type = svalue(plotType))
-		                  }
-               }, container = grfame13)
-	  enabled(grfame13) <- FALSE
-
-  	gframe14 <- gframe(text = " Spectral Type selection ", container = gtab1, horizontal = FALSE)
+  	gframe13 <- gframe(text = " Spectral Type selection ", container = gtab1, horizontal = FALSE)
    SpectType1 <- gradio(c("CoreLines", "AugerTransitions"), selected=1, horizontal = TRUE, spacing=5,  handler = function(h,...){
                      SType <- svalue(SpectType1)
                      ElmtList <<- ReadElmtList(SType) #reads the CoreLine/Auger List Table
@@ -124,7 +108,17 @@ reset.boundaries <- function(h, ...) {
                      ElmtList <<- as.data.frame(ElmtList,  stringsAsFactors = FALSE)
                      svalue(SpectType2)<-SType
                      svalue(SpectType3)<-SType
-               }, container = gframe14)
+               }, container = gframe13)
+	  enabled(gframe13) <- FALSE
+
+	  grframe14 <- gframe(text = " Plot ", container = gtab1, horizontal = TRUE, spacing = 5)
+	  plotType <- gradio(items=c("normal", "corrected"), selected=1, handler = function(h, ...) {
+		                  if (! is.null(Peaks)) {
+		   	                 plotPeaks(newcoreline, Peaks, type = svalue(plotType))
+		                  }
+               }, container = grframe14)
+
+
 
 
 #--- TAB2
@@ -133,13 +127,13 @@ reset.boundaries <- function(h, ...) {
 	  gframe21 <- gframe(text = " Peak BE value  ", container = gtab2, horizontal = FALSE, expand = FALSE, spacing = 5)
 	  glyt3 <- gformlayout(container = gframe21)
    BEbutton <- gbutton(label=" Peak Position: ", text="Press to locate", handler=function(h,...){
-                    coord<<-locator(n=1, type="p", col="red", lwd=2)
-                    xx<-as.character(round(as.numeric(coord$x),digits=2))
-                    svalue(be_value)<-xx
+                    coord <<- locator(n=1, type="p", col="red", lwd=2)
+                    xx <- as.character(round(as.numeric(coord$x),digits=2))
+                    svalue(be_value) <- xx
                }, container = glyt3)
 
-   be_value<- gedit(label="Energy value: ", initial.msg="BE?", handler = function(h,...) {
-                    BE<-svalue(coord$x)
+   be_value <- gedit(label="Energy value: ", initial.msg="BE?", handler = function(h,...) {
+                    BE <- svalue(coord$x)
                     if (!is.null(BE)) { svalue(be_value)<-BE } #svuoto il valore del locator nel widget cursor position in modo che su qs valore siano attive tutte le funzioni
                     replayPlot(RecPlot)
 #	 	              replot()
@@ -155,17 +149,17 @@ reset.boundaries <- function(h, ...) {
                      ElmtList <<- ReadElmtList(SType) #reads the CoreLine/Auger List Table
                      ElmtList <<- format(ElmtList, justify="centre", width=10)
                      ElmtList <<- as.data.frame(ElmtList,  stringsAsFactors = FALSE)
-                     svalue(SpectType1)<-SType
-                     svalue(SpectType3)<-SType
+                     svalue(SpectType1) <- SType
+                     svalue(SpectType3) <- SType
                }, container = gframe22)
 
 	  gframe23 <- gframe(text = " Core Line Search Mode ", container = gtab2, horizontal = FALSE, expand = FALSE, spacing = 5)
    glyt4<-glayout(homogeneous=FALSE, spacing=1, container=gframe23)
 
-	  glyt4[1,1]<-gbutton("  Find Elements Nearer to the Selected Energy  ", handler = function(h, ...) {
+	  glyt4[1,1] <- gbutton("  Find Elements Nearer to the Selected Energy  ", handler = function(h, ...) {
                      replot()
 		                   if ( !is.na(svalue(be_value)) && !is.na(svalue(be_win)) ) {
-			                     IdPeaks<<-NearerElement(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
+			                     IdPeaks <<- NearerElement(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
 			                     if (length(IdPeaks)>0){
    		                      ShowTablePeaks(IdPeaks, svalue(SpectType2))
                         } else {
@@ -173,10 +167,10 @@ reset.boundaries <- function(h, ...) {
                         }
 		                   }
 	              }, container = glyt4)
-	  glyt4[2,1]<-gbutton(" Core Lines with Max RSF in the Selected Energy Range ", handler = function(h, ...) {
+	  glyt4[2,1] <- gbutton(" Core Lines with Max RSF in the Selected Energy Range ", handler = function(h, ...) {
                      replot()
 		                   if ( !is.na(svalue(be_value)) && !is.na(svalue(be_win)) ) {
-			                     IdPeaks<<-CoreLinesMaxRSF(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
+			                     IdPeaks <<- CoreLinesMaxRSF(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
 			                     if (length(IdPeaks)>0){
    		                      ShowTablePeaks(IdPeaks, svalue(SpectType2))
                         } else {
@@ -184,10 +178,10 @@ reset.boundaries <- function(h, ...) {
                         }
 		                   }
 	              }, container = glyt4)
-	  glyt4[3,1]<-gbutton(" Find Any Element any Orbital in the Selected Energy Range ", handler = function(h, ...) {
+	  glyt4[3,1] <- gbutton(" Find Any Element any Orbital in the Selected Energy Range ", handler = function(h, ...) {
                      replot()
 	                    if ( !is.na(svalue(be_value)) && !is.na(svalue(be_win)) ) {
-			                     IdPeaks<<-AllElements(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
+			                     IdPeaks <<- AllElements(svalue(be_value), svalue(be_win), newcoreline, ElmtList)
 			                     if (length(IdPeaks)>0){
    		                      ShowTablePeaks(IdPeaks, svalue(SpectType2))
                         } else {
@@ -203,8 +197,8 @@ reset.boundaries <- function(h, ...) {
    gtable3 <- gtable(ElmtList, chosen.col=1, container = gframe31)
    size(gtable3) <- c(420,230)
    addHandlerDoubleclick(gtable3, handler = function(h, ...){
-                     elmt<-svalue(gtable3)
-                     HldPlt<-svalue(HoldPlot)
+                     elmt <- svalue(gtable3)
+                     HldPlt <- svalue(HoldPlot)
                      idx <- grep(elmt, ElmtList[,1])
                      elmtBE <- NULL
                      if (HldPlt==FALSE){
@@ -225,8 +219,8 @@ reset.boundaries <- function(h, ...) {
                      ElmtList <<- ReadElmtList(SType) #reads the CoreLine/Auger List Table
                      ElmtList <<- format(ElmtList, justify="centre", width=10)
                      ElmtList <<- as.data.frame(ElmtList,  stringsAsFactors = FALSE)
-                     svalue(SpectType1)<-SType
-                     svalue(SpectType2)<-SType
+                     svalue(SpectType1) <- SType
+                     svalue(SpectType2) <- SType
                      delete(gframe31, gtable3)
                      gtable3 <<- gtable(ElmtList, chosen.col=1, container = gframe31)
                      size(gtable3) <- c(420,230)
@@ -236,8 +230,8 @@ reset.boundaries <- function(h, ...) {
                         color="blue"
                      }
                      addHandlerDoubleclick(gtable3, handler = function(h, ...){
-                                       elmt<-svalue(gtable3)
-                                       HldPlt<-svalue(HoldPlot)
+                                       elmt <- svalue(gtable3)
+                                       HldPlt <- svalue(HoldPlot)
                                        idx <- grep(elmt, ElmtList[,1])
                                        elmtBE <- NULL
                                        if (HldPlt==FALSE){
@@ -254,10 +248,10 @@ reset.boundaries <- function(h, ...) {
                }, container = gframe32)
 
     Search <-gedit(initial.msg="Element?", spacing=10, handler=function(h, ...){
-                     elmt<-svalue(Search)
+                     elmt <- svalue(Search)
                      SType <- svalue(SpectType3)
-                     HldPlt<-svalue(HoldPlot)
-                     elmt<-paste(elmt, " ", sep="")
+                     HldPlt <- svalue(HoldPlot)
+                     elmt <- paste(elmt, " ", sep="")
                      idx <- grep(elmt, ElmtList[,1])
                      if (HldPlt==FALSE){
                         replot()    #refresh plot
@@ -275,58 +269,58 @@ reset.boundaries <- function(h, ...) {
     tkconfigure(Search$widget, width=8)
 
 
-    HoldPlot <-gcheckbox("Hold plot", checked = FALSE, spacing=10, container=gframe32)
+    HoldPlot <- gcheckbox("Hold plot", checked = FALSE, spacing=10, container=gframe32)
 
 #--- COMUNI
 
 	CommFrame1 <- gframe(text = " Cursor and Zoom ", container = mainGroup, horizontal = FALSE)
     glabel("SX click to get position/define zoom area; DX to exit zoom", container = CommFrame1)
 
-    glyt5<-glayout(homogeneous=FALSE, spacing=1, container=CommFrame1)
-    glyt5[1,1]<-SetPos<-gbutton("Cursor Position", container = glyt5)
+    glyt5 <- glayout(homogeneous=FALSE, spacing=1, container=CommFrame1)
+    glyt5[1,1] <- SetPos <- gbutton("Cursor Position", container = glyt5)
     addHandlerClicked(SetPos, handler=function(h,...){
-                     pos<-locator(n=1, type="p", pch=3, cex=1.5, lwd=1.5, col="red") #to modify zoom limits
+                     pos <- locator(n=1, type="p", pch=3, cex=1.5, lwd=1.5, col="red") #to modify zoom limits
                      if (length(pos) > 0) { #non ho premuto tasto DX
                          replot()
                          points(pos, type="p", pch=3, cex=1.5, lwd=1.8, col="red")
-                         pos<-round(x=c(pos$x, pos$y), digits=2)
-                         txt<-paste("X: ", as.character(pos[1]), ", Y: ", as.character(pos[2]), sep="")
+                         pos <- round(x=c(pos$x, pos$y), digits=2)
+                         txt <- paste("X: ", as.character(pos[1]), ", Y: ", as.character(pos[2]), sep="")
                          svalue(ShowPos)<-txt
                          tcl("update", "idletasks")  #force text to be shown in the glabel ShowPos
                      }
                   })
 
-    glyt5[1,2]<-ShowPos<-glabel("Cursor position: ", container = glyt5)
+    glyt5[1,2] <- ShowPos <- glabel(" X, Y: ", container = glyt5)
 
     glyt6<-glayout(homogeneous=FALSE, spacing=1, container=CommFrame1)
     glyt6[1,1] <- gbutton("Set Zoom Boundaries", handler = function(h,...) {
 	                 replot()
-                  point.coords<<-locator(n=2, type="p", pch=3, cex=1.5, lwd=1.5, col="red")
-                  DE<-abs(newcoreline[[1]][1]-newcoreline[[1]][2]) #Get the energy scale step: newcoreline[[1]] == newcoreline$x
+                  point.coords <<- locator(n=2, type="p", pch=3, cex=1.5, lwd=1.5, col="red")
+                  DE <- abs(newcoreline[[1]][1]-newcoreline[[1]][2]) #Get the energy scale step: newcoreline[[1]] == newcoreline$x
 	                 idx1 <- which(abs(newcoreline[[1]]-point.coords$x[1]) < DE) #get the element index corresponding to coords[1]
-	                 idx1<-idx1[1] #in idx there could be more than one value: select the first
+	                 idx1 <- idx1[1] #in idx there could be more than one value: select the first
 	                 idx2 <- which(abs(newcoreline[[1]]-point.coords$x[2]) < DE) #get the element index corresponding to coords[2]
-	                 idx2<-idx2[1]
-	                 point.coords$y<<-c(min(newcoreline[[2]][idx1:idx2]), max(newcoreline[[2]][idx1:idx2]))
+	                 idx2 <- idx2[1]
+	                 point.coords$y <<- c(min(newcoreline[[2]][idx1:idx2]), max(newcoreline[[2]][idx1:idx2]))
                   slot(newcoreline,"Boundaries") <<- point.coords
 	                 newcoreline <<- XPSsetRegionToFit(newcoreline)
 		                replot()
              }, container = glyt6)
 
- 	glyt6[1,2] <-gbutton("Reset Boundaries", handler = function(h, ...) {
+ 	glyt6[1,2] <- gbutton("Reset Boundaries", handler = function(h, ...) {
   		              reset.boundaries()
   		              replot()
   	          }, container = glyt6)
 
    glyt6[1,3] <- gbutton("Refresh plot", handler = function(h,...) {
-                  IdPeaks<<-NULL
+                  IdPeaks <<- NULL
                   enabled(identificationButton) <- TRUE
                   replayPlot(RecPlot)
              }, container = glyt6)
 
    glyt6[1,4] <- gbutton("Reset Analysis", handler = function(h,...) {
-                  Peaks<<-NULL
-                  IdPeaks<<-NULL
+                  Peaks <<- NULL
+                  IdPeaks <<- NULL
                   enabled(identificationButton) <- FALSE
                   replot()
                   RecPlot <<- recordPlot()   #save graph for Refresh
@@ -343,8 +337,8 @@ reset.boundaries <- function(h, ...) {
   plot(newcoreline)
 
   visible(mainWin) <- TRUE
-  svalue(nb)<-3       #refresh notebook pages
-  svalue(nb)<-2
-  svalue(nb)<-1
+  svalue(nb) <- 3       #refresh notebook pages
+  svalue(nb) <- 2
+  svalue(nb) <- 1
 
 }

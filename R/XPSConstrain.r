@@ -1,5 +1,5 @@
 #-----------------------------------------------------------
-#XPSConstrain: make constraints among fitting parameters and 
+#XPSConstrain: make constraints among fitting parameters and
 #stores informatin into the XPSSample slots
 #-----------------------------------------------------------
 
@@ -9,23 +9,24 @@
 # constraint on sigma: sigma2=sigma1
 # prova[[2]] <- XPSConstrain(prova[[2]], 3, "link", "sigma2", expr="sigma1")
 
-#'XPSConstrain function to set fit constraints
-#'
-#'@param Object XPSSample
-#'@param ncomponent the fit component index
-#'@param action  link, fix, set, remove the constraint to apply or remove
-#'@param variable h, mu, sigma, etc.   the fit parameter to constrain
-#'@param parameter one of the values start, min, max
-#'@param value the value to set
-#'@param expr the constraint expression
-#'
-#'@examples
-#'\dontrun{
-#' XPSConstrain(XPSCoreline[[3]], ncomponent=2, action="link", variable="mu", expr="mu1+1.5")
-#' XPSConstrain(XPSCoreline[[2]], ncomponent=3, action="link", variable="sigma", expr="sigma1")
-#'}
-#'
-#'@export
+#' @title XPSConstrain function to set fit constraints
+#' @description XPSConstrain function allows a direct setting of the
+#'   constraints needed for the best fit of a Core-Line. 
+#'   Generally constraints are set more easily by using the
+#'   /code{XPSConstraintsGUI()} function, a simple and powerful GUI.
+#' @param Object XPSSample
+#' @param ncomponent the fit component index
+#' @param action  link, fix, set, remove the constraint to apply or remove
+#' @param variable h, mu, sigma, etc.   the fit parameter to constrain
+#' @param parameter one of the values start, min, max
+#' @param value the value to set
+#' @param expr the constraint expression
+#' @examples
+#' \dontrun{
+#'  XPSConstrain(XPSCoreline[[3]], ncomponent=2, action="link", variable="mu", expr="mu1+1.5")
+#'  XPSConstrain(XPSCoreline[[2]], ncomponent=3, action="link", variable="sigma", expr="sigma1")
+#' }
+#' @export
 #'
 
 XPSConstrain <- function(Object,         # XPSSample[[CoreLine]]

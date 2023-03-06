@@ -2,20 +2,19 @@
 % Please edit documentation in R/XPSTwoScalePlotGUI.r
 \name{XPSTwoScalePlot}
 \alias{XPSTwoScalePlot}
-\title{Performs plots overlapping two different object with different Y scales}
+\title{XPSTwoScalePlot}
 \usage{
 XPSTwoScalePlot()
 }
 \description{
-Provides a userfriendly interface to select Objects to overlay
-and a selection of major plotting options for a personalized data representation
-Data are represented using different Left and Right Y scales
-No parameters passed to this function
+XPSTwoScalePlot performs plots overlapping two different
+  object with different Y scales
+  Provides a userfriendly interface to select Objects to superpose
+  and a selection of major plotting options for a personalized data representation
+  Data are represented using different Left and Right Y scales
 }
 \examples{
-
 \dontrun{
-XPSTwoScalePlot()
+	XPSTwoScalePlot()
 }
-
 }

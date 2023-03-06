@@ -8,7 +8,6 @@
 #'@param file File
 #'@param debug debug switch
 #'
-#'@export
 #'
 
 read.scienta <- function(file=NULL, debug = FALSE) {
@@ -203,7 +202,7 @@ read.scienta <- function(file=NULL, debug = FALSE) {
          SpectInfo[2]<-paste("   Acqn. Time(s): ", as.character(TotTime),"  Sweeps: ", as.character(nsweep),"   Anode:Mono Al Ka=1486.6eV   Step(meV): ",as.character(steps), sep="")
          SpectInfo[3]<-paste("   Dwell Time(ms):", as.character(acq_time*1000),"  Charge Neutraliser :manual   Acquired On :unspecified")
 			SEScurve <- new("XPSCoreLine",
-							.Data = list(x = X, y = Y, t=T, dummy=NULL),   #X, Y, T=Analizer, transfer function, and dummy column for future use
+							.Data = list(x = X, y = Y, t=T),   #X, Y, T=Analizer, transfer function, and dummy column for future use
 							units = units,
 							Flags = c(binding, TRUE, TRUE),
 							Info = SpectInfo,

@@ -2,19 +2,17 @@
 % Please edit documentation in R/XPSExportAsciiGUI.r
 \name{XPSExportAscii}
 \alias{XPSExportAscii}
-\title{GUI for the selection of the more convenient style to export all the XPSCoreLine
-in a XPSSample in anASCII text file.}
+\title{XPSExportAscii}
 \usage{
 XPSExportAscii()
 }
 \description{
-Export all the XPSCoreLine in a XPSSample in ASCII format.
-No parameters are passed to this function
+XPSExportAscii GUI for the selection of the more convenient
+  style to export single and all the XPSCoreLines in a XPSSample in anASCII 
+  text file.
 }
 \examples{
-
 \dontrun{
-XPSexportASCII()
+ XPSexportASCII()
 }
-
 }

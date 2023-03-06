@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{DoniachSunjic}
 \alias{DoniachSunjic}
-\title{DoniachSunjic function
-Correct version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))}
+\title{DoniachSunjic function}
 \usage{
 DoniachSunjic(x, h, mu, sigmaDS, asym)
 }
@@ -19,6 +18,6 @@ DoniachSunjic(x, h, mu, sigmaDS, asym)
 \item{asym}{function asymmetry value}
 }
 \description{
-DoniachSunjic function
 Correct version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
+  see Leiro et al. J. El. Spectr. Rel. Phen. 128, 205, (2003)
 }

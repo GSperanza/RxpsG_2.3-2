@@ -10,13 +10,11 @@ XPSAnalysis()
 Returns the processed \code{object}.
 }
 \description{
-Interactive GUI to add BaseLines and Fitting components to a CoreLine
-No parameter passed to this function
+XPSAnalysis() function is an interactive GUI to add BaseLines
+  and Fitting components to a CoreLine needed for the best fit and quantification
 }
 \examples{
-
 \dontrun{
-XPSAnalysis()
+	XPSAnalysis()
 }
-
 }

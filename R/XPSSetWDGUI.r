@@ -1,15 +1,12 @@
-#'To set the default working dir if it is not defined
-#'
-#'The new default working dir will be saved in the XPSSettings.ini
-#'which uincludes also the user preferences.
-#'
-#'
+
+#'@title XPSSetWD
+#'@description XPSSetWD function To set the default working dir if it is not defined
+#'  The new default working dir will be saved in the /R/library/RxpsG/extdata/XPSSettings.ini
+#'  which contains also the user preferences.
 #'@examples
-#'
 #'\dontrun{
 #'	XPSSetWD()
 #'}
-#'
 #'@export
 #'
 
@@ -59,7 +56,7 @@ XPSSetWD <- function(){
    glabel("  ", container=MainGroup)
 
    gbutton("SET AS DEFAULT and EXIT", handler=function(h, ...){
-                     Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
+                     Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG", lib.loc=.libPaths())
                      if (file.exists(Ini.pthName)) {
                          XPSSettings <<- read.table(file = Ini.pthName, header=TRUE, sep="", stringsAsFactors = FALSE)
                          XPSSettings$General[7] <<- WorkingDir  #personal Working Dir
@@ -76,7 +73,7 @@ XPSSetWD <- function(){
 
    gbutton("SET and EXIT", handler=function(h, ...){
 #--- get System info and apply correspondent XPS Settings ---
-                     Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
+                     Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG", lib.loc=.libPaths())
                      if (file.exists(Ini.pthName)) {
                          XPSSettings <<- read.table(file = Ini.pthName, header=TRUE, sep="", stringsAsFactors = FALSE)
                          XPSSettings$General[7] <<- WorkingDir  #personal Working Dir

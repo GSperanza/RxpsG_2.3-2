@@ -12,5 +12,5 @@ Derivative(x, mu)
 \item{mu}{position of function center}
 }
 \description{
-Derivative function
+Derivative function to store Derivate position in a CoreLine@Components slot
 }

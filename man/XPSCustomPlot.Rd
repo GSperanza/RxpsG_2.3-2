@@ -7,19 +7,14 @@
 XPSCustomPlot()
 }
 \description{
-This GUI allows setting the various parameters genereally used for
-replotting data. Through a user friendly interface it is possible to
-set colors, lines or symbols, their weight, and annotate the plot.
-This Gui is based on the Lattice package.
-No parameters are passed to this function.
+XPSCustomPlot allows a full control of the various
+  parameters forplotting data. Through a user friendly interface it
+  is possible to set colors, lines or symbols, their weight,  modify
+  title, X,Y labels and their dimensions, add/modify legend
+  annotate the plot.This GUI is based on the Lattice package.
 }
 \examples{
-
 \dontrun{
-XPSCustomPlot()
+	XPSCustomPlot()
 }
-
-}
-\seealso{
-\link{Lattice}
 }

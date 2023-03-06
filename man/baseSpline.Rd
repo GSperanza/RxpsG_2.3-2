@@ -14,8 +14,8 @@ baseSpline(spectra, splinePoints, limits)
 \item{limits}{the abscissa range where the spline is defined}
 }
 \description{
-Definition of Spline Algorythms
-}
-\details{
-Computes the Spline curve trough a set of splinePoints
+definition of the Spline Algorythms
+  Computes the Spline curve trough a set of splinePoints
+  provided by the user by mouse-clicking on the Core-Line spectrum
+  This function is called by the XPSAnalysisGUI
 }

@@ -2,9 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{DoniachSunjicGaussTail}
 \alias{DoniachSunjicGaussTail}
-\title{DoniachSunjicGauss function
-Doniach Sunjic function multiplied for a Gaussian broadening
-corrected for an exponential decay on the low BE side}
+\title{DoniachSunjicGauss function}
 \usage{
 DoniachSunjicGaussTail(x, h, mu, sigmaDS, sigmaG, asym, tail)
 }
@@ -24,7 +22,6 @@ DoniachSunjicGaussTail(x, h, mu, sigmaDS, sigmaG, asym, tail)
 \item{tail}{amplitude of the spectral tail on the low BE (high KE) side}
 }
 \description{
-DoniachSunjicGauss function
 Doniach Sunjic function multiplied for a Gaussian broadening
-corrected for an exponential decay on the low BE side
+  corrected for an exponential decay on the low BE side
 }

@@ -1,20 +1,31 @@
-#'Read XPS data from old-DOS-Scienta format
-#'
-#'Reads XPS data 'old-Scienta' format Data.
-#'
-#'
-#'@param filename file name or list of file names
-#'@param project  comment
-#'@param experiment  comment
-#'@param out output class type default list()
-#'@return list object class
-#'@export
-#'@examples
-#'
-#'\dontrun{
-#'pk1 <- read.xps("/Volumes/GoogleDrive/Il mio Drive/R/OldScientaFiles/Specific/DLC.48")
-#'}
-#'
+# XPSRead.Oldscienta function to read old Scienta data
+#Data are saved in the following folder which must be present
+# /Analysis
+# /Regions
+# /Results
+# /Specific
+#
+#' @title XPSRead.Oldscienta
+#' @description XPSRead.Oldscienta function is used to read XPS data
+#'   in the old-DOS-Scienta format
+#'   Data are saved in the following folder which must be present
+#'    /Analysis
+#'    /Regions
+#'    /Results
+#'    /Specific
+#'   Selection of the DataFile in the /Analysis folder activates reading
+#'   data in all the folders.
+#' @param filename file name or list of file names
+#' @param project  comment
+#' @param experiment  comment
+#' @param out output class type default list()
+#' @return XPSRead.Oldscienta returns and object of class XPSSample
+#' @examples
+#' \dontrun{
+#'  pk1 <- read.xps("c:/R/Analysis/OldScientaFiles/Analysis/DLC.48")
+#' }
+#' @export
+
 XPSRead.Oldscienta <- function(filename  = NULL,
 					                     project    = "",
 				                      experiment = "",
@@ -127,34 +138,35 @@ XPSRead.Oldscienta <- function(filename  = NULL,
         seek(fp, where = 8, "current")
 
 # generate the XPSCoreline structure
- 	    		OldScientaObj[[idx]]<<- new("XPSCoreLine")
+# 	    		OldScientaObj[[idx]] <<- new("XPSCoreLine", .Data = list(x = X, y = Y, t=T))
+ 	    		OldScientaObj[[idx]] <<- new("XPSCoreLine")
 
 # save information into the XPSSample Coreline
         if(tmp$xmin > tmp$xmax) { #Acquisition made using BE scale 
-           OldScientaObj[[idx]]@units<<-c("Binding Energy [eV]","Intensity [cps]")
-           OldScientaObj[[idx]]@Flags<<-c(TRUE, FALSE, TRUE, FALSE)    #BE scale, CPS, ScientaData, TransmissionCorrection
+           OldScientaObj[[idx]]@units <<- c("Binding Energy [eV]","Intensity [cps]")
+           OldScientaObj[[idx]]@Flags <<- c(TRUE, FALSE, TRUE)    #BE scale, CPS, ScientaData
            sgn <- -1
         } else if(tmp$xmin < tmp$xmax) { #Acquisition made using KE scale
-           OldScientaObj[[idx]]@units<<-c("Kinetic Energy [eV]","Intensity [cps]")
-           OldScientaObj[[idx]]@Flags<<-c(FALSE, FALSE, TRUE, FALSE)
+           OldScientaObj[[idx]]@units <<- c("Kinetic Energy [eV]","Intensity [cps]")
+           OldScientaObj[[idx]]@Flags <<- c(FALSE, FALSE, TRUE)
            sgn <- 1
         }
-        OldScientaObj[[idx]]@.Data[[1]]<<-seq(from=tmp$xmin, to=tmp$xmax, by=(sgn*tmp$xstep)) #X axis has to be genrated from range and  Xstep
-        TotTime<-tmp$t_acq*(abs(tmp$xmax-tmp$xmin)/tmp$xstep)*tmp$sweeps
-        SpectInfo[1]<-paste("   XPS     Spectrum    Lens Mode:",tmp$mode,"   Resolution:Pass energy ", as.character(tmp$pass_energy),"   Iris(Aper):manual", sep="")
-        SpectInfo[2]<-paste("   Acqn. Time(s): ", as.character(TotTime),"  Sweeps: ", as.character(tmp$sweeps),"   Anode:Mono Al Ka=1486.6eV   Step(meV): ",as.character(tmp$xstep), sep="")
-        SpectInfo[3]<-paste("   Dwell Time(ms):", as.character(tmp$t_acq*1000),"  Charge Neutraliser :manual   Acquired On :unspecified")
+        OldScientaObj[[idx]]@.Data[[1]] <<- seq(from=tmp$xmin, to=tmp$xmax, by=(sgn*tmp$xstep)) #X axis has to be genrated from range and  Xstep
+        TotTime <- tmp$t_acq*(abs(tmp$xmax-tmp$xmin)/tmp$xstep)*tmp$sweeps
+        SpectInfo[1] <- paste("   XPS     Spectrum    Lens Mode:",tmp$mode,"   Resolution:Pass energy ", as.character(tmp$pass_energy),"   Iris(Aper):manual", sep="")
+        SpectInfo[2] <- paste("   Acqn. Time(s): ", as.character(TotTime),"  Sweeps: ", as.character(tmp$sweeps),"   Anode:Mono Al Ka=1486.6eV   Step(meV): ",as.character(tmp$xstep), sep="")
+        SpectInfo[3] <- paste("   Dwell Time(ms):", as.character(tmp$t_acq*1000),"  Charge Neutraliser :manual   Acquired On :unspecified")
 
         OldScientaObj[[idx]]@Boundaries[[1]]<<-c(tmp$xmin,tmp$xmax)
         OldScientaObj[[idx]]@Info<<-SpectInfo
         OldScientaObj[[idx]]@Symbol<<-SpectNames[idx]
 #save acquisition info to change COUNTS in CPS
-        Tint[idx]<<-tmp$t_acq
-        Nsweeps[idx]<<-tmp$sweeps
-        PE[idx]<<-tmp$pass_energy
-        Estep[idx]<<-tmp$xstep
+        Tint[idx] <<- tmp$t_acq
+        Nsweeps[idx] <<- tmp$sweeps
+        PE[idx] <<- tmp$pass_energy
+        Estep[idx] <<- tmp$xstep
       }
-      OldScientaObj@names<<-SpectNames #All regions defined, now is possible to save SpectNames
+      OldScientaObj@names <<- SpectNames #All regions defined, now is possible to save SpectNames
       close(fp) # now close file
 
 #cat(str(tmp)) ## DEBUG
@@ -217,8 +229,8 @@ XPSRead.Oldscienta <- function(filename  = NULL,
   if ( is.null(filename) ) stop("No Filename null?\n")
   FName <-  basename(filename)
   rootdir <- dirname(dirname(filename))
-cat("DIR:", rootdir,"\n")
-cat("FILE:", FName,"\n")
+cat("\n DIR:", rootdir)
+cat("\n FILE:", FName)
 
 # read Specific
 cat("\n Read Specific")

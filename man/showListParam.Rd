@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFitLM.r
 \name{showListParam}
 \alias{showListParam}
-\title{showListParam prints a list of parameters in a formatted style}
+\title{showListParam}
 \usage{
 showListParam(lista, decimals, ParamNames)
 }
@@ -20,9 +20,8 @@ returns the formatted print of parameters
 showListParam prints a list of parameters in a formatted style
 }
 \examples{
-
 \dontrun{
-XPSfit(SampData[["C1s"]])
+ XPSfit(SampData[["C1s"]])
 }
 
 }

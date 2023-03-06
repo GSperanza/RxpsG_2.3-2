@@ -5,29 +5,32 @@
 \alias{fitComponents-class}
 \title{Class "fitComponents"}
 \description{
-A class that describes a fit component.  The class has the definition of all
-the necessary informations needed to use a component algorithm with the
-optimisation framework and the graphical user interface (but see Notes
-below).
+a class that describes a fit component.  The class has the
+  definition of all the necessary informations needed to use a fit component
+  algorithm store all the related infromation, enable specific plot functionalities
+  Objects from the Class: Objects can be created by calls of the form
+  \code{new("fitComponents", ...)}.
 }
-\note{
-The goal is that the optimisation framework and the GUI code should get
-all information about available baseline algorithms through a list of
-\code{fitComponents} objects.  This will make it relatively simple to add new
-baseline algorithms.
-}
-\section{Objects from the Class}{
- Objects can be created by calls of the form
-\code{new("fitComponents", ...)}.
-}
+\section{Slots}{
+
+\describe{
+\item{\code{funcName}}{the name of the fitting function}
+
+\item{\code{description}}{the description of the fitting function}
+
+\item{\code{label}}{label of the fit component associated to the added fit component}
+
+\item{\code{param}}{the list of fitting parameters}
+
+\item{\code{rsf}}{the RSF associated to the fit component (the same as that of the Core-Line)}
+
+\item{\code{ycoor}}{the y values of the best fit}
+
+\item{\code{link}}{the list containing the series of links associated to this fit component}
+}}
 
 \examples{
-
 \dontrun{
-showClass("fitComponents")
+ showClass("fitComponents")
 }
 }
-\author{
-Roberto Canteri, modified Giorgio Speranza
-}
-\keyword{classes}

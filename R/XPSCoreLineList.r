@@ -1,17 +1,16 @@
-#coreline list
+#XPSCoreLineList provides the listy of coreline in a XPSSample
 
-#'Make the list of CoreLines of the loaded XPS-Sample
-#'
-#'The list of corelines which are contained in the loaded XPS-Sample
-#'are displayed by this function. No parameters are passed to this function.
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSCoreLineList()
-#'}
-#'
-#'@export
+#' @title XPSCoreLineList provides the XPS-Sample Core-Lines
+#' @description XPSCoreLineList gives the list of Core-Lines 
+#'   which are contained in the active XPS-Sample. This list
+#'   corresponds to the Core-Lines plotted when double-clicking
+#'   on a XPS-Sample loaded in RxpsG. This function is commonly 
+#'   used by the other RxpsG functions
+#' @examples
+#' \dontrun{
+#' 	XPSCoreLineList()
+#' }
+#' @export
 #'
 
 XPSCoreLineList <- function() {

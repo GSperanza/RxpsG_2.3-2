@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{Initialize}
 \alias{Initialize}
-\title{Initialize: initalizes parameter slot for a generic function}
+\title{Initialize}
 \usage{
 Initialize(x, h, mu, sigma)
 }
@@ -16,5 +16,5 @@ Initialize(x, h, mu, sigma)
 \item{sigma}{function full width at half maximum}
 }
 \description{
-Initialize: initalizes parameter slot for a generic function
+initialize function to initalizes parameter slot for a generic function
 }

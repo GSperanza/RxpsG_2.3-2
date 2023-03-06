@@ -3,36 +3,33 @@
 ## call the XPSdofit AND plot the result
 ## ===========================================================
 
-#'Perform the fit of a Core Line
-#'
-#'Provides a userfriendly interface to select a fitting algorithms to
-#'fit an XPSCoreline. Fitting algorithms are:
-#'   Classic algorithms: Levenberg-Marquardt, Newton and Port based on the minimization 
-#'   of the Squares of the Differences and handled in a more robust way (although slower)
-#'   compared to (\code{nlsLM}) function.
-#'   Conjugate-Gradient Algorithms: General-purpose optimization based on Nelder-Mead, 
-#'   quasi-Newton and conjugate-gradient algorithms.
-#'   Pseudo Algorithms: random based algorithm (rather slow) but ensure the convergence.
-#'
-#'
-#'@param Object XPSCoreLine object
-#'@param plt logical, to enable plot XPSCoreLine and fit. By default set to TRUE
-#'@param \dots  further parameters to the fitting function
-#'@return The Object slot \code{XPSModFit} will be filled with the result of the
-#'calculation. All the values of the components will be update and the result
-#'will be displyed.
-#'@seealso \link{nlsLM}
-#'@examples
-#'
-#'\dontrun{
-#'	SampData[["C1s"]] <- XPSModFit(SampData[["C1s"]])
-#'}
-#'
-#'@export
+#' @title XPSmodFit performs the fit of a Core Line
+#' @description Provides a userfriendly interface to select a fitting algorithms to
+#'   fit an XPSCoreline. Fitting algorithms are:
+#'   (I) Classic algorithms: Levenberg-Marquardt, Newton and Port based on the minimization
+#'     of the Squares of the Differences and handled in a more robust way (although slower)
+#'     compared to (\code{nlsLM}) function.
+#'   (II) Conjugate-Gradient Algorithms: General-purpose optimization based on Nelder-Mead,
+#'     quasi-Newton and conjugate-gradient algorithms.
+#'   (III) Pseudo Algorithms: random based algorithm (rather slow) but ensure the convergence.
+#' @param Object XPSCoreLine object
+#' @param plt logical, to enable plot XPSCoreLine and fit. By default is set to TRUE
+#' @param \dots  further parameters to the fitting function
+#' @return The Object slot \code{XPSmodFit} will be filled with the result of the
+#'  calculation. All the values of the components will be update and the result
+#'  will be displyed.
+#' @seealso \link{nlsLM}
+#' @examples
+#' \dontrun{
+#' 	SampData[["C1s"]] <- XPSmodFit(SampData[["C1s"]])
+#' }
+#' @export
 #'
 
-XPSModFit <- function(Object, plt=TRUE, ...) {
-
+XPSmodFit <- function(Object, plt=TRUE, ...) {
+       import::from(FME, modFit)
+       import::from(rootSolve,gradient)    #cannot use import::here because rootSolve not listed in DESCRIPTION
+       assign("gradient", gradient, envir=.GlobalEnv)  #renders the function 'gradient' globally available
 
 # ==============================================================
 # showListParam: formatted print of a list of parameters
@@ -78,11 +75,6 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 # ===========================================================
 
    XPSdofit <- function(Object, method, ...) {
-
-       if (is.na(mesh)) mesh <- 1   #the default values of variables is set in the ctrl list for all the algorithms
-       if (is.na(Tolerance)) Tolerance <<- 1e-9
-       if (Verbose) trace=1
-
 #--- data to fit: curve - baseline
  	     datafit <- data.frame(x = Object@RegionToFit$x,
  				  y = Object@RegionToFit$y - Object@Baseline$y)
@@ -132,7 +124,7 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
        for(ii in 1:Ncomp){
    	      Npar <- length(Parms[[ii]])  #Componants may have different fitting functions with different number of parameters
           for(jj in 1:Npar){
-              #if FIX present => Ubound==Lbound but in ModFit this does not work
+              #if FIX present => Ubound==Lbound but in modFit this does not work
               if ((Ubounds[[ii]][jj] == Lbounds[[ii]][jj]) && (jj != 3)) { #here we run on all the parameters except sigma (jj=3)
                   Ubounds[[ii]][jj] <- Parms[[ii]][jj]+Parms[[ii]][jj]/10000 #Ubound~=LBound
                   Lbounds[[ii]][jj] <- Parms[[ii]][jj]-Parms[[ii]][jj]/10000
@@ -174,66 +166,69 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 	     Param <- paste(ParamNames, " <- ", Parms, " ;", sep="")
 
       LL <- length(datafit$x)
-#spectral data decimation: extract indexes of original data to use for fitting. If mesh=2 one valuje is taken one is drop
+#spectral data decimation: extract indexes of original data to use for fitting. If mesh=2 one value is taken one is drop
       indexes <- seq(from=1, to=LL, by=mesh)
       XX <- datafit$x[indexes]
       YY <- datafit$y[indexes]
 
+
 #--- evaluate the fitting function using the fitting Parameters
-	     FitFunct <- function(XX, Param, FitExpr) {
+      FitFunct <- function(XX, Param, FitExpr) {
                           eval(parse(text=Param))  #eval creates in the .GlobalEnv the fitting parameters having the correspondent values
-                          estimate <- sapply(XX, function(x) eval(parse(text=FitExpr))) #evaluates the fitFunction using the fitting parameters
+                          eval(parse(text="x <- XX")) # FitExpr = fit function(x) needs the whole vector XX be available
+                          estimate <- eval(parse(text=FitExpr))
                           return(as.vector(estimate))
                        }
 
-
 #--- estimate the residuals as difference of the FitFunction and the original spectral data
-      FitResiduals <- function(Parms) {
-                              Param <- paste(names(Parms), " <- ", Parms, " ;", sep="") # qui metto i parametri in una stringa che valutero' in fitFunct
+      FitResiduals <- function(Parms) { #function to be minimized by modFit
+                              Param <- paste(names(Parms), " <- ", Parms, " ;", sep="") #String containing FitParam evaluated by FitFunction
                               Fitting <- FitFunct(XX, Param, FitExpr) #fitting evaluates the fitting functon using the Param
                               residuals <- (YY - Fitting)
                               return(residuals)
                        }
+
 #--- FITTING ALGORITHMS
      if (method=="Marq") {
         if (is.na(MaxIter)) MaxIter <<- 10000
-        ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=trace)
+        ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Marq", control=ctrl)
      }
      if (method=="Newton") {
         if (is.na(MaxIter)) MaxIter <<- 10000
-        ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=trace)
+        ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
+        cat("\n Iterations are starting please wait")
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Newton", control=ctrl)
      }
      if (method=="Port") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(rel.tol=Tolerance, eval.max=200, iter.max=MaxIter, trace=trace)
+        ctrl <- list(rel.tol=Tolerance, eval.max=200, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Port", hessian=TRUE, control=ctrl)
      }
      if (method=="Nelder-Mead") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=trace)
+        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Nelder-Mead", control=ctrl)
      }
      if (method=="CG") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=trace)
+        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="CG", control=ctrl)
      }
      if (method=="BFGS") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=trace)
+        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="BFGS", control=ctrl)
      }
      if (method=="L-BFGS-B") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=trace)
+        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="L-BFGS-B", control=ctrl)
      }
      if (method=="SANN") {
         if (is.na(MaxIter)) MaxIter <<- 200
-        if (Verbose) trace=1
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=trace)
+        if (Verbose) traceFit=1
+        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="SANN", control=ctrl)
      }
      if (method=="Pseudo") {
@@ -241,7 +236,7 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
         ctrl <- list(varleft=Tolerance, numiter=MaxIter, verbose=Verbose)
         FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Pseudo", control=ctrl)
      }
-    
+
      #--- SUMMARY of fit model and PLOT FIT RESULT
      cat("\n ----Best Fit Param.----\n")
      print(FitEstimation$par)
@@ -298,29 +293,32 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
         Object@Fit$fit <- FitEstimation
         if (plt == TRUE){
             plot(Object)
-            lines(datafit$x, Fit+Object@Baseline$y, lwd = 1, col = "orange")
+            lines(datafit$x, Fit+Object@Baseline$y, lwd = 1, col = "red")
         }
         return(Object)
    }
 
 
-
-#===========  MAIN ===========
-
+#===== variables =====
    FittedObject <- Object  #creates a copy of original data
-   mesh <<- 1
-   MaxIter <<- NA
-   Tolerance <<- 1e-9
-   Verbose <<- TRUE
+   mesh <- 1
+   MaxIter <- NA
+   Tolerance <- 1e-9
+   Verbose <- TRUE
+   traceFit <- 1
 
 
-   Fwin <- gwindow("XPS FIT", visible=FALSE)
+#=====  MAIN =========
+
+   Fwin <- gwindow("XPS MODEL FITTING", parent=c(50, 10), visible=FALSE)
    FgroupMain <- ggroup(horizontal=FALSE, container = Fwin)
 
    Fgroup1 <- ggroup(horizontal=TRUE, container = FgroupMain)
    Fframe1 <- gframe("Data Decimation", spacing=5, container=Fgroup1)
    Fobj1 <- gcombobox(c("default","1","2","3","4","5","6","7","8","9","10"), selected=1, editable=FALSE, handler=function(h, ...){
-                              mesh <<- as.numeric(svalue(Fobj1))
+                              mesh <<- (svalue(Fobj1))
+                              if (mesh == "default") mesh <<- 1
+                              if (mesh != "default") mesh <<- as.numeric(mesh)
                               LL <- length(Object@RegionToFit$x)
                               indices <- seq(from=1, to=LL, by=mesh)
                               XX <- Object@RegionToFit$x[indices] #if mesh > 1 data decimation
@@ -334,21 +332,27 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
    Fframe2 <- gframe("Max Iterations", spacing=5, container=Fgroup1)
    Fobj2 <- gcombobox(c("default","100","200","500","1000","3000","5000","10000"), selected=1, editable=FALSE, handler=function(h, ...){
-                              MaxIter <<- as.numeric(svalue(Fobj2))
+                              MaxIter <<- svalue(Fobj2)
+                              if (MaxIter == "default") MaxIter <<- NA
+                              if (MaxIter != "default") MaxIter <<- as.numeric(MaxIter)
                         }, container=Fframe2)
 
    Fframe3 <- gframe("Tolerance", spacing=5, container=Fgroup1)
    Fobj3 <- gcombobox(c("default", "1e-3","1e-4","1e-5","1e-6","1e-7","1e-8", "1e-9"), selected=1, editable=FALSE, handler=function(h, ...){
-                              Tolerance <<- as.numeric(svalue(Fobj3))
+                              Tolerance <<- svalue(Fobj3)
+                              if (Tolerance == "default") Tolerance <<- 1e-9
+                              if (Tolerance != "default") Tolerance <<- as.numeric(Tolerance)
                         }, container=Fframe3)
 
    Fframe4 <- gframe("Verbose", spacing=5, container=Fgroup1)
    Fobj4 <- gcombobox(c("Yes", "No"), selected=1, editable=FALSE, handler=function(h, ...){
-                              Verb <- svalue(Fobj4)
-                              if (Verb =="yes"){
+                              Verbose <- svalue(Fobj4)
+                              if (Verbose == "Yes"){
                                  Verbose <<- TRUE
+                                 traceFit <<- 1
                               } else {
                                  Verbose <<- FALSE
+                                 traceFit <<- -1
                               }
                         }, container=Fframe4)
 
@@ -422,13 +426,21 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
                         },container=Fgroup8)
 
    gbutton("RESET", handler=function(...){
+                              mesh <<- 1   #the default values of variables is set in the ctrl list for all the algorithms
+                              MaxIter <<- NA
+                              Tolerance <<- 1e-9
+                              traceFit <<- 1
+                              svalue(Fobj1) <- "default"
+                              svalue(Fobj2) <- "default"
+                              svalue(Fobj3) <- "default"
+                              svalue(Fobj4) <- "Yes"
                               SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)
                               activeFName <- get("activeFName", envir=.GlobalEnv)
                               FName <- get(activeFName, envir=.GlobalEnv)
                               Object <<- FName[[SpectIndx]]
                               FittedObject <<- NULL
                               if (plt == TRUE){
-                                  plot(FittedObject)
+                                  plot(Object)
                               }
                         },container=Fgroup8)
 
@@ -438,7 +450,7 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
                         },container=Fgroup8)
 
    visible(Fwin) <- TRUE
-   Fwin$set_modal(TRUE)  #set_modal == TRUE: no other operation allowed until ModFit active
+   Fwin$set_modal(TRUE)  #set_modal == TRUE: no other operation allowed until modFit active
 
    return(Object)
 }

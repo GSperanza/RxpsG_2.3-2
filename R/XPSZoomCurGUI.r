@@ -1,17 +1,13 @@
 ## zoom function
-#'To zoom a plotted spectrum
-#'
-#'To zoom a plotted spectrum.
-#'No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSZoomCur()
-#'}
-#'
-#'@export 
+
+
+#' @title XPSZoomCur
+#' @description XPSZoomCur for zooming a portion of a plotted spectrum.
+#' @examples
+#' \dontrun{
+#' 	XPSZoomCur()
+#' }
+#' @export
 #'
 
 
@@ -23,11 +19,11 @@ ReDraw <- function(){   #redraw all spectrum with no restrictions to RegionToFit
    plot(x=SampData[[1]], y=SampData[[2]], xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="black")
    SampData <- as(FName[[SpectIndx]], "matrix") # Regiontofit, Baseline, ecc in a matrix
    NC <- ncol(SampData)
-   if (NC>2) { #a Baseline is present
+   if (NC > 2) { #a Baseline is present
        BaseLine <- SampData[,3]
        matlines(x=SampData[,1], y=BaseLine, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="sienna")
    }
-   if (NC>3){ #c'e' un fit
+   if (NC > 3){ #c'e' un fit
       FitComp <- SampData[,4:NC-1]  #first three column skipped
       SpectFit <- SampData[,NC]  #fit
       matlines(x=SampData[,1], y=FitComp, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="blue")
@@ -37,7 +33,7 @@ ReDraw <- function(){   #redraw all spectrum with no restrictions to RegionToFit
 
 
 
-FindNearest <- function(LocPos, Corners){
+FindNearest <- function(){
 
    D <- NULL
    Dmin <- ((LocPos$x-Corners$x[1])^2 + (LocPos$y-Corners$y[1])^2)^0.5  #init value
@@ -49,21 +45,19 @@ FindNearest <- function(LocPos, Corners){
        }
    }
    if (idx==1){
-       Corners$x[1] <- Corners$x[2] <- LocPos$x
-       Corners$y[1] <- Corners$y[3] <- LocPos$y
+       Corners$x[1] <<- Corners$x[2] <<- LocPos$x
+       Corners$y[1] <<- Corners$y[3] <<- LocPos$y
    } else if (idx==2){
-       Corners$x[1] <- Corners$x[2] <- LocPos$x
-       Corners$y[2] <- Corners$y[4] <- LocPos$y
+       Corners$x[1] <<- Corners$x[2] <<- LocPos$x
+       Corners$y[2] <<- Corners$y[4] <<- LocPos$y
    } else if (idx==3){
-       Corners$x[3] <- Corners$x[4] <- LocPos$x
-       Corners$y[1] <- Corners$y[3] <- LocPos$y
+       Corners$x[3] <<- Corners$x[4] <<- LocPos$x
+       Corners$y[1] <<- Corners$y[3] <<- LocPos$y
    } else if (idx==4){
-       Corners$x[3] <- Corners$x[4] <- LocPos$x
-       Corners$y[2] <- Corners$y[4] <- LocPos$y
+       Corners$x[3] <<- Corners$x[4] <<- LocPos$x
+       Corners$y[2] <<- Corners$y[4] <<- LocPos$y
    }
-   Corners$x[idx] <- LocPos$x
-   Corners$y[idx] <- LocPos$y
-   return(Corners)
+   return()
 }
 
 
@@ -101,7 +95,7 @@ FindNearest <- function(LocPos, Corners){
 
 #--- Zoom Cursor window ---
 
-   ZMwin <- gwindow("ZOOM/CURSOR OPTION", parent=c(100,0) ,visible=FALSE)
+   ZMwin <- gwindow("ZOOM/CURSOR OPTION", parent=c(50,10) ,visible=FALSE)
    size(ZMwin) <- c(250, 270)
 
    ZMgroup <- ggroup(label="", horizontal=FALSE, container=ZMwin)
@@ -117,7 +111,7 @@ FindNearest <- function(LocPos, Corners){
                                  delete(ZMframe0, Core.Lines)
                                  Core.Lines <<- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
                                                           SpectName <- svalue(Core.Lines)
-                                                          SpectName <- unlist(strsplit(SpectName, "\\."))   #tolgo il N. all'inizio del nome coreline
+                                                          SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
                                                           SpectIndx <<- as.integer(SpectName[1])
                                                           XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
                                                           if (length(FName[[SpectIndx]]@RegionToFit)>0) {   #reverse if BE scale
@@ -133,7 +127,7 @@ FindNearest <- function(LocPos, Corners){
 
    Core.Lines <- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
                      SpectName <- svalue(Core.Lines)
-                     SpectName <- unlist(strsplit(SpectName, "\\."))   #tolgo il N. all'inizio del nome coreline
+                     SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
                      SpectIndx <<- as.integer(SpectName[1])
                      XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
                      if (length(FName[[SpectIndx]]@RegionToFit)>0) {   #reverse if BE scale
@@ -146,34 +140,39 @@ FindNearest <- function(LocPos, Corners){
                  }, container=ZMframe0)
    svalue(Core.Lines) <- paste(SpectIndx, ".",activeSpectName, sep="")
 
-   ZMframe1 <- gframe(text="Set the zoom region", horizontal=FALSE, spacing=5, container=ZMgroup)
+   ZMframe1 <- gframe(text="Define the zoom area", horizontal=FALSE, spacing=5, container=ZMgroup)
 
-   ZMobj1 <- gbutton(" Set Zoom Limits ", handler=function(h,...){
+   ZMobj1 <- gbutton(" Set Zoom Area ", handler=function(h,...){
                      txt <- "LEFT button to set the zoom area; RIGHT to exit \n Click near markers to modify the zoom area"
                      gmessage(msg=txt , title = "WARNING",  icon = "warning")
-                     pos <- locator(n=2, type="p", pch=3, col="red", lwd=1.5) #first the two corners are drawn
+                     pos <- locator(n=2, type="p", pch=3, col="blue", lwd=2) #first the two corners are drawn
                      rect(pos$x[1], min(pos$y), pos$x[2], max(pos$y))  #marker-Corners are ordered with ymin on Left and ymax on Right
-                     Corners$x <- c(pos$x[1],pos$x[1],pos$x[2],pos$x[2])
-                     Corners$y <- c(pos$y[1],pos$y[2],pos$y[1],pos$y[2])
-                     points(Corners, type="p", pch=3, col="red", lwd=1.5)
+                     Corners$x <<- c(pos$x[1],pos$x[1],pos$x[2],pos$x[2])
+                     Corners$y <<- c(pos$y[1],pos$y[2],pos$y[1],pos$y[2])
+                     points(Corners, type="p", pch=3, col="blue", lwd=2)
+                     if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
+                         pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=TRUE) #pos$x in decrescent ordered => Corners$x[1]==Corners$x[2]
+                     } else {
+                         pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=FALSE) #pos$x in ascending order
+                     }
+                     pos$y <- sort(c(Corners$y[1],Corners$y[2]), decreasing=FALSE)
 
-                     LocPos <- list(x=0, y=0)
+                     LocPos <<- list(x=0, y=0)
                      while (length(LocPos) > 0) {  #if pos1 not NULL a mouse butto was pressed
-                        LocPos <- locator(n=1, type="p", pch=3, col="red", lwd=2) #to modify the zoom limits
+                        LocPos <<- locator(n=1, type="p", pch=3, col="red", lwd=2) #to modify the zoom limits
                         if (length(LocPos$x) > 0) { #if the right mouse button NOT pressed
-                           Corners <- FindNearest(LocPos,Corners)
+                           FindNearest()
                            if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
                               pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=TRUE) #pos$x in decrescent ordered => Corners$x[1]==Corners$x[2]
                            } else {
                               pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=FALSE) #pos$x in ascending order
                            }
-                           pos$y <- c(Corners$y[1],Corners$y[2])
+                           pos$y <- sort(c(Corners$y[1],Corners$y[2]), decreasing=FALSE)
                            ReDraw()  #refresh graph
                            rect(pos$x[1], pos$y[1], pos$x[2], pos$y[2])
-                           points(Corners, type="p", pch=3, col="red", lwd=1.5)
+                           points(Corners, type="p", pch=3, col="blue", lwd=2)
                         }
                      }
-                     pos$y <- sort(c(Corners$y[1],Corners$y[2]), decreasing=FALSE) #pos$y in ascending order => Corners$y[1]==Corners$y[3]
                      XYrange <<- pos
                      plot(FName[[SpectIndx]], xlim=pos$x, ylim=pos$y) #zoom
 

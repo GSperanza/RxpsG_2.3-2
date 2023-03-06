@@ -2,20 +2,15 @@
 % Please edit documentation in R/XPSSurElmtIdentifyGUI.r
 \name{XPSSurveyElementIdentify}
 \alias{XPSSurveyElementIdentify}
-\title{Identify Elements on the Survey}
+\title{XPSSurveyElementIdentify}
 \usage{
 XPSSurveyElementIdentify()
 }
 \description{
-GUI to Identify Elements on the Survey.
-}
-\details{
-No parameters are passed to this function
+function to Identify Elements present in a Survey spectrum.
 }
 \examples{
-
 \dontrun{
 XPSSurveyElementIdentify()
 }
-
 }

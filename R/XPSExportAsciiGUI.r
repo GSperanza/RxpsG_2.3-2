@@ -1,19 +1,15 @@
 #This routine allows selection of the spectra to save in ASCII text file
 # and the output Format (header, separators...)
 
-#'GUI for the selection of the more convenient style to export all the XPSCoreLine
-#'in a XPSSample in anASCII text file.
-#'
-#'Export all the XPSCoreLine in a XPSSample in ASCII format.
-#'No parameters are passed to this function
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSexportASCII()
-#'}
-#'
-#'@export
+#' @title XPSExportAscii
+#' @description XPSExportAscii GUI for the selection of the more convenient
+#'   style to export single and all the XPSCoreLines in a XPSSample in anASCII 
+#'   text file.
+#' @examples
+#' \dontrun{
+#'	 XPSexportASCII()
+#' }
+#' @export
 #'
 
 
@@ -54,15 +50,15 @@ XPSExportAscii <- function(){
                          FName <<- get(ActiveFName, envir = .GlobalEnv)
                          delete(EAframe2, EAobj2)
                          SpectList <<- XPSSpectList(ActiveFName)
-                         SpectList <- c("All", SpectList) #all option added to save all the XPS Corelines
+                         SpectList <<- c("All", SpectList) #all option added to save all the XPS Corelines
                          EAobj2 <<- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
                                              SpectName <- svalue(EAobj2)
                                              if (SpectName == "All"){
                                                 plot(FName)
                                              } else {
-                                               SpectName <- unlist(strsplit(SpectName, "\\."))   #delete the index. before the coreline name
-                                               SpectName <- SpectName[2]
-                                               plot(FName[[SpectName]])
+                                                SpectName <- unlist(strsplit(SpectName, "\\."))
+                                                idx <- as.integer(SpectName[1])
+                                                plot(FName[[idx]])
                                              }
                                              enabled(EAobj3) <- TRUE
                                              enabled(EAobj4) <- TRUE
@@ -78,8 +74,8 @@ XPSExportAscii <- function(){
                             plot(FName)
                          } else {
                             SpectName <- unlist(strsplit(SpectName, "\\."))
-                            SpectName <- SpectName[2]
-                            plot(FName[[SpectName]])
+                            idx <- as.integer(SpectName[1])
+                            plot(FName[[idx]])
                          }
                          enabled(EAobj3) <- TRUE
                          enabled(EAobj4) <- TRUE
@@ -108,7 +104,8 @@ XPSExportAscii <- function(){
                          SpectName <- svalue(EAobj2)
                          FitYesNo <- svalue(EAobj3, index=TRUE)
                          if (SpectName == "All"){
-                            for (ii in 1:length(SpectList)){
+                            LL <- length(SpectList) # -1: "All" is not a core-line
+                            for (ii in 2:LL){
                                 SpectName <- unlist(strsplit(SpectList[ii], "\\."))
                                 idx <- as.integer(SpectName[1])
                                 filenameOUT <- paste(filename[1], "_", SpectName[2],filename[2], sep="")
@@ -116,6 +113,7 @@ XPSExportAscii <- function(){
                                    data <- as(FName[[idx]], "matrix")  #export spectrum and fit
                                 } else if (FitYesNo==2){
                                    data <- data.frame(x=FName[[idx]]@.Data[1], y=FName[[idx]]@.Data[2]) #export spectrum only
+                                   names(data)[1] <- "x"
                                    if (slot(FName[[idx]],"Symbol") != "") names(data)[2] <- slot(FName[[idx]],"Symbol")
                                 }
                                 data <- round(data,digits=4) #round to 4 decimal digits
@@ -133,7 +131,7 @@ XPSExportAscii <- function(){
                                data <- data.frame(x=FName[[idx]]@.Data[[1]], y=FName[[idx]]@.Data[[2]]) #export spectrum only
                                if (slot(FName[[idx]],"Symbol") != "") names(data)[2] <- slot(FName[[idx]],"Symbol")
                             }
-                            data <- round(data,digits=4)  #round to 4 decimal digits
+                            data <- round(data,digits=3)  #round to 4 decimal digits
                             writeData(data, filenameOUT, fmt)
                             cat("\n Core line: ", SpectName[2], "   written in file: ", filenameOUT)
                             XPSSaveRetrieveBkp("save")

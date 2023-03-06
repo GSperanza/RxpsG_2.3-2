@@ -4,14 +4,14 @@
 \alias{VBFermi}
 \title{VBFermi function}
 \usage{
-VBFermi(x, h, Ef, k)
+VBFermi(x, h, mu, k)
 }
 \arguments{
 \item{x}{numeric vector}
 
 \item{h}{function amplitude}
 
-\item{Ef}{position of function center}
+\item{mu}{position of function center}
 
 \item{k}{Fermi Distribution decay rate}
 }

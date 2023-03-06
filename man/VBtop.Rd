@@ -12,5 +12,5 @@ VBtop(x, mu)
 \item{mu}{position of function center}
 }
 \description{
-VBtop function
+VBtop function to store VBtop position in a CoreLine@Components slot
 }

@@ -1,19 +1,16 @@
-#'Function to generate personalized plot
-#'
-#'This GUI allows setting the various parameters genereally used for
-#'replotting data. Through a user friendly interface it is possible to
-#'set colors, lines or symbols, their weight, and annotate the plot.
-#'This Gui is based on the Lattice package.
-#'No parameters are passed to this function.
-#'
-#'@seealso \link{Lattice}
-#'@examples
-#'
-#'\dontrun{
-#'	XPSCustomPlot()
-#'}
-#'
-#'@export
+#XPSCustomPlot function to produce customized plots
+#
+#' @title Function to generate personalized plot
+#' @description XPSCustomPlot allows a full control of the various
+#'   parameters forplotting data. Through a user friendly interface it
+#'   is possible to set colors, lines or symbols, their weight,  modify
+#'   title, X,Y labels and their dimensions, add/modify legend
+#'   annotate the plot.This GUI is based on the Lattice package.
+#' @examples
+#' \dontrun{
+#' 	XPSCustomPlot()
+#' }
+#' @export
 #'
 
 XPSCustomPlot <- function(){
@@ -64,7 +61,7 @@ XPSCustomPlot <- function(){
                enabled(T5obj4) <- FALSE
                enabled(T5obj5) <- FALSE
             }
-
+            
             if ( svalue(T2obj4) == "ON" && svalue(T2obj7) == "ON") {  # symbols OFF
                Plot_Args$type <<- "b"  # both: line and symbols
             }  #conditions on lines and symbols see above (T2obj4==ON   T2obj7==ON)
@@ -109,24 +106,42 @@ XPSCustomPlot <- function(){
 
    PlotErrorBar <- function(){
             ErrOptions <- as.numeric(svalue(T2obj8, index=TRUE))
+            x1 <- as.numeric(svalue(XX1))
+            y1 <- as.numeric(svalue(YY1))
+            x2 <- as.numeric(svalue(XX2))
+            y2 <- as.numeric(svalue(YY2))
+
+            yy0 <- NULL
+            yy1 <- NULL
             NOpt <- length(ErrOptions)
             xx <- FName[[SpectIndx]]@.Data[[1]]
             yy <- FName[[SpectIndx]]@.Data[[2]]
             Err <- FName[[SpectIndx]]@.Data[[4]]
-
+            yy0 <- yy+Err
+            MaxY <- max(yy0)
+            yy0 <- yy-Err
+            MinY <- min(yy0)
+            if (is.na(x1) && is.na(x2) && is.na(y1) && is.na(y2)){
+                Plot_Args$ylim <<- Ylim  <<- c(MinY, MaxY)
+            } else {
+                if (!is.na(x1) && !is.na(x2)){ # --- Set X Range
+                    if (svalue(RevAxis)) { #Binding energy set
+                        Plot_Args$xlim  <<- Xlim <<- sort(c(x1, x2), decreasing=TRUE)
+                    } else {
+                        Plot_Args$xlim  <<- Xlim <<- sort(c(x1, x2))
+                    }
+                }
+                if (!is.na(y1) && !is.na(y2)){ # --- Set Y Range
+                    Plot_Args$ylim  <<- Ylim <<- sort(c(y1, y2))
+                }
+            }
             NData <- length(xx)
             EndAmpli <- as.numeric(svalue(T2obj9)) #Amplitude of the limiting ending bars
             EndLngth <- EndAmpli*(range(xx)[2]-range(xx)[1])/50
             colr <- svalue(T2obj1)
 
-            MaxErr <- max(Err)
-            MinErr <- min(Err)
-            Plot_Args$ylim <<- c(Ylim[1]-MinErr, Ylim[2]+MaxErr)  #include error bars in the Y plot scale
             graph <- do.call(xyplot, args = Plot_Args)
             plot(graph)
-
-            yy0 <- NULL
-            yy1 <- NULL
             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)  #to enable modify the lattice graph
             for(ii in 1:NOpt){
                 if (ErrOptions[ii] == 1){ #plot the upper part of the stanbdard error
@@ -172,6 +187,7 @@ XPSCustomPlot <- function(){
             }
             trellis.unfocus()
    }
+
 
    setRange <- function(){
                x1 <- as.numeric(svalue(XX1))
@@ -257,13 +273,13 @@ XPSCustomPlot <- function(){
                select <- ""
                code <- vector()
                if (idx==1) {
-                  select <- "MAIN"   #plot raw data
+                   select <- "MAIN"   #plot raw data
                } else {
-                  select <- "RTF"    #plot RegionToFit
+                   select <- "RTF"    #plot RegionToFit
                }
-               code <- 1     #code is the label identifying the group of data possessing
+               code <- 1   #code is the label identifying the group of data possessing
 #                          #same properties (linetype, lwd, color etc...)
-#                          #and at the same time in which order the style options have to be applied
+#                          #and at the same time in which order the style options have to be applied        
                if (svalue(BaseLineCK)==TRUE) {
                    select <- c(select, "BASE")
                    code <- c(code, 2)
@@ -276,13 +292,38 @@ XPSCustomPlot <- function(){
                    select <- c(select, "FIT")
                    code <- c(code, (NComp+3))
                }
+               if (Normalize){
+                   if (length(grep("[cps]", FName[[SpectIndx]]@units[2], fixed=TRUE)) > 0) {  #if original Ylab="Intensity [cps]"
+                       Plot_Args$ylab$label <<- "Intensity [a.u.]"
+                   }
+                   #Now normalize the .Data[[2]], RegionToFit$y, Baseline, Components and Fit
+                   RngY <- range(FName[[SpectIndx]]@.Data[[2]])
+                   FName[[SpectIndx]]@.Data[[2]] <- (FName[[SpectIndx]]@.Data[[2]]-RngY[1])/(RngY[2]-RngY[1])
+                   if (hasBaseline(FName[[SpectIndx]])){
+                       FName[[SpectIndx]]@RegionToFit$y <- (FName[[SpectIndx]]@RegionToFit$y-RngY[1])/(RngY[2]-RngY[1])
+                       FName[[SpectIndx]]@Baseline$y <- (FName[[SpectIndx]]@Baseline$y-RngY[1])/(RngY[2]-RngY[1])
+                   }
+                   if (hasComponents(FName[[SpectIndx]])){
+                       for(ii in 1:NComp){
+                           FName[[SpectIndx]]@Components[[ii]]@ycoor <- (FName[[SpectIndx]]@Components[[ii]]@ycoor-RngY[1])/(RngY[2]-RngY[1])
+                       }
+                       FName[[SpectIndx]]@Fit$y <- (FName[[SpectIndx]]@Fit$y-RngY[1])/(RngY[2]-RngY[1])
+                   }
+                   Plot_Args$ylim <<- c(-0.05,1.05)  #normalized limits: slightly larger than [0,1]
+               } else {
+                   Plot_Args$ylab$label <<- FName[[SpectIndx]]@units[2]
+                   RngY <<- sort(range(FName[[SpectIndx]]@.Data[[2]]), decreasing=FALSE)
+                   Plot_Args$ylim <<- c(RngY[1]-(RngY[2]-RngY[1])/10, RngY[2]+(RngY[2]-RngY[1])/10)
+               }
+               
                tmp <- asList(FName[[SpectIndx]],select=select) #from coreline FName[[SpectIndx]] extract the selecteed regions
                X <- tmp$x # x list
                Y <- tmp$y # y list
-               revAx <- svalue(RevAxis)
+
                if (length(Xlim)==0 || length(Ylim)==0){
-                  Xlim  <<-sort(range(X, na.rm=TRUE), decreasing=revAx)
-                  Ylim  <<-sort(range(Y, na.rm=TRUE))
+                  revAx <- svalue(RevAxis)
+                  Xlim  <<- sort(range(X, na.rm=TRUE), decreasing=revAx)
+                  Ylim  <<- sort(range(Y, na.rm=TRUE))
                   Plot_Args$xlim <<- Xlim
                   Plot_Args$ylim <<- Ylim
                }
@@ -350,7 +391,6 @@ XPSCustomPlot <- function(){
                }
                CtrlPlot()
    }
-   
 
    ResetPlot <- function(){
                svalue(RevAxis) <<- TRUE
@@ -358,13 +398,15 @@ XPSCustomPlot <- function(){
                svalue(BaseLineCK) <<- FALSE
                svalue(ComponentCK) <<- FALSE
                svalue(FitLineCK) <<- FALSE
+               svalue(LabelCK) <<- FALSE
                svalue(legendCK) <<- "FALSE"
                NComp <<- length(FName[[SpectIndx]]@Components)
                SampData <<- as(FName[[SpectIndx]],"matrix") #put spectrum, baseline, etc... in a matrix
                NColS <<- ncol(SampData)
                Xlim <<- sort(range(SampData[,1]), decreasing=TRUE)
                Ylim <<- sort(range(SampData[,2]))
-cat("\n 1111", Xlim, Ylim)
+               Normalize <- FALSE
+               Plot_Args$type <<-"l"
                Plot_Args$xlim <<- Xlim
                Plot_Args$ylim <<- Ylim
                Plot_Args$data <<- data.frame(x=SampData[,1], y=SampData[,2])
@@ -375,8 +417,8 @@ cat("\n 1111", Xlim, Ylim)
                Plot_Args$type <<- "l"
                Plot_Args$background <<- "transparent"
                Plot_Args$main <<- list(label <<- SpectName,cex=1.4)
-               Plot_Args$xlab <<- list(label <<- FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
-               Plot_Args$ylab <<- list(label <<- FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
+               Plot_Args$xlab <<- list(label=FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
+               Plot_Args$ylab <<- list(label=FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
                Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), x=list(log=FALSE), y=list(log=FALSE))
                Plot_Args$xscale.components <<- xscale.components.subticks
                Plot_Args$yscale.components <<- yscale.components.subticks
@@ -399,11 +441,38 @@ cat("\n 1111", Xlim, Ylim)
                svalue(T1obj12) <<- "1"       #axis scale size
                svalue(T1obj13) <<- "1.2"     #axis label size
   }
+  
+  LoadCoreLine <- function(){
+               SpName <- svalue(T1obj2)
+               SpName <- unlist(strsplit(SpName, "\\."))
+               SpectIndx <<- as.numeric(SpName[1])
+               SpectName <<- SpName[2]
+               assign("activeSpectName",SpectName,envir=.GlobalEnv)
+               assign("activeSpectIndx",SpectIndx,envir=.GlobalEnv)
+               ResetPlot()
+               NColS <<- ncol(SampData)
+               wdth <- Xlim[2]-Xlim[1]
+               Xlim[1] <<- Xlim[1]-wdth/15
+               Xlim[2] <<- Xlim[2]+wdth/15
+               wdth <- Ylim[2]-Ylim[1]
+               Ylim[1] <<- Ylim[1]-wdth/15
+               Ylim[2] <<- Ylim[2]+wdth/15
+               if (svalue(RevAxis)) {   #reverse scale if checkbox TRUE
+                   Xlim <<- sort(Xlim, decreasing=TRUE)
+                   Plot_Args$xlim <<- Xlim
+               } else {
+                   Xlim <<- sort(Xlim, decreasing=FALSE)
+                   Plot_Args$xlim <<- Xlim
+               }
+               Plot_Args$xlim <<- Xlim
+               Plot_Args$ylim <<- Ylim
+               Plot_Args$data <<- data.frame(x=SampData[,1], y=SampData[,2])
+   }
 
 
 #===== VARIABLES =====
    if (exists("activeFName")==FALSE){
-       gmessage(msg="Please Load an XPSSample to Plot please.", title="WARNING: XPSSAMPLE LACKING", icon="warning")
+       gmessage(msg="Load an XPSSample to Plot please.", title="WARNING: XPSSAMPLE LACKING", icon="warning")
        return()
    }
    FName <- get(activeFName, envir=.GlobalEnv)
@@ -422,20 +491,35 @@ cat("\n 1111", Xlim, Ylim)
    Ylim <- sort(range(SampData[,2]))
    Xlabel <- FName[[SpectIndx]]@units[1]
    Ylabel <- FName[[SpectIndx]]@units[2]
+   Normalize <- FALSE
 
-   FitComp1 <- ""  #FitComp1 == vector containing the names of the fit components of the active spectrum
-   for (ii in 1:NComp){
-      FitComp1[ii] <- paste("C",ii, sep="")
-   }
-   Colors <- c("black", "red", "limegreen", "blue", "magenta", "orange", "cadetblue", "sienna", "darkgrey", "darkgreen", "gold", "darkviolet", "yellow", "cyan", "lightblue", "turquoise", "pink", "wheat", "thistle", "grey40")
-   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash", "F8", "431313", "22848222")
-   LineTypes <- c("Solid", "Dashed", "Dotted", "Dotdash", "Longdash", "Twodash", "ExtraLongDash", "DashTwoDots", "DashTwoDotsDash")
-   SType <- c("VoidSquare", "VoidCircle", "VoidTriangle", "Cross", "Diamond", "SolidSquare", "SolidCircle", "SolidTriangle", "SolidDiamond")
-   STypeIndx <- c(0, 1, 2, 3, 5, 15, 16, 17, 18)
-   LWidth <- c(0,1,1.5,2,2.5,3,3.5,4)
+#   FitComp1 <- ""  #FitComp1 == vector containing the names of the fit components of the active spectrum
+#   for (ii in 1:NComp){
+#      FitComp1[ii] <- paste("C",ii, sep="")
+#   }
+   Colors <- c("black", "red", "limegreen", "blue", "magenta", "orange", "cadetblue", "sienna",
+             "darkgrey", "forestgreen", "gold", "darkviolet", "greenyellow", "cyan", "lightblue",
+             "turquoise", "deeppink3", "wheat", "thistle", "grey40")
+   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash",     #definisco 20 tipi divesi di line pattern
+            "twodash", "F8", "431313", "22848222", "12126262",
+            "12121262", "12626262", "52721272", "B454B222", "F313F313",
+            "71717313", "93213321", "66116611", "23111111", "222222A2" )
+   LineTypes <- c("Solid", "Dashed", "Dotted", "Dotdash", "Longdash",     #definisco 20 tipi divesi di line pattern
+            "Twodash", "F8", "431313", "22848222", "12126262",
+            "12121262", "12626262", "52721272", "B454B222", "F313F313",
+            "71717313", "93213321", "66116611", "23111111", "222222A2" )
+   SType <- c("VoidCircle", "VoidSquare", "VoidTriangleUp", "VoidTriangleDwn",  "Diamond",
+            "X", "Star", "CrossSquare", "CrossCircle", "CrossDiamond",
+            "SolidSquare", "SolidCircle", "SolidTriangleUp", "SolidTriangleDwn", "SolidDiamond",
+            "DavidStar", "SquareCross", "SquareTriang", "CircleCross", "Cross")
+   STypeIndx <- c(1,  0,  2,  6,  5,
+                4,  8,  7,  10, 9,
+                15, 16, 17, 25, 18,
+                11, 12, 14, 13, 3)
+   LWidth <- c(1,1.25,1.5,1.75,2,2.25,2.5,3, 3.5,4)
    SymSize <- c(0,0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2)
-   LCol <- 24    #initialize the color line to black
-   LW <- 1       #initialize the linewidth to 1
+   LCol <- "black"
+   LW <- 1
    FontSize <- c(0.6, 0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,2.6,2.8,3)
    LegPos <- c("OutsideCenterTop", "OutsideTopRight", "OutsideTopLeft", "OutsideCenterRight", "OutsideCenterLeft",
              "OutsideCenterBottom", "InsideTopRight", "InsideTopLeft", "InsideBottomRight", "InsideBottomLeft")
@@ -477,7 +561,7 @@ cat("\n 1111", Xlim, Ylim)
 
 #===== NoteBook =====
 
-   win <- gwindow("CUSTOM PLOT", visible=FALSE)
+   win <- gwindow("CUSTOM PLOT", parent(10, 10), visible=FALSE)
    maingp <- ggroup(horizontal=FALSE,container=win)
    NoteBk <- gnotebook(expand=TRUE, container = maingp)
 
@@ -488,80 +572,25 @@ cat("\n 1111", Xlim, Ylim)
 
        layoutAxis[1,1] <- T1frame1 <- gframe("XPSdata SELECTION", spacing=5, container=layoutAxis)
        T1obj1 <- gcombobox(FNameList, selected=FNameIdx, editable=FALSE, handler=function(h,...){
+                             plot.new()
+                             ResetPlot()
                              SelectedFName <- svalue(T1obj1)
                              FName <<- get(SelectedFName,envir=.GlobalEnv)  #load the XPSSample
                              SpectList <<- XPSSpectList(SelectedFName)
                              SpectIndx <<- 1
+                             SampData <<- as(FName[[SpectIndx]],"matrix")
                              delete(T1frame2, T1obj2)
-                             T1obj2  <<-gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
-                                                 SpName <- svalue(T1obj2)
-                                                 SpName <- unlist(strsplit(SpName, "\\."))
-                                                 SpectIndx <<- as.numeric(SpName[1])
-                                                 SpectName <<- SpName[2]
-                                                 assign("activeSpectName",SpectName,envir=.GlobalEnv)
-                                                 assign("activeSpectIndx",SpectIndx,envir=.GlobalEnv)
-                                                 ResetPlot()
-                                                 NColS <<- ncol(SampData)
-	                                                wdth <- Xlim[2]-Xlim[1]
-	                                                Xlim[1] <<- Xlim[1]-wdth/15
-	                                                Xlim[2] <<- Xlim[2]+wdth/15
-	                                                wdth <- Ylim[2]-Ylim[1]
-	                                                Ylim[1] <<- Ylim[1]-wdth/15
-	                                                Ylim[2] <<- Ylim[2]+wdth/15
-
-                                                 if ( FName[[SpectIndx]]@Flags[1]) {   #reverse if BE is set
-                                                    Xlim <<- sort(Xlim, decreasing=TRUE)
-                                                 }
-                                                 Plot_Args$xlim <<- Xlim
-                                                 Plot_Args$ylim <<- Ylim
-                                                 Plot_Args$data <<- data.frame(x=SampData[,1], y=SampData[,2])
-                                                 if (NColS > 2) {
-                                                    BaseLine <- SampData[,3]
-                                                 }
-                                                 if (NColS > 3){
-                                                    FitComp <- SampData[,4:NColS-1] #skip the first three column
-                                                    SpectFit <- SampData[,NColS]
-                                                 }
+                             T1obj2 <<- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
+                                                 LoadCoreLine()
                                                  CtrlPlot()
                              }, container=T1frame2)
-                             add(T1frame2, T1obj2)
-                             CtrlPlot() }, container=T1frame1)
+                             add(T1frame2, T1obj2) }, container=T1frame1)
 
 
        layoutAxis[1,2] <- T1frame2 <- gframe("CORE LINE SELECTION", spacing=5, container=layoutAxis)
        T1obj2 <- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
-                             SpName <- svalue(T1obj2)
-                             SpName <- unlist(strsplit(SpName, "\\."))
-                             SpectIndx <<- as.numeric(SpName[1])
-                             SpectName <<- SpName[2]
-                             assign("activeSpectName",SpectName,envir=.GlobalEnv)
-                             assign("activeSpectIndx",SpectIndx,envir=.GlobalEnv)
                              ResetPlot()
-                             NColS <<- ncol(SampData)
-	                            wdth <- Xlim[2]-Xlim[1]
-	                            Xlim[1] <<- Xlim[1]-wdth/15
-	                            Xlim[2] <<- Xlim[2]+wdth/15
-	                            wdth <- Ylim[2]-Ylim[1]
-	                            Ylim[1] <<- Ylim[1]-wdth/15
-	                            Ylim[2] <<- Ylim[2]+wdth/15
-                             if ( svalue(RevAxis)) {   #reverse scale if checkbox TRUE
-                                Xlim <<- sort(Xlim, decreasing=TRUE)
-                                Plot_Args$xlim <<- Xlim
-                             } else {
-                                Xlim <<- sort(Xlim, decreasing=FALSE)
-                                Plot_Args$xlim <<- Xlim
-                             }
-
-                             Plot_Args$xlim <<- Xlim
-                             Plot_Args$ylim <<- Ylim
-                             Plot_Args$data <<- data.frame(x=SampData[,1], y=SampData[,2])
-                             if (NColS > 2) {
-                                BaseLine <- SampData[,3]
-                             }
-                             if (NColS > 3){
-                                FitComp <- SampData[,4:NColS-1]
-                                SpectFit <- SampData[,NColS]  #fit
-                             }
+                             LoadCoreLine()
                              CtrlPlot()
                              }, container=T1frame2)
 
@@ -607,21 +636,30 @@ cat("\n 1111", Xlim, Ylim)
                              CtrlPlot() }, container=T1frame6)
 
       layoutAxis[2,2] <- T1frame7 <- gframe("SCALE", spacing=5, container=layoutAxis)
-      T1obj7 <- gcombobox(c("Standard", "X-Log10", "Y-Log10", "XY-Log10", "X-^10", "Y-^10", "XY-^10"), selected=1, editable=FALSE, handler= function(h,...){
+      T1obj7 <- gcombobox(c("Standard", "Log10 X", "Log10 Y", "Log10 X,Y", "X E10", "Y E10", "XY E10", "X ^10", "Y ^10"), selected=1, editable=FALSE, handler= function(h,...){
                              idx <- svalue(T1obj7,index=TRUE)
                              Xlim <- sort(range(SampData[,1]))
                              Ylim <- sort(range(SampData[,2]))
+                             Xlabel <<- FName[[SpectIndx]]@units[1]
+                             Ylabel <<- FName[[SpectIndx]]@units[2]
                              if (idx == 1) {
+                                Plot_Args$xlab$label <<- Xlabel
+                                Plot_Args$ylab$label <<- Ylabel
                                 Plot_Args$scales$x <<- list(log=FALSE)
                                 Plot_Args$xscale.components <<- xscale.components.subticks
                                 Plot_Args$scales$y <<- list(log=FALSE)
                                 Plot_Args$yscale.components <<- yscale.components.subticks
                              } else if (idx == 2) {  #X-log10 scale
+                                if (svalue(RevAxis) == TRUE){
+                                    gmessage("X-axis inverted. Please uncheck Reverse_Xaxis", title="Xaxis Reversed", icon="warning")
+                                    return()
+                                }
                                 Xlim <- sort(range(SampData[,1]))
                                 if (Xlim[1] < 0) {
                                     gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
                                     return()
                                 }
+                                Plot_Args$xlab$label <<- paste("Log.",Xlabel, sep="")
                                 Plot_Args$scales$y <<- list(log=FALSE)
                                 Plot_Args$yscale.components <<- yscale.components.subticks
                                 Plot_Args$scales$x <<- list(log = 10)
@@ -632,34 +670,138 @@ cat("\n 1111", Xlim, Ylim)
                                     gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
                                     return()
                                 }
+                                Plot_Args$ylab$label <<- paste("Log.",Ylabel, sep="")
                                 Plot_Args$scales$x <<- list(log=FALSE)
                                 Plot_Args$xscale.components <<- xscale.components.subticks
                                 Plot_Args$scales$y <<- list(log = 10)
                                 Plot_Args$yscale.components <<- yscale.components.log10ticks
                              } else if (idx == 4) {  #XY-log10 scale
+                                if (svalue(RevAxis) == TRUE){
+                                    gmessage("X-axis inverted. Please uncheck Reverse_Xaxis", title="Xaxis Reversed", icon="warning")
+                                    return()
+                                }
                                 Xlim <- sort(range(SampData[,1]))
                                 Ylim <- sort(range(SampData[,2]))
                                 if (Xlim[1] < 0 || Ylim[1] < 0) {
                                     gmessage("Cannot plot negatige X, Y values !", title="WRONG X, Y VALUES", icon="warning")
                                     return()
                                 }
+                                Plot_Args$xlab$label <<- paste("Log.",Xlabel, sep="")
+                                Plot_Args$ylab$label <<- paste("Log.",Ylabel, sep="")
                                 Plot_Args$scales$x <<- list(log = 10)
                                 Plot_Args$xscale.components <<- xscale.components.log10ticks
                                 Plot_Args$scales$y <<- list(log = 10)
                                 Plot_Args$yscale.components <<- yscale.components.log10ticks
-                            } else if (idx == 5) {
-                                Plot_Args$scales$x$log <<- TRUE
-                                Plot_Args$scales$y$log <<- FALSE
-                             } else if (idx == 6) {
+                             } else if (idx == 5) { # X E10
+                                Plot_Args$xlab$label <<- Xlabel
+                                Plot_Args$ylab$label <<- Ylabel
                                 Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- TRUE
-                             } else if (idx == 7) {
-                                Plot_Args$scales$x$log <<- TRUE
-                                Plot_Args$scales$y$log <<- TRUE
+                                Plot_Args$scales$y$log <<- FALSE
+                                x_at <- pretty(SampData[,1]) #position of Xscale ticks
+                                x_labels <- formatC(x_at, digits = 1, format = "E") #tick labels in exponential format
+                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                             } else if (idx == 6) { # Y E10
+                                Plot_Args$xlab$label <<- Xlabel
+                                Plot_Args$ylab$label <<- Ylabel
+                                Plot_Args$scales$x$log <<- FALSE
+                                Plot_Args$scales$y$log <<- FALSE
+                                y_at <- pretty(SampData[,2]) #position of Yscale ticks
+                                y_labels <- formatC(y_at, digits = 1, format = "E") #tick labels in exponential format
+                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
+                             } else if (idx == 7) { # XY E10
+                                Plot_Args$xlab$label <<- Xlabel
+                                Plot_Args$ylab$label <<- Ylabel
+                                Plot_Args$scales$x$log <<- FALSE
+                                Plot_Args$scales$y$log <<- FALSE
+                                x_at <- pretty(SampData[,1]) #position of Xscale ticks
+                                x_labels <- formatC(x_at, digits = 1, format = "E") #tick labels in exponential format
+                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                                y_at <- pretty(SampData[,2]) #position of Yscale ticks
+                                y_labels <- formatC(y_at, digits = 1, format = "E") #tick labels in exponential format
+                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
+                             } else if (idx == 8){ #Y ^10
+                                Plot_Args$scales$x$log <<- FALSE
+                                Plot_Args$scales$y$log <<- FALSE
+                                x_labels <- NULL
+                                x_at <- NULL
+                                x_tk <- 0
+                                Xmin <- min(SampData[,1])
+                                Xmax <- max(SampData[,1])
+                                Nmax <- floor(log10(abs(Xmax))) #number of digits composing integer(Ymax)
+                                Nmin <- floor(log10(abs(Xmin))) #number of digits composing integer(Ymin)
+                                Xmin <- round(Xmin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
+                                Xmax <- round(Xmax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
+                                Step <- 10^Nmax/2
+                                if (2*(Xmax-Xmin)/10^Nmax > 5) {Step <- 10^Nmax}
+                                while(x_tk < Xmax){
+                                     x_tk <- x_tk + Step
+                                     x_at <- c(x_at, x_tk)
+                                     x_labels <- c(x_labels, as.character(x_tk/10^Nmax))
+                                }
+                                Plot_Args$ylab$label <<- Ylabel
+                                x_labels <- formatC(x_labels, digits = 1, format = "f") #tick labels in exponential format
+                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                                Plot_Args$xlab$label
+                                Xlabel <<- unlist(strsplit(Xlabel, "]"))[1]
+                                Plot_Args$xlab$label <<- paste(Xlabel, "*10^", Nmax, "]", sep="")
+
+                             } else if (idx == 9){ #Y ^10
+                                Plot_Args$scales$x$log <<- FALSE
+                                Plot_Args$scales$y$log <<- FALSE
+                                y_labels <- NULL
+                                y_at <- NULL
+                                y_tk <- 0
+                                Ymin <- min(SampData[,2])
+                                Ymax <- max(SampData[,2])
+                                Nmax <- floor(log10(abs(Ymax))) #number of digits composing integer(Ymax)
+                                Nmin <- floor(log10(abs(Ymin))) #number of digits composing integer(Ymin)
+                                Ymin <- round(Ymin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
+                                Ymax <- round(Ymax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
+                                Step <- 10^Nmax/2
+                                if (2*(Ymax-Ymin)/10^Nmax > 5) {Step <- 10^Nmax}
+                                while(y_tk < Ymax){
+                                     y_tk <- y_tk + Step
+                                     y_at <- c(y_at, y_tk)
+                                     y_labels <- c(y_labels, as.character(y_tk/10^Nmax))
+                                }
+                                Plot_Args$xlab$label <<- Xlabel
+                                y_labels <- formatC(y_labels, digits = 1, format = "f") #tick labels in exponential format
+                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
+                                Ylabel <<- unlist(strsplit(Ylabel, "]"))[1]
+                                Plot_Args$ylab$label <<- paste(Ylabel, "*10^", Nmax, "]", sep="")
                              }
                              CtrlPlot() }, container=T1frame7)
 
-      layoutAxis[2,3] <- T1frame8 <- gframe("XY range", spacing=5, container=layoutAxis)
+      layoutAxis[2,3] <- FrameAxLabOrient <- gframe("AXIS LABEL ORIENTATION", spacing=5, container=layoutAxis)
+      AxLabOrient <- gcombobox(c("Horizontal","Rot-20","Rot-45","Rot-70","Vertical","Parallel","Normal"), selected=1, editable=FALSE, handler= function(h,...){
+                             LabOrient <- svalue(AxLabOrient)
+                             if (LabOrient == "Horizontal"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 0}
+                             if (LabOrient == "Rot-20"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 20}
+                             if (LabOrient == "Rot-45"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 45}
+                             if (LabOrient == "Rot-70"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 70}
+                             if (LabOrient == "Vertical"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 90}
+                             if (LabOrient == "Parallel"){
+                                 Plot_Args$scales$x$rot <<- 0
+                                 Plot_Args$scales$y$rot <<- 90
+                             }
+                             if (LabOrient == "Normal"){
+                                 Plot_Args$scales$x$rot <<- 90
+                                 Plot_Args$scales$y$rot <<- 0
+                             }
+
+                             CtrlPlot() }, container=FrameAxLabOrient)
+
+      layoutAxis[3,1] <- T1frame9 <- gframe("TITLE SIZE", spacing=5, container=layoutAxis)
+      T1obj9 <- gcombobox(FontSize, selected=5, editable=FALSE, handler= function(h,...){
+                             Plot_Args$main$cex <<- svalue(T1obj9)
+                             CtrlPlot() }, container=T1frame9)
+
+      layoutAxis[3,2] <- T1frame10 <- gframe("CHANGE TITLE", spacing=5, container=layoutAxis)
+      T1obj10 <- gedit("", handler=function(h,...){
+                             Plot_Args$main$label <<- svalue(T1obj10)
+                             CtrlPlot() }, container=T1frame10,)
+
+      layoutAxis[3,3] <- T1frame8 <- gframe("XY range", spacing=5, horizontal=FALSE, container=layoutAxis)
       T1obj8 <- gradio(items=c("Original_XYrange", "Fitted XY range"), selected=1, horizontal=FALSE,  handler=function(h,...){
                              if (length(svalue(T1obj2)) == 0) {
                                 gmessage(msg="Please Select the Core Line!" , title = "No spectral Data selected",  icon = "warning")
@@ -670,18 +812,24 @@ cat("\n 1111", Xlim, Ylim)
                              }
                              CtrlPlot() }, container=T1frame8)
 
+      objFunctNorm <- gcheckbox("Normalize",checked=FALSE, handler=function(h,...){
+                             Normalize <<- svalue(objFunctNorm)
+                             SetXYplotData()
+                             CtrlPlot() }, container=T1frame8)
 
-      layoutAxis[3,1] <- T1frame9 <- gframe("TITLE SIZE", spacing=5, container=layoutAxis)
-      T1obj9 <- gcombobox(FontSize, selected=5, editable=FALSE, handler= function(h,...){
-                             Plot_Args$main$cex <<- svalue(T1obj9)
-                             CtrlPlot() }, container=T1frame9)
+      layoutAxis[4,1] <- T1frame12 <- gframe("AXIS SCALE SIZE", spacing=5, container=layoutAxis)
+      T1obj12 <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
+                             Plot_Args$scales$cex <<- svalue(T1obj12)
+                             CtrlPlot() }, container=T1frame12)
 
-      layoutAxis[3,2] <- T1frame10 <- gframe("CHANGE TITLE", spacing=5, container=layoutAxis)
-      T1obj10 <- gedit("", container=T1frame10, handler=function(h,...){
-                             Plot_Args$main$label <<- svalue(T1obj10)
-                             CtrlPlot() })
+      layoutAxis[4,2] <- T1frame14 <- gframe("AXIS LABEL SIZE", spacing=5, container=layoutAxis)
+      T1obj13 <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
+                             Plot_Args$xlab$cex <<- svalue(T1obj13)
+                             Plot_Args$ylab$cex <<- svalue(T1obj13)
+                             CtrlPlot() }, container=T1frame14)
 
-      layoutAxis[3,3] <- T1frame11 <- gframe("Exact Range Values", horizontal=FALSE, spacing=5, container=layoutAxis)
+
+      layoutAxis[4,3] <- T1frame11 <- gframe("Exact Range Values", horizontal=FALSE, spacing=5, container=layoutAxis)
       T1group11a <- ggroup(horizontal=TRUE, container=T1frame11)
       XX1 <- gedit("", initial.msg = "Xmin= ", handler=function(h, ...){setRange()}, container=T1group11a)
       XX2 <- gedit("", initial.msg = "Xmax= ", handler=function(h, ...){setRange()}, container=T1group11a)
@@ -692,18 +840,6 @@ cat("\n 1111", Xlim, Ylim)
       tkconfigure(XX2$widget, width=10)
       tkconfigure(YY1$widget, width=10)
       tkconfigure(YY2$widget, width=10)
-
-
-      layoutAxis[4,1] <- T1frame12 <- gframe("AXIS SCALE SIZE", spacing=5, container=layoutAxis)
-      T1obj12 <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
-                             Plot_Args$scales$cex <<- svalue(T1obj12)
-                             CtrlPlot() }, container=T1frame12)
-
-      layoutAxis[4,2] <- T1frame13 <- gframe("AXIS LABEL SIZE", spacing=5, container=layoutAxis)
-      T1obj13 <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
-                             Plot_Args$xlab$cex <<- svalue(T1obj13)
-                             Plot_Args$ylab$cex <<- svalue(T1obj13)
-                             CtrlPlot() }, container=T1frame13)
 
 
       layoutAxis[5,1] <- T1frame14 <- gframe("CHANGE X-LABEL", spacing=5, container=layoutAxis)
@@ -717,7 +853,7 @@ cat("\n 1111", Xlim, Ylim)
                              Plot_Args$ylab$label <<- svalue(T1obj15)
                              Ylabel <<- svalue(T1obj15)
                              CtrlPlot() })
-                             
+
 # --- Tab2: Spectrum Options ---
 
       T2group1 <- ggroup(label="SPECTRUM OPTIONS", horizontal=FALSE, container=NoteBk)
@@ -725,13 +861,13 @@ cat("\n 1111", Xlim, Ylim)
       layoutT2 <- glayout(homogeneous=FALSE, spacing=3, container=T2group1)
 
       layoutT2[1,1] <- T2frame1 <- gframe("COLOR", spacing=5, container=layoutT2)
-      T2obj1 <- gcombobox(Colors, selected=1, editable=FALSE, handler=function(h,...){
+      T2obj1 <- gcombobox(Colors, selected=1, editable=TRUE, handler=function(h,...){
                             Plot_Args$col <<- svalue(T2obj1)
                             SetXYplotData()
                           }, container=T2frame1)
 
       layoutT2[2,1] <- T2frame2 <- gframe("LINE TYPE", spacing=5, container=layoutT2)
-      T2obj2 <- gcombobox(LineTypes, selected=1, editable=FALSE, handler=function(h,...){
+      T2obj2 <- gcombobox(LineTypes, selected=1, editable=TRUE, handler=function(h,...){
                               Plot_Args$type <<- "l"
                               idx <- as.numeric(svalue(T2obj2, index=TRUE))
                               Plot_Args$lty <<- LType[idx]

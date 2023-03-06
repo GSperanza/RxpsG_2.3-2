@@ -1,16 +1,17 @@
 ## XPSoverPlot   engine to perform overlay of XPSspectra
 
-#'XPSOverlay Engine is the software powering the XPSOverlayGUI.
-#'
-#'@param PlotParameters the plot parameters asociated to the XPSOverlayGUI options;
-#'@param Plot_Args list of plot options;
-#'@param AutoKey_Args list of options for annotation;
-#'@param SelectedNames list containing the XPSSample names and the Corelines to be plotted;
-#'@param Xlim Xrange of the data to be plotted;
-#'@param Ylim Yrange of the data to be plotted;
-#'@return Return c(Xlim, Ylim) eventually modified
-#'
-#'@export
+#' @title XPSovEngine
+#' @description XPSOverlay Engine is a macro called by XPSOverlayGUI
+#'    which uses lattice to plot data following the graphical options
+#     set by XPSOverlayGUI and stored in PlotParameters and Plot_Args.
+#' @param PlotParameters the plot parameters asociated to the XPSOverlayGUI options;
+#' @param Plot_Args list of plot options;
+#' @param AutoKey_Args list of options for annotation;
+#' @param SelectedNames list containing the XPSSample names and the Corelines to be plotted;
+#' @param Xlim Xrange of the data to be plotted;
+#' @param Ylim Yrange of the data to be plotted;
+#' @return Return c(Xlim, Ylim) eventually modified
+#' @export
 #'
 
 XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim) {
@@ -136,7 +137,10 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
               select[[idx]] <- "MAIN"
            }
         }
-
+        if (PlotParameters$RTFLtd == TRUE && length(FName[[SpectIdx]]@RegionToFit) > 0) {  # Plot limited to the RegionToFit
+            select[[idx]] <- "RTF"
+        }
+        
         if (PlotParameters$OverlayType == "Spectrum+Fit") {
            if (length(FName[[SpectIdx]]@Components) > 0) {
               select[[idx]] <- c("RTF", "BASE", "COMPONENTS", "FIT")
@@ -279,11 +283,11 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 	   FitStyle <- list(Lty=NULL, Col=NULL)
 	   panel <- sapply(Ylength, sum)
     PanelTitles <- NULL
-    Xlimits<-list() # costruisco una lista di limiti nel caso Xaxis invertito revers=TRUE
+    Xlimits <- list() # buld a list of limits to invert X axis if revers=TRUE
 
     if ( Plot_Args$type=="l") { #lines are selected for plot
-         AutoKey_Args$lines<-TRUE
-         AutoKey_Args$points<-FALSE
+         AutoKey_Args$lines <- TRUE
+         AutoKey_Args$points <- FALSE
          if (length(PlotParameters$Colors)==1) {   # B/W LINES
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- rep(NA, 20)
@@ -292,7 +296,11 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
              FitStyle$Col <- c("black", "grey45", "black")
              SetPltArgs(LType, SType, palette, FitStyle)
          } else if (length(PlotParameters$Colors) > 1) {   # RainBow LINES
-             LType <- rep(Plot_Args$lty[1], 20)    # "solid", "solid", "solid", ....
+             if (length(Plot_Args$lty) == 1){          # chosen "solid" for all core-lines
+                 LType <- rep(Plot_Args$lty[1], 20)    # "solid", "solid", "solid", ....
+             } else {
+                 LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....             
+             }
              SType <- rep(NA, 20)
              palette <- PlotParameters$Colors      #"black", "red", "green"....
              FitStyle$Lty <- PlotParameters$CompLty

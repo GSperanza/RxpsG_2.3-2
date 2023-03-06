@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{findYIndex}
 \alias{findYIndex}
-\title{findYIndex function utility}
+\title{findYIndex}
 \usage{
 findYIndex(Y, Value, tolerance = 0.01)
 }
@@ -17,12 +17,10 @@ findYIndex(Y, Value, tolerance = 0.01)
 Returns Y index
 }
 \description{
-finds the index of Y vector corresponding to a given Value
+findYIndex finds the index of Y vector corresponding to a given Value
 }
 \examples{
-
 \dontrun{
-findYIndex(Y, Value, tolerance=0.01)
+	findYIndex(Y, Value, tolerance=0.01)
 }
-
 }

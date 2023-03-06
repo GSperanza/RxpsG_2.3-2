@@ -2,23 +2,21 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{findMaxPos}
 \alias{findMaxPos}
-\title{findMaxPos function utility}
+\title{findMaxPos}
 \usage{
 findMaxPos(XY)
 }
 \arguments{
-\item{XY}{numeric XY matrix}
+\item{XY}{numeric matrix composed by X and Y columns}
 }
 \value{
 Returns c(x, max) values
 }
 \description{
-finds the abscissa corresponding to the y-vector maximum
+findMaxPos finds the abscissa corresponding to the y-vector maximum
 }
 \examples{
-
 \dontrun{
-findYIndex(XY)
+	findMaxPos(XY)
 }
-
 }

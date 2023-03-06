@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFitParamGUI.r
 \name{XPSFitParam}
 \alias{XPSFitParam}
-\title{XPSFitParam Gui to set fit param MaXiTERATION, TOLERANCE, MINFACTOR, when NLSfit error occurs}
+\title{XPSFitParam}
 \usage{
 XPSFitParam(ParamNames, ParamValues)
 }
@@ -12,11 +12,11 @@ XPSFitParam(ParamNames, ParamValues)
 \item{ParamValues}{the correspondent values}
 }
 \description{
-XPSFitParam Gui to set fit param MaXiTERATION, TOLERANCE, MINFACTOR, when NLSfit error occurs
+XPSFitParam GUI to set the fit param MaXiTERATION, TOLERANCE, MINFACTOR
+ when NLSfit error occurs
 }
 \examples{
 \dontrun{
-XPSFitParam(c("maxiteration", "tolerance", "minfactor"), c(1000, 1e-5, 1e-3))
+ XPSFitParam(c("maxiteration", "tolerance", "minfactor"), c(1000, 1e-5, 1e-3))
 }
-
 }

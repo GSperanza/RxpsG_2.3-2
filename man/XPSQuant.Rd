@@ -2,22 +2,20 @@
 % Please edit documentation in R/XPSQuantifyGUI.r
 \name{XPSQuant}
 \alias{XPSQuant}
-\title{XPSQuant() performs the elemental quantification for a selected XPS-Sample}
+\title{XPSQuant}
 \usage{
 XPSQuant()
 }
 \description{
-Provides a userfriendly interface with the list of Corelines of the selected XPS-Sample
-Each Coreline can be count/omit from the elemental quantification.
-If peak fitting is present also each of the fitting component can be count/omit from the
-elemental quantification. 
-Finally also relative RSF of the coreline or individual fitting components can be modified.
-No parametrs are passed to this function.
+XPSQuant() performs the elemental quantification for a selected XPS-Sample
+  Provides a userfriendly interface with the list of Corelines of the selected XPS-Sample
+  Each Coreline can be count/omit from the elemental quantification.
+  If peak fitting is present also each of the fitting component can be count/omit from the
+  elemental quantification.
+  Finally also relative RSF of the coreline or individual fitting components can be modified.
 }
 \examples{
-
 \dontrun{
-XPSQuant()
+	XPSQuant()
 }
-
 }

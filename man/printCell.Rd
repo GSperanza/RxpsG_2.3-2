@@ -2,13 +2,12 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{printCell}
 \alias{printCell}
-\title{printCell prints data in a table constructed by MakeTable()
-Borders are made using ascii characters  - and |}
+\title{printCell}
 \usage{
 printCell(Type, txt, CellB, CellLength, align)
 }
 \arguments{
-\item{Type}{label for labels such as the title, 
+\item{Type}{label for labels such as the title,
 separator to print a ---------- like separator,
 tableRow to print a sequence of data in a table row}
 
@@ -23,18 +22,16 @@ in label mode it is the witdth of the tableRow (sum of column widths)}
 }
 \description{
 printCell prints data in a table constructed by MakeTable()
-Borders are made using ascii characters  - and |
+  Borders are made using ascii characters  - and |
 }
 \examples{
-
 \dontrun{
-  CellLgth<-c(12, 15, 8, 7, 8, 9)
-  cell<-printCell(Type="separator", txt="-", cellB="", CellLength=sum(CellLgth), align="")
-  txt<-"XPS Au24.vms"
-  cell<-printCell("label", txt, "|", sum(CellLgth), "")
-  txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(\%)")    #Voci Tabella
-  cell<-printCell("tableRow", txt, "|", CellLgth, "center")
-  cell<-printCell("separator", "-", "|", sum(CellLgth), "")
+   CellLgth<-c(12, 15, 8, 7, 8, 9)
+   cell<-printCell(Type="separator", txt="-", cellB="", CellLength=sum(CellLgth), align="")
+   txt<-"XPS Au24.vms"
+   cell<-printCell("label", txt, "|", sum(CellLgth), "")
+   txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(\%)")    #Voci Tabella
+   cell<-printCell("tableRow", txt, "|", CellLgth, "center")
+   cell<-printCell("separator", "-", "|", sum(CellLgth), "")
 }
-
 }

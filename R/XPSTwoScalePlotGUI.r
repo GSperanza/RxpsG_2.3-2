@@ -1,22 +1,16 @@
-#function to perform plots in overlay mode
+#function to perform plots using two Y scales
 
-#function to perform plots in overlay mode
-
-#'Performs plots overlapping two different object with different Y scales
-#'
-#'Provides a userfriendly interface to select Objects to overlay
-#'and a selection of major plotting options for a personalized data representation
-#'Data are represented using different Left and Right Y scales
-#'No parameters passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSTwoScalePlot()
-#'}
-#'
-#'@export 
+#' @title XPSTwoScalePlot
+#' @description XPSTwoScalePlot performs plots overlapping two different
+#'   object with different Y scales
+#'   Provides a userfriendly interface to select Objects to superpose
+#'   and a selection of major plotting options for a personalized data representation
+#'   Data are represented using different Left and Right Y scales
+#' @examples
+#' \dontrun{
+#' 	XPSTwoScalePlot()
+#' }
+#' @export
 #'
 
 

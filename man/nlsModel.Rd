@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSnlsLM.r
 \name{nlsModel}
 \alias{nlsModel}
-\title{function to perform the Lev. Marq. peak fitting}
+\title{nlsModel}
 \usage{
 nlsModel(form, data, start, wts, Niter, upper = NULL)
 }
@@ -20,7 +20,8 @@ nlsModel(form, data, start, wts, Niter, upper = NULL)
 \item{upper}{upper,lower bounds for the estimates}
 }
 \description{
-This is a modified version of the nlsLM() function
-to avoid the frequent non-convergence problems arising
-when multiple constraints are set on a given XPS CoreLine
+nlsModel function to perform the Lev. Marq. peak fitting
+  This is a modified version of the nlsLM() function
+  to avoid the frequent non-convergence problems arising
+  when multiple constraints are set on a given XPS CoreLine
 }

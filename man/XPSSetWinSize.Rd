@@ -2,18 +2,16 @@
 % Please edit documentation in R/XPSSetWinSizeGUI.r
 \name{XPSSetWinSize}
 \alias{XPSSetWinSize}
-\title{To select a dimensions of the graphic window depending on the dimensions of the screen used}
+\title{XPSSetWinSize}
 \usage{
 XPSSetWinSize()
 }
 \description{
-To select a dimensions of the graphic window depending on the dimensions of the screen used
-No parameters are passed to this function
+XPSSetWinSize function to select a dimensions of the graphic
+  window depending on the dimensions of the screen used
 }
 \examples{
-
 \dontrun{
-XPSSetWinSize()
+	XPSSetWinSize()
 }
-
 }

@@ -1,19 +1,15 @@
 #crea la lista degli XPS-Sample Names caricati nel .GlobalEnv
 
-#'Provide a list of the XPS-Sample names loaded
-#'
-#'Provide a list of names (strings) relative to the XPS-Samples
-#'loaded in the XPS-Analysis software. No parameters are passed to this function.
-#'
-#'@param warn logical enables warning messages
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSFNameList()
-#'}
-#'
-#'@export
+#' @title XPSFNameList
+#' @description Provide a list of the XPS-Sample names loaded
+#'   Provide a list of names (strings) relative to the XPS-Samples
+#'   loaded in the XPS-Analysis software. No parameters are passed to this function.
+#' @param warn logical enables warning messages
+#' @examples
+#' \dontrun{
+#' 	XPSFNameList()
+#' }
+#' @export
 #'
 
 

@@ -2,18 +2,16 @@
 % Please edit documentation in R/XPSMoveBaseLineGUI.r
 \name{XPSMoveBaseLine}
 \alias{XPSMoveBaseLine}
-\title{Modifies the BaseLine level and limits of a given Coreline}
+\title{XPSMoveBaseLine}
 \usage{
 XPSMoveBaseLine()
 }
 \description{
-Function to modify the BaseLine ends and level for a given CoreLine.
-No parameters are passed to this function.
+XPSMoveBaseLine modifies the BaseLine level and 
+ limits of a given Coreline. New edge values are provided by
 }
 \examples{
-
 \dontrun{
-XPSMoveBaseLine()
+	XPSMoveBaseLine()
 }
-
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{DoniachSunjicGauss}
 \alias{DoniachSunjicGauss}
-\title{DoniachSunjicGauss function
-Doniach Sunjic function multiplied for a Gaussian broadening}
+\title{DoniachSunjicGauss function}
 \usage{
 DoniachSunjicGauss(x, h, mu, sigmaDS, sigmaG, asym)
 }
@@ -21,6 +20,5 @@ DoniachSunjicGauss(x, h, mu, sigmaDS, sigmaG, asym)
 \item{asym}{function asymmetry value}
 }
 \description{
-DoniachSunjicGauss function
 Doniach Sunjic function multiplied for a Gaussian broadening
 }

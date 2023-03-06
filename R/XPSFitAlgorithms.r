@@ -2,17 +2,15 @@
 ## Fit functions
 ## =======================================================================
 
-#'XPSfitAlgorithms function contains all the definition of the fit functions,
-#'the definition of fit parameters, and the initialization of the parameter slots.
-#'
+#' @title XPSfitAlgorithms
+#' @description XPSfitAlgorithms groups all the definitions of the fit functions,
+#'   the definition of fit parameters, and the initialization of the parameter
+#'   slots of objects of class 'XPSCoreLine'.
 #'@return Returns the selected fit algorithm.
-#'
 #'@examples
-#'
 #'\dontrun{
 #'	XPSfitAlgorithms()
 #'}
-#'
 #'@export
 #'
 
@@ -31,56 +29,53 @@ XPSfitAlgorithms <- function() {
 ## =======================================================================
 ## Symmetric functions
 ## =======================================================================
+#' @title Initialize
+#' @description initialize function to initalizes parameter slot for a generic function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @export
 
-Initialize <- function(x, h, mu, sigma) { 
-#'Initialize: initalizes parameter slot for a generic function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'
-#'@export
+  Initialize <- function(x, h, mu, sigma) {
 
     return(x*NA)     #initialize the component with NA values
 }
 
 
 ## =======================================================================
-#'Generic function to create the new Fit Component Slots
-#'
-#'@param x numeric vector
-#'@export
+#' @title Generic
+#' @description Generic is a function to initialize the new Fit Component Slots
+#' @param x numeric vector
+#' @returns a series of NA of length = length(x)
+#' @export
+
 Generic <- function(x) { 
-
     return(x*NA)     #initialize the component with NA values
 }
 
 
 ## =======================================================================
-#'Gauss function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'
-#'@export
-Gauss <- function(x, h, mu, sigma) { 
+#' @title Gauss function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @export
 
-    return( h*exp(-(2.77258872*((x-mu)/sigma)^2)) ) 
+Gauss <- function(x, h, mu, sigma) { 
+    return( h*exp(-(2.77258872*((x-mu)/sigma)^2)) )
 }
 
 
 ## =======================================================================
-#'Lorentz function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'
-#'@export
+#' @title Lorentz function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @export
+
 Lorentz <- function(x, h, mu, sigma) { 
 
      return( h/(1+(4*(((x-mu)/sigma)^2))) ) 
@@ -89,36 +84,51 @@ Lorentz <- function(x, h, mu, sigma) {
 
 ## =======================================================================
 ## Voigt require NORMT3 package
-## http://en.wikipedia.org/wiki/Voigt_profile
+#' @title Voigt function
+#' @description The Voigt function is obtained by convolution of
+#'   a Gauss and a Lorentz functions using the convolve() function
+#'   based on FFT
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz obtained via FFT convolution
+#' @export
 
-#'Voigt function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'
-#'@export
 Voigt <- function(x, h, mu, sigma, lg) {
-
-    xx <- (x - mu)/sigma/1.41421356     # sqrt(2)=1.41421356
-    yy <- lg/sigma/1.41421356
-    return( h * Re(wofz( complex(real = xx, imaginary = yy) ))/sigma/2.50662827 )  #sqrt(2*PI)=2.50662827
+  sigma <- 2*sigma #this to account for the decimation by 2
+  LL <- length(x)
+  dE <- x[2]-x[1]
+  #extension of the RegionToFit since convolve uses a too limited zero padding
+  LL2 <- floor(LL/4) #number of point to add at the edge o the energy scale
+  xx1 <- seq(from=(x[1]-LL2*dE), to=x[1], by=dE)
+  xx2 <- x[2:(LL-1)]
+  xx3 <- seq(from=x[LL], to=(x[LL]+LL2*dE), by=dE)
+  xx <- c(xx1, xx2, xx3)
+#  xx <- c(seq(from=(x[1]-LL2*dE), to=x[1], by=dE), x[2:(LL-1)], seq(from=x[LL], to=(x[LL]+LL2*dE), by=dE))
+  Cnv <- convolve(Gauss(xx, h, mu, (1-lg)*sigma),
+                rev(Lorentz(xx, h, mu, lg*sigma)), type="o")
+  #Cnv is long 2*LL => decimation to reduce Cnv length to LL
+  LLc <- length(Cnv)
+  xx <- seq(from=1, to=LLc, by=2)
+  Cnv <- Cnv[xx]
+  LLc <- length(Cnv)        #Convolve exits with LL-1 values, with decimation may loose one point
+  Cnv <- Cnv[(LL2+1):(LLc-LL2)] #eliminates the RegionToFit Extensions
+  Cnv <- (Cnv/max(Cnv))*h   #convolution normalization to set the correct amplitude = h
+  return(Cnv)
 }
 
 
 ## =======================================================================
 ## Definition: pulses with a temporal intensity profile which has the shape of a sech2 function
 ## http://www.rp-photonics.com/sech2_shaped_pulses.html
-#'Sech2 function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
+#' @title Sech2 function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @export
 
-#'@export
 Sech2 <- function(x, h, mu, sigma) { 
 
     return( h/( cosh((x-mu)/sigma)*cosh((x-mu)/sigma) ) ) 
@@ -128,16 +138,14 @@ Sech2 <- function(x, h, mu, sigma) {
 ## =======================================================================
 ## Gaussian Lorentz cross product
 # http://www.casaxps.com/help_manual/line_shapes.htm
+#' @title GaussLorentzProd function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz
+#' @export
 
-#'GaussLorentzProd function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'
-#'@export
 GaussLorentzProd <- function(x, h, mu, sigma, lg) {
 
  	  return( h / (1+(4*lg*((x-mu)/sigma)^2)) * exp(-2.77258872*(1-lg)*((x-mu)/sigma)^2) )
@@ -147,16 +155,14 @@ GaussLorentzProd <- function(x, h, mu, sigma, lg) {
 ## =======================================================================
 ## Gaussian Lorentz Sum form
 # http://www.casaxps.com/help_manual/line_shapes.htm
+#' @title GaussLorentzSum function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz
+#' @export
 
-#'GaussLorentzSum function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'
-#'@export
 GaussLorentzSum <- function(x, h, mu, sigma, lg) {
 
 		  return(h*(lg*exp(-2.77258872*((x-mu)/sigma)^2) + (1-lg)*(1/(1+4*(((x-mu)/sigma)^2)))))
@@ -172,17 +178,15 @@ GaussLorentzSum <- function(x, h, mu, sigma, lg) {
 
 ## =======================================================================
 # Tail modified Gauss used in Genplot
+#' @title AsymmGauss function
+#' @description Tail modified Gauss by an exponential function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param asym function asymmetry value
+#' @export
 
-#'AsymmGauss function
-#'Tail modified Gauss by an exponential function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param asym function asymmetry value
-#'
-#'@export
 AsymmGauss <- function(x, h, mu, sigma, asym) {
 
 	   Tail <- function(x, mu, asym) {
@@ -196,34 +200,55 @@ AsymmGauss <- function(x, h, mu, sigma, asym) {
 }
 
 ## =======================================================================
-#'AsymmVoigt
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'@param asym function asymmetry value
-#'
-#'@export
+# Tail modified Gauss-Lorentz used in Genplot
+#' @title AsymmGaussLorentz function
+#' @description Tail modified Gauss-Lorentz Sum modifed by using an exponential function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param asym function asymmetry value
+#' @export
+
+AsymmLorentz <- function(x, h, mu, sigma, asym) {
+
+	   Tail <- function(x, mu, asym) {
+		          Y <- vector("numeric", length=length(x))
+		          Ex <- (x-mu)
+		          index <- which(Ex >= 0)
+		          Y[index] <- exp(-abs(Ex[index])*(1-asym)/asym)
+		          return(Y)
+		  }
+	   return( Lorentz(x, h, mu, sigma) + (h - Lorentz(x, h, mu, sigma))*Tail(x, mu, asym) )
+}
+
+
+## =======================================================================
+# Tail modified Voigt function
+#' @title AsymmVoigt
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz
+#' @param asym function asymmetry value
+#' @export
 
 AsymmVoigt <- function(x, h, mu, sigma, lg, asym) {
 
 	   Tail <- function(x, mu, sigma, asym) {
-            Y<- asym / (sigma^2 + (x - mu)^2)^(1-asym/2)
+            Y <- asym / (sigma^2 + (x - mu)^2)^(1-asym/2)
             return(Y)
     }
 
 	   Y <- vector("numeric", length=length(x))
-	   Ex <- (x-mu)
-	   indx1 <- which(Ex < 0)                          #DX part: normal Voigt
-	   Y[indx1] <- Voigt(x[indx1], h, mu, sigma, lg)
+	   dE <- abs(x[2]-x[1])
+	   LL <- length(x)
+	   indx1 <- which(x < mu)                          #DX part: normal Voigt
+	   Y[indx1] <- Voigt(x, h, mu, sigma, lg)[indx1]
     MM<-max(Y[indx1])
-
-	   indx2 <- which(Ex >= 0)                        #SX part: Voigt + voigt*tail
-#    Y[indx2] <- Voigt(x[indx2], h, mu, sigma, lg) +  (h- Voigt(x[indx2], h, mu, sigma, lg))*Tail(x[indx2], mu, sigma, asym)
-    Y[indx2] <- Voigt(x[indx2], h, mu, sigma, lg)+h*Tail(x[indx2], mu, sigma, asym)
-#   Y[indx2] <- h* Tail(x[indx2], mu, sigma, asym)
+	   indx2 <- which(x >= mu)                        #SX part: Voigt + voigt*tail
+    Y[indx2] <- Voigt(x, h, mu, sigma, lg)[indx2]+h*Tail(x, mu, sigma, asym)[indx2]
 	   Y[indx2] <- MM * Y[indx2]/max(Y[indx2])
 	   return (Y)
 }
@@ -231,27 +256,24 @@ AsymmVoigt <- function(x, h, mu, sigma, lg, asym) {
 
 ## =======================================================================
 # Tail modified Gauss-Lorentz used in Genplot
-
-#'AsymmGaussLorentz function
-#'Tail modified Gauss-Lorentz Sum modifed by using an exponential function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'@param asym function asymmetry value
-#'
-#'@export
+#' @title AsymmGaussLorentz function
+#' @description Tail modified Gauss-Lorentz Sum modifed by using an exponential function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz
+#' @param asym function asymmetry value
+#' @export
 
 AsymmGaussLorentz <- function(x, h, mu, sigma, lg, asym) {
 
 	   Tail <- function(x, mu, asym) {
-		          X <- vector("numeric", length=length(x))
+		          Y <- vector("numeric", length=length(x))
 		          Ex <- (x-mu)
 		          index <- which(Ex >= 0)
-		          X[index] <- exp(-abs(Ex[index])*(1-asym)/asym)
-		          return(X)
+		          Y[index] <- exp(-abs(Ex[index])*(1-asym)/asym)
+		          return(Y)
 		  }
 	   return( GaussLorentzSum(x, h, mu, sigma, lg) + (h - GaussLorentzSum(x, h, mu, sigma, lg))*Tail(x, mu, asym) )
 }
@@ -259,23 +281,23 @@ AsymmGaussLorentz <- function(x, h, mu, sigma, lg, asym) {
 
 
 ## =======================================================================
-#'AsymmGaussVoigt Asymmetric Gaussian-Voigt function see CasaXPS
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param lg mix Gauss-Lorentz
-#'@param asym function asymmetry value
-#'@param gv mix Gauss-Voigt
-#'
-#'@export
+# Tail modified Gaussian-Voigt function
+#' @title Gaussian-Voigt
+#' @description Gaussian-Voigt symmetric Gaussian-Voigt function see CasaXPS
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param lg mix Gauss-Lorentz
+#' @param asym function asymmetry value
+#' @param gv mix Gauss-Voigt
+#' @export
 
 AsymmGaussVoigt <- function(x, h, mu, sigma, lg, asym, gv) {
 	   Tail <- function(x, mu, asym) {
 		          Y <- vector("numeric", length=length(x))
 	          	Ex <- (x-mu)
-          		index <- which(Ex >= 0)
+          		index <- which(x >= mu)
           		Y[index] <- exp(-abs(Ex[index])*(1-asym)/asym)
           		return(Y)
 	   }
@@ -285,17 +307,14 @@ AsymmGaussVoigt <- function(x, h, mu, sigma, lg, asym, gv) {
 
 ## =======================================================================
 ## Asym Gaussian Lorentz cross product from UNIFIT Publication
-
-#'AsymmGaussLorentzProd function
-#'Asym Gaussian Lorentz cross product from UNIFIT Publication
-#'
+#'@title AsymmGaussLorentzProd function
+#'@description Asym Gaussian Lorentz cross product from UNIFIT Publication
 #'@param x numeric vector
 #'@param h function amplitude
 #'@param mu position of function center
 #'@param sigma function full width at half maximum
 #'@param asym function asymmetry value
 #'@param lg mix Gauss-Lorentz
-#'
 #'@export
 
 AsymmGaussLorentzProd <- function(x, h, mu, sigma, asym, lg) {
@@ -307,24 +326,21 @@ AsymmGaussLorentzProd <- function(x, h, mu, sigma, asym, lg) {
 ## =======================================================================
 ## DoniachSunjic(x, h, mu, sigmaDS, asym)
 #Lineshape Doniach -Sunjic corretta pura
-#(vedi anche Leiro et al. J. El. Spectr. Rel. Phen. 128, 205, (2003).
-
-#'DoniachSunjic function
-#'Correct version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
-#'
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigmaDS function full width at half maximum
-#'@param asym function asymmetry value
-#'
-#'@export
+#(see Leiro et al. J. El. Spectr. Rel. Phen. 128, 205, (2003).
+#' @title DoniachSunjic function
+#' @description Correct version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
+#'   see Leiro et al. J. El. Spectr. Rel. Phen. 128, 205, (2003)
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigmaDS function full width at half maximum
+#' @param asym function asymmetry value
+#' @export
 
 DoniachSunjic <- function(x, h, mu, sigmaDS, asym) {
 
- 	DS <- h/4*( (gamma(1-asym)/((mu-x)^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((mu-x)*2/sigmaDS)) )  #DoniachSunjic
-        return (DS)
+ 	  DS <- h/4*( (gamma(1-asym)/((mu-x)^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((mu-x)*2/sigmaDS)) )  #DoniachSunjic
+    return (DS)
 }
 
 
@@ -336,49 +352,48 @@ DoniachSunjic <- function(x, h, mu, sigmaDS, asym) {
 #mu-x instead of x-mu to work on energies < mu
 #tail damps the lineshape at low BE
 
-#'DoniachSunjic function
-#'Version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
-#'Corrected for an exponential decay (tail) on the low BE side
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigmaDS function full width at half maximum
-#'@param asym function asymmetry value
-#'@param tail amplitude of the spectral tail on the low BE (high KE) side
-#'
-#'@export
+#' @title DoniachSunjic function
+#' @description Version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
+#'   Corrected for an exponential decay (tail) on the low BE side
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigmaDS function full width at half maximum
+#' @param asym function asymmetry value
+#' @param tail amplitude of the spectral tail on the low BE (high KE) side
+#' @export
 
 DoniachSunjicTail <- function(x, h, mu, sigmaDS, asym, tail) {
 
  	  Tail <- function(x, mu, tail) {
-		          X <- rep(1, length(x))  #unity vettore
+		          Y <- vector("numeric", length=length(x))
 		          Ex <- (mu-x)    #tail at the right of mu (component position)
 	          	index <- which(Ex >= 0)
-	          	X[index] <- exp(-abs(Ex[index])*(1-tail)/tail)
-		          return(X)
+	          	Y[index] <- exp(-abs(Ex[index])*(1-tail)/tail)
+		          return(Y)
 	   }
 
- 	  DS <- h/4*( (gamma(1-asym)/((mu-x)^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((mu-x)*2/sigmaDS)) )  #DoniachSunjic
-    return (DS * Tail(x, mu, tail) )
+    DS1 <- vector("numeric", length=length(x))
+    Ex <- (mu-x)
+    index <- which(Ex < 0)
+ 	  DS1[index] <- h/4*( (gamma(1-asym)/((Ex[index])^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((Ex[index])*2/sigmaDS)) )  #DoniachSunjic
+ 	  DS2 <- h/4*( (gamma(1-asym)/((mu-x)^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((mu-x)*2/sigmaDS)) )  #DoniachSunjic
+    return(DS1+DS2*Tail(x, mu, tail) )
 }
 
 
 ## =======================================================================
 ## DSunjicGauss(x, h, mu, sigmaDS, sigmaG, asym)
-#a gaussian broadeniing is added by multiplying the DS function with a Gauss
-
-#'DoniachSunjicGauss function
-#'Doniach Sunjic function multiplied for a Gaussian broadening
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigmaDS function full width at half maximum
-#'@param sigmaG full width at half maximum of superimpossed Gaussian broadening
-#'@param asym function asymmetry value
-#'
-#'@export
+#a gaussian broadening is added by multiplying the DS function with a Gauss
+#' @title DoniachSunjicGauss function
+#' @description Doniach Sunjic function multiplied for a Gaussian broadening
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigmaDS function full width at half maximum
+#' @param sigmaG full width at half maximum of superimpossed Gaussian broadening
+#' @param asym function asymmetry value
+#' @export
 
 DoniachSunjicGauss <- function(x, h, mu, sigmaDS, sigmaG, asym) {
 
@@ -410,28 +425,26 @@ DoniachSunjicGauss <- function(x, h, mu, sigmaDS, sigmaG, asym) {
 #tail damps the lineshape at low BE
 #a gaussian broadeniing is added by multiplying the DS function with a Gauss
 
-#'DoniachSunjicGauss function
-#'Doniach Sunjic function multiplied for a Gaussian broadening
-#'corrected for an exponential decay on the low BE side
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigmaDS function full width at half maximum
-#'@param sigmaG full width at half maximum of superimpossed Gaussian broadening
-#'@param asym function asymmetry value
-#'@param tail amplitude of the spectral tail on the low BE (high KE) side
-#'
-#'@export
+#' @title DoniachSunjicGauss function
+#' @description Doniach Sunjic function multiplied for a Gaussian broadening
+#'   corrected for an exponential decay on the low BE side
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigmaDS function full width at half maximum
+#' @param sigmaG full width at half maximum of superimpossed Gaussian broadening
+#' @param asym function asymmetry value
+#' @param tail amplitude of the spectral tail on the low BE (high KE) side
+#' @export
 
 DoniachSunjicGaussTail <- function(x, h, mu, sigmaDS, sigmaG, asym, tail) {
 
  	  Tail <- function(x, mu, tail) {
-		          X <- rep(1, length(x))  #vettore contenete tutti 1
+		          Y <- vector("numeric", length=length(x))
 		          Ex <- (mu-x)    #coda a DX di mu (posizione componente)
 	          	index <- which(Ex >= 0)
-	          	X[index] <- exp(-abs(Ex[index])*(1-tail)/tail)
-	          	return(X)
+	          	Y[index] <- exp(-abs(Ex[index])*(1-tail)/tail)
+	          	return(Y)
 	   }
 
     DS = ( (gamma(1-asym)/((mu-x)^2+(sigmaDS/2)^2)^((1-asym)/2) ) * cos((pi*asym)/2+(1-asym)*atan((mu-x)*2/sigmaDS)) )  #DoniachSunjic
@@ -449,8 +462,15 @@ DoniachSunjicGaussTail <- function(x, h, mu, sigmaDS, sigmaG, asym, tail) {
     ConvDSGs<-h/4*maxDS*ConvDSGs/max(ConvDSGs)     #normalize and moltiply by h/4 to get the proper height
 
     LL=length(ConvDSGs)               #convoluzione provides the double of elements
-    X <- ConvDSGs[seq(1,LL,2)]        #since DS and Gs have the same number of elements: decimation 1 each two elements
-    return (X * Tail(x, mu, tail) )   #generation of DS gaussian broadened + exponential decay on the low BE side
+    DSG <- ConvDSGs[seq(1,LL,2)]        #since DS and Gs have the same number of elements: decimation 1 each two elements
+
+
+    DSG1 <- vector("numeric", length=length(x))
+    Ex <- (mu-x)
+    index <- which(Ex < 0)
+ 	  DSG1[index] <- DSG[index]
+    return(DSG1+DSG*Tail(x, mu, tail) )
+
 }
 
 ## =======================================================================
@@ -458,16 +478,14 @@ DoniachSunjicGaussTail <- function(x, h, mu, sigmaDS, sigmaG, asym, tail) {
 # http://www.casaxps.com/help_manual/line_shapes.htm 
 # mu-x instead of x-mu to get asymmetries for energies > mu
 
-#'SimplifiedDoniachSunjic function
-#'see http://www.casaxps.com/help_manual/line_shapes.htm
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param asym function asymmetry value
-#'
-#'@export
+#' @title SimplifiedDoniachSunjic function
+#' @description see http://www.casaxps.com/help_manual/line_shapes.htm
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param asym function asymmetry value
+#' @export
 
 SimplifiedDoniachSunjic <- function(x, h, mu, sigma, asym) {
 
@@ -475,14 +493,12 @@ SimplifiedDoniachSunjic <- function(x, h, mu, sigma, asym) {
 }
 
 ## =======================================================================
-#'linear function
-#'
-#'@param x numeric vector
-#'@param m slope
-#'@param c constant value
-#'@param mu function position
-#'
-#'@export
+#' @title linear function
+#' @param x numeric vector
+#' @param m slope
+#' @param c constant value
+#' @param mu function position
+#' @export
 
 Linear <- function(x, m, c, mu) {
 
@@ -496,15 +512,13 @@ Linear <- function(x, m, c, mu) {
 
 
 ## =======================================================================
-#'Eponential decay function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param k decay constant
-#'@param c constant value
-#'
-#'@export
+#' @title Eponential decay function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param k decay constant
+#' @param c constant value
+#' @export
 
 ExpDecay <- function(x, h, mu, k, c) {
 
@@ -512,15 +526,13 @@ ExpDecay <- function(x, h, mu, k, c) {
 }
 
 ## =======================================================================
-#'Power decay function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param pow value of the power exponent
-#'@param c constant value
-#'
-#'@export
+#' @title Power decay function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param pow value of the power exponent
+#' @param c constant value
+#' @export
 
 PowerDecay <- function(x, h, mu, pow, c) {
 
@@ -528,15 +540,13 @@ PowerDecay <- function(x, h, mu, pow, c) {
 }
 
 ## =======================================================================
-#'Sigmoid function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param k sigmoid decay rate
-#'@param c constant value
-#'
-#'@export
+#' @title Sigmoid function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param k sigmoid decay rate
+#' @param c constant value
+#' @export
 
 Sigmoid <- function(x, h, mu, k, c) {
 
@@ -544,21 +554,26 @@ Sigmoid <- function(x, h, mu, k, c) {
 }
 
 ## =======================================================================
-#'HillSigmoid function
-#'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param pow sigmoid decay rate
-#'@param A Sigmoid upper limit
-#'@param B Sigmoid lower limit
-#'
-#'@export
+#' @title HillSigmoid function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param pow sigmoid decay rate
+#' @param A Sigmoid upper limit
+#' @param B Sigmoid lower limit
+#' @export
 
-HillSigmoid <- function(x, h, mu, pow, A, B) {
+#HillSigmoid.BE <- function(x, h, mu, pow, A, B) { #decreases with decreaseing x values
+#print(c(x, x^pow/(mu^pow+x^pow)))                                                 #i.e. decreasing the BE towards the Fermi
+#    return( B+(A-B)*x^pow/(mu^pow+x^pow) )       #HillSigmoind.Left decreases
+#}
 
-    return( A+(B-A)*x^pow/(mu^pow+x^pow) )
+HillSigmoid <- function(x, h, mu, pow, A, B) { #decreases with incresing x values
+                                               #i.e. decreas\ing the KE towards the Fermi
+#    return( A-(A-B)*x^pow/(mu^pow+x^pow) )    #HillSigmoind.Right decreases
+    return( A-A*x^pow/(mu^pow+x^pow) )         #HillSigmoind.Right decreases
 }
+
 
 ## =======================================================================
 # The Fermi Function is: 1/(exp(-(E-Ef)/KbT)+1)  Ef=Fermi energy Kb=K Boltzman T=temperature
@@ -566,30 +581,29 @@ HillSigmoid <- function(x, h, mu, pow, A, B) {
 # Kb = 8.617333262145*10-5 eV/K-1
 # we set T=295K = room temperature
 
-#'VBFermi function
+#' @title VBFermi function
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param k Fermi Distribution decay rate
 #'
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param Ef position of function center
-#'@param k Fermi Distribution decay rate
-#'
-#'@export
 
-VBFermi <- function(x, h, Ef, k) {
 
-    return( h/(1+exp(-k*(x-Ef)/(8.617333262145*1e-5*295))) )
+VBFermi <- function(x, h, mu, k) {
+
+    return( h/(1+exp(-k*(x - mu)/(8.617333262145*1e-5*295))) )
 }
 
 ## =======================================================================
-#VBtop function needed to store VBtop position
+#VBtop function needed to store VBtop in a CoreLine@Components slot
 #evaluated either using Linear Fit or Decay Fit
 #
-#'VBtop function
+#' @title VBtop function
+#' @description VBtop function to store VBtop position in a CoreLine@Components slot
+#' @param x numeric vector
+#' @param mu position of function center
 #'
-#'@param x numeric vector
-#'@param mu position of function center
-#'
-#'@export
+
 
 VBtop <- function(x, mu) {
 
@@ -597,15 +611,13 @@ VBtop <- function(x, mu) {
 }
 
 ## =======================================================================
-#Derivate function needed to store the Core Line derivate
-#
-#
-#'Derivative function
+#Derivate function needed to store in a CoreLine@Components slot
+#' @title Derivative function
+#' @description Derivative function to store Derivate position in a CoreLine@Components slot
+#' @param x numeric vector
+#' @param mu position of function center
+#' @export
 #'
-#'@param x numeric vector
-#'@param mu position of function center
-#'
-#'@export
 
 Derivative <- function(x, mu) {
 

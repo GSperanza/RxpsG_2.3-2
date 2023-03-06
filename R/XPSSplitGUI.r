@@ -4,21 +4,17 @@
 # A group of corelines can be chosen through a checkbox
 # The chosen corelines may be saved in a new XPSSample.
 
-#'To select split multiple acquisitions performed with the ScientaGammadata instrument
-#'
-#'Acquisitions on multiple samples may be included in a single .PXT file
-#'This function allows splitting spectra corresponding to each sample in 
-#'individual files.
-#'No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSSplit()
-#'}
-#'
-#'@export 
+#' @title XPSSplit
+#' @description XPSSplit to select split multiple acquisitions performed
+#    with the ScientaGammadata or other instruments
+#'   Acquisitions on multiple samples may be included in a single .PXT file
+#'   This function allows splitting spectra corresponding to each sample in
+#'   individual files.
+#' @examples
+#' \dontrun{
+#' 	XPSSplit()
+#' }
+#' @export
 #'
 
 

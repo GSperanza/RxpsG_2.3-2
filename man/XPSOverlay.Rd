@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSOverlayGUI.r
 \name{XPSOverlay}
 \alias{XPSOverlay}
-\title{Performs overlay of XPS-Spectra}
+\title{XPSOverlay}
 \usage{
 XPSOverlay()
 }
 \description{
-Provides a userfriendly interface to select XPS-Corelines to overlay
-and a selection of plotting options for a personalized data representation
-This function is based on the (/code{Lattice}) Package.  No parameters passed
-No parameters passed to this function
+function to superpose plots of CoreLine spectra
+  Provides a userfriendly interface to select XPS-Corelines to overlay
+  and a selection of plotting options for a personalized data representation
+  This function is based on the (/code{Lattice}) package.
 }
 \examples{
-
 \dontrun{
-XPSOverlay()
+	XPSOverlay()
 }
-
 }

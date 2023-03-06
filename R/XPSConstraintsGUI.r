@@ -2,23 +2,20 @@
 # allowed function: FIX, Link fit parameters
 #                   force the parameter to assume a given value respect to another (es. BE1 == 0.5+BE2)
 #
-#function based on the XPSConstrain() function
+#This function is based on the XPSConstrain() function
 
-#'GUI to add a fit constraints to the fitting functions of a XPSCoreLine
-#'
-#'Add constraints among fit components defined for a XPSCoreLine object. 
-#'This function is called after the definition of the baseline (\code{XPSbaseline}) 
-#'and fitting components (\code{XPSaddFitComponent}). No parameters are passed to
-#'this function
-#'@seealso \link{XPSConstrain}, \link{XPSbaseline}, \link{XPSaddFitComponent}, \link{XPSfitAlgorithms} 
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSConstraints()
-#'}
-#'
-#'@export
+#' @title XPSConstraints is a user interface to add a fit constraints
+#' @description  XPSConstraints function is a user interface to simplyfy
+#    the setting of the fitting parameters to perform the best fit of a XPSCoreLine
+#'   It adds constraints among fit components defined for a XPSCoreLine object.
+#'   This function is called after the definition of the baseline (\code{XPSbaseline})
+#'   and fitting components (\code{XPSaddFitComponent}).
+#' @seealso \link{XPSConstrain}, \link{XPSbaseline}, \link{XPSaddFitComponent}, \link{XPSfitAlgorithms}
+#' @examples
+#' \dontrun{
+#' 	XPSConstraints()
+#' }
+#' @export
 #'
 
 
@@ -30,9 +27,9 @@ XPSConstraints <- function(){
            Nc2 <- as.integer(gsub("[^0-9]", "", component2))  #extract index from string component2
            switch(operation,
            "fix" = {
-              FName[[SpectIndx]] <- XPSConstrain(FName[[SpectIndx]],Nc1,action=operation,variable=parameter,value=setValue, expr=NULL)
+              FName[[SpectIndx]] <<- XPSConstrain(FName[[SpectIndx]],Nc1,action=operation,variable=parameter,value=setValue, expr=NULL)
               if (parameter=="sigma") {
-                 FName[[SpectIndx]] <- FixCtrl(FName[[SpectIndx]])  #controls that no other links present for ComponentToLink otherwise errors are generated
+                 FName[[SpectIndx]] <<- FixCtrl(FName[[SpectIndx]])  #controls that no other links present for ComponentToLink otherwise errors are generated
               }
            },
            "link" = {
@@ -42,8 +39,6 @@ XPSConstraints <- function(){
                   if (length(FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link) > 0){
                      if (LnkdVar == FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link[[1]]$variable){
                          FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link <<- list()
-#print(str(FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link))
-
                      }
                   }
               }
@@ -56,8 +51,8 @@ XPSConstraints <- function(){
                     SigmaCtrl$CompLnkd[Nc1[ii]] <<- Nc1[ii] #save the linked component
                     SigmaCtrl$ToComp[Nc1[ii]] <<- Nc2       #save the linked-TO component
                     SigmaCtrl$Expression[Nc1[ii]] <<- linkExpression   #save the link expression
-#in the case of sigma, here only SigmsCtrl is set. All links on sigma are controlled
-#by calling SetLinks(). This function activates linkCTRL() to control all links on sigms and
+#in the case of sigma, here only SigmsCtrl is set. All links on sigma will be controlled
+#by calling SetLinks(). This function activates linkCTRL() to control all links on sigma and
 #calls also XPSConstrain() to set links
                  }
               } else {
@@ -80,7 +75,7 @@ XPSConstraints <- function(){
               }
               for(ii in 1:LL){
                  if (length(FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link) > 0) {  #FitComponents selected to set links can be reset although links are still not set
-                    FName[[SpectIndx]] <- XPSConstrain(FName[[SpectIndx]],Nc1[ii],action="remove",variable=NULL,value=NULL,expr=NULL)
+                    FName[[SpectIndx]] <<- XPSConstrain(FName[[SpectIndx]],Nc1[ii],action="remove",variable=NULL,value=NULL,expr=NULL)
                  }
               }
               assign(activeFName, FName, envir=.GlobalEnv)
@@ -90,14 +85,13 @@ XPSConstraints <- function(){
            })
 
            #replot FitComponent with changed parameters and the Fit
-           LL <- length(Nc1)
-           for(ii in 1:LL){
-               FName[[SpectIndx]]@Components[[ Nc1[ii] ]] <<- Ycomponent(FName[[SpectIndx]]@Components[[ Nc1[ii] ]], x=FName[[SpectIndx]]@RegionToFit$x, y=FName[[SpectIndx]]@Baseline$y)
+#           LL <- length(Nc1)
+           for(ii in 1:NComp){
+               FName[[SpectIndx]]@Components[[ii]] <<- Ycomponent(FName[[SpectIndx]]@Components[[ii]], x=FName[[SpectIndx]]@RegionToFit$x, y=FName[[SpectIndx]]@Baseline$y)
 	              tmp <- sapply(FName[[SpectIndx]]@Components, function(z) matrix(data=z@ycoor))  #fit is the sum of fitting components
 	              FName[[SpectIndx]]@Fit$y <<- ( colSums(t(tmp)) - length(FName[[SpectIndx]]@Components)*(FName[[SpectIndx]]@Baseline$y)) #substract NComp*Baseline
 	              FName[[SpectIndx]] <<- sortComponents(FName[[SpectIndx]])
            }
-
            plot(FName[[SpectIndx]])
            Saved <<- FALSE
    }
@@ -217,7 +211,7 @@ XPSConstraints <- function(){
 #the control the apmplitude of sigma of the other components be == sigmaC2 is made either if FIX and LINK
 #constraints are set
 
-      NComp <- length(Object@Components)
+#      NComp <- length(Object@Components)
       CompIndx <- as.integer(gsub("[^0-9]", "", component1))   #index of the linked component
       SigC1 <- paste("sigma", as.character(CompIndx), sep="")  #a string made of "sigmaXX" where XX is the index of the ReferenceComp.
       SigC1Start <- Object@Components[[CompIndx]]@param$start[3]   #get the value of start, min, max to make them equal to those of ReferenceComp. C1
@@ -238,33 +232,38 @@ XPSConstraints <- function(){
 
 #---------- editFitFrame ----------
 
-   editFitFrame <- function(h,...){
-      blockHandler(T1obj1)  #blocks handler to avoid opening multiple editParam window
+   editFitFrame <- function(){
+      blockHandler(T1obj1)  #blocks handler to avoid opening multiple editParam windows
       selectedComp <- svalue(T1obj1)
       CompIndx <- as.integer(gsub("[^0-9]", "", selectedComp))
-      fitParam <- FName[[SpectIndx]]@Components[[CompIndx]]@param #load DataFrame relative to the selected component
+      fitParam <<- FName[[SpectIndx]]@Components[[CompIndx]]@param #load DataFrame relative to the selected component
       VarNames <- rownames(fitParam)
-      fitParam <- as.matrix(fitParam) #this is needed to construct correctly the data.frame
-      fitParam <- data.frame(cbind(VarNames,fitParam), stringsAsFactors=FALSE) #in the dataframe add a column with variable names
+      idx <- grep("lg", VarNames)
+      if(length(idx) > 0){VarNames[idx] <- "Mix.L.G"}
+      idx <- grep("gv", VarNames)
+      if(length(idx) > 0){VarNames[idx] <- "Mix.G.V"}
+      fitParam <<- as.matrix(fitParam) #this is needed to construct correctly the data.frame
+      fitParam <<- data.frame(cbind(VarNames,fitParam), stringsAsFactors=FALSE) #in the dataframe add a column with variable names
       newFitParam <<- fitParam
       Label=paste("C", CompIndx, "- COMPONENT FIT PARAMETERS")
+
       DFwin <- gwindow(title=Label, visible=FALSE) # open a window to edit the dataframe
       DFgroup <- ggroup(horizontal=FALSE, container=DFwin)
-      glabel("                             EDIT FIT PARAMETERS                                     ", container=DFgroup)
-      DFrame <- gdf(items=fitParam, container=DFgroup)
-      size(DFrame) <- c(400,150)
+      txt <- paste("Fit Function: ", FName[[SpectIndx]]@Components[[CompIndx]]@funcName, sep="")
+      glabel(txt, container=DFgroup)      
+      DFrame <- gdf(items=fitParam, container=DFgroup)  
+      size(DFrame) <- c(550, 200)   #force the DFrame size using two equivalent commands since in linux
+      tkconfigure(DFrame$widget, width=550, height=200)    #not always the single instruction works
       addHandlerChanged(DFrame, handler=function(h,...){ #addHandlerChanged dowload the dataFrame with modified parameters in NewFirParam (global variable)
          newFitParam <<- h$obj[]
       })
 
       gbutton("     SAVE AND EXIT      ", handler=function(h,...){
-
                 newFP <- lapply(newFitParam[,2:ncol(newFitParam)], function(x) {as.numeric(x)} ) #the dataframe contais strings
-                fitParam <- fitParam[,-1]   #remove labels introduced in the first column of the DataFrame
-                fitParam[, 1:ncol(fitParam)] <- newFP   #this operation preserves the class(fitParam)=data.base nneded to save parameters in the relative slot of XPSSSample
-                slot(FName[[SpectIndx]]@Components[[CompIndx]], "param") <- fitParam #save parameters in the slot of XPSSample
+                fitParam <<- fitParam[,-1]   #remove labels introduced in the first column of the DataFrame
+                fitParam[, 1:ncol(fitParam)] <<- newFP   #this operation preserves the class(fitParam)=data.base nneded to save parameters in the relative slot of XPSSSample
+                FName[[SpectIndx]]@Components[[CompIndx]]@param <<- fitParam #save parameters in the slot of XPSSample
 
-                FName[[SpectIndx]] <<- FName[[SpectIndx]]
                 operation <<- "edit"
                 component1 <<- selectedComp
                 parameter <<- NULL
@@ -278,7 +277,7 @@ XPSConstraints <- function(){
    }
 
 
-#===== variabili =====
+#===== variables =====
    if (is.na(activeFName)){
        gmessage("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
@@ -344,7 +343,8 @@ XPSConstraints <- function(){
          visible(WW) <- TRUE
          WW$set_modal(TRUE)  #wait until selection done
       }
-      mainFCwin <- gwindow("FIT PARAMETER CONSTRAINTS", parent=c(30,30), visible=TRUE)
+      Title <- paste("FIT PARAMETER CONSTRAINTS ", activeFName, sep="")
+      mainFCwin <- gwindow(title=Title, parent=c(30,30), visible=TRUE)
       size(mainFCwin) <- c(570,320)
       maingroup <- ggroup(horizontal=TRUE, container=mainFCwin)
       NBframe <- gframe(text=" CONSTRAINTS ", spacing=5,horizontal=FALSE, container=maingroup)
@@ -358,7 +358,7 @@ XPSConstraints <- function(){
       layoutT1 <- glayout(homogeneous=FALSE, spacing=3, container=T1group1)
 
       layoutT1[1,1] <- T1frame1 <- gframe(" SELECT COMPONENT TO EDIT", spacing=5, container=layoutT1)
-      T1obj1 <- gcombobox(FitComp1, selected=-1, editable=FALSE, handler=editFitFrame, container=T1frame1)
+      T1obj1 <- gcombobox(FitComp1, selected=-1, editable=FALSE, handler=function(h, ...) { editFitFrame() }, container=T1frame1)
       layoutT1[2,1] <- glabel("          ", spacing=5, container=layoutT1)
 
       layoutT1[3,1] <- gseparator(horizontal = TRUE, container=layoutT1)
@@ -419,20 +419,20 @@ XPSConstraints <- function(){
                      ParamList <- rownames(FName[[SpectIndx]]@Components[[CompIndx]]@param) #carico il DataFrame relativo alla componente selezionata nel Radiobox
 
                      delete(T2frame2, T2obj2)   #per mantenere l'ordine degli oggetti devo cancellare anche il bottone
-                     T2obj2 <<- gcombobox(ParamList, selected=-1, editable=FALSE, handler=NULL, container=T2frame2)
-                     addHandlerChanged(T2obj2,handler=function(h,...){
-                     #l'handler va definito qui poiche' T2obj2 viene rigenerato e non corrisponde a quello originario
+#                     T2obj2 <<- gcombobox(ParamList, selected=-1, editable=FALSE, handler=NULL, container=T2frame2)
+#                     addHandlerChanged(T2obj2,handler=function(h,...){
+                     #re-define new handler acting on the modified ParamList
+                     T2obj2 <<- gcombobox(ParamList, selected=-1, editable=FALSE, handler=function(h,...){
                                         component1 <<- svalue(T2obj1)   #componente scelta
                                         CompIndx <- as.integer(gsub("[^0-9]", "", component1))  #indice della componente
                                         parameter <- svalue(T2obj2)
                                         OldValue <- FName[[SpectIndx]]@Components[[CompIndx]]@param[parameter,"start"] # valore attuale del parametro
                                         NewParam <<- round(as.numeric(OldValue), digits=2)
                                         svalue(T2obj3) <- OldValue
-                     })
+                     }, container=T2frame2)
       }
 
       T2obj1 <- gcombobox(FitComp1, selected=-1, editable=FALSE, handler=function(h,...){HndlrT2obj1()}, container=T2frame1)
-
 
       layoutT2[2,1] <- T2frame2 <- gframe(text=" PARAMETER TO FIX / SET ", spacing=5, container=layoutT2)
       T2obj2 <- gcombobox(ParamList, selected=-1, editable=FALSE, handler=NULL, container=T2frame2)
@@ -449,14 +449,14 @@ XPSConstraints <- function(){
                        component1 <<- svalue(T2obj1)
                        component2 <<- "NULL"
                        CompIndx <- as.integer(CompIndx <- gsub("[^0-9]", "", component1))  #component index
-                       parameter <- svalue(T2obj2)
-                       ParamIndx <- svalue(T2obj2, index=TRUE)
+                       parameter <<- svalue(T2obj2)
+#                       ParamIndx <- svalue(T2obj2, index=TRUE)
                        operation <<- "fix"     #operation=set only when Gedit is used, otherwise it is forced to FIX when a parameter is selected (see handler T2obj1)
                        setValue <<- NewParam
-                       parameter <<- parameter
+#                       parameter <<- parameter
                        linkExpression <<- ""
-                       component1 <<- component1
-                       component2 <<- component2
+#                       component1 <<- component1
+#                       component2 <<- component2
                        setCommand()
                  }, container = T2group1)
 
@@ -647,6 +647,26 @@ XPSConstraints <- function(){
                          LinkGroup3 <- ggroup(horizontal=FALSE, spacing=2, container=LinkGroup1)
                          gbutton(" SET LINKS ", spacing=1, handler=function(h,...){
                                                      component2 <<- svalue(RefLinkComp)
+#-------------------------------------------------------------------------------------------------------------------------------
+#                                                     #control on the linked sigma parameter:
+#                                                     #link sigma of different fitting functions (for example LINK Sigma(Gauss) to Sigma(Voigt)
+#                                                     #if link was set, the operation is blocked and an error message raised
+#                                                     FitFnct1 <- FName[[SpectIndx]]@Components[[component2]]@funcName
+#                                                     for(ii in 1:NfitP){
+#                                                         if (is.na(PList[ii])==FALSE && PList[ii] == "sigma"){
+#                                                            for(jj in 1:NfitC){
+#                                                               Chkd <- svalue(T3LinkParam[[ii]][[jj]])
+#                                                               FitFnct2 <- FName[[SpectIndx]]@Components[[jj]]@funcName
+#                                                               if (FitFnct2 != FitFnct1 && Chkd==TRUE){
+#                                                                  txt <- paste("Cannot link sigma of different fitting functions: \n", FitFnct1, "  ", FitFnct2, sep="")
+#                                                                  gmessage(msg=txt, title="ERROR", icon="error")
+#                                                                  ResetLinks()
+#                                                                  return()
+#                                                               }
+#                                                            }
+#                                                         }
+#                                                     }
+#-------------------------------------------------------------------------------------------------------------------------------
                                                      if (length(component1)==0 || length(component2)==0){
                                                         gmessage("Error: Component to link or Reference Component not set!", title ="WRONG COMPONENT SELECTION", icon="error")
                                                         return()
@@ -670,7 +690,13 @@ XPSConstraints <- function(){
 
       layoutT3[1,1] <- T3frame1 <- gframe(" SET LINKS ", spacing=7, horizontal=FALSE, container=layoutT3)
 
-      gbutton(" OPEN PARAMETER TABLE ", spacing=7, handler=function(h,...){ HndlrSetLinks() }, container=T3frame1)
+      gbutton(" OPEN PARAMETER TABLE ", spacing=7, handler=function(h,...){
+                        if(length(FName[[SpectIndx]]@Components) < 2){
+                           gmessage(msg="Not enough Fitting Components to set Links", title="WARNING", icon="warning")
+                           return()
+                        }
+                        HndlrSetLinks()
+                 }, container=T3frame1)
       glabel(" ", container=T3group1)
 
       layoutT3[2,1] <- T3frame2 <- gframe(" RESET LINKS ", spacing=7, horizontal=FALSE, container=layoutT3)
@@ -757,7 +783,7 @@ XPSConstraints <- function(){
 
       gbutton(" FIT Lev.Marq. ", handler=function(h,...){
                           if (Saved){
-                             FName[[SpectIndx]] <<- XPSFitLM(FName[[SpectIndx]], plt=FALSE, verbose=FALSE)
+                             FName[[SpectIndx]] <<- XPSFitLM(FName[[SpectIndx]], plt=FALSE, verbose=TRUE)
                              plot(FName[[SpectIndx]])
                           } else {
                              gmessage(msg="Please save the Constraints before running the fit", title="WARNING!", icon = "warning")
@@ -766,6 +792,11 @@ XPSConstraints <- function(){
                      }, container = Bframe)
 
       gbutton(" FIT ModFit ", handler=function(h,...){
+                          if(is.na(match("FME", Pkgs)) == TRUE ){   #check if the package 'FME' is installed
+                             txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
+                             gmessage(msg=txt, title="WARNING", icon="error")
+                             return()
+                          }
                           if (Saved){
                              FName[[SpectIndx]] <<- XPSModFit(FName[[SpectIndx]])#XPSMoveCompoonent GUI is active to beused in combination with XPSConstraintsGUI
                              plot(FName[[SpectIndx]])

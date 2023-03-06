@@ -2,24 +2,36 @@
 % Please edit documentation in R/XPSCustomBaseline.r
 \name{Tougaard4P}
 \alias{Tougaard4P}
-\title{Tougaard4P is the four parameters B, C, C' and D Tougaard background
-Universal Cross Section described by: B*T/[(C + C'*T^2)^2 + D*T^2]    T=energy loss
-see R. Hesse et al., Surf. Interface Anal. (2011), 43, 1514}
+\title{@title  Tougaard4P four parameters Tougaard Baseline
+ @description Tougaard4P is a Tougaard Baseline defined usinf
+  the four parameters B, C, C' and D
+  Tougaard4p = Integral{ BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT }
+  J(T) = the measured spectrum
+  B*T/[(C + C'*T^2)^2 + D*T^2] = Modified Universal Cross Section
+  T=energy loss = E'-E
+  see R. Hesse et al., Surf. Interface Anal. (2011), 43, 1514
+  This function is called by XPSAnalysisGUI}
 \usage{
 Tougaard4P(object, C1, limits)
 }
 \arguments{
-\item{object}{XPSSample object}
+\item{object}{XPSSample CoreLine}
 
 \item{C1}{numeric is a parameter value}
 
-\item{limits}{limits of the XPSSample object}
+\item{limits}{limits of the XPSSample CoreLine}
 }
 \value{
 Return the 4parameter Tougaard background.
 }
 \description{
-Tougaard4P is the four parameters B, C, C' and D Tougaard background
-Universal Cross Section described by: B*T/[(C + C'*T^2)^2 + D*T^2]    T=energy loss
-see R. Hesse et al., Surf. Interface Anal. (2011), 43, 1514
+@title  Tougaard4P four parameters Tougaard Baseline
+ @description Tougaard4P is a Tougaard Baseline defined usinf
+  the four parameters B, C, C' and D
+  Tougaard4p = Integral{ BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT }
+  J(T) = the measured spectrum
+  B*T/[(C + C'*T^2)^2 + D*T^2] = Modified Universal Cross Section
+  T=energy loss = E'-E
+  see R. Hesse et al., Surf. Interface Anal. (2011), 43, 1514
+  This function is called by XPSAnalysisGUI
 }

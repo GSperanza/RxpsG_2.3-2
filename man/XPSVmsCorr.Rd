@@ -2,19 +2,19 @@
 % Please edit documentation in R/XPSVmsCorrGUI.r
 \name{XPSVmsCorr}
 \alias{XPSVmsCorr}
-\title{Corrects XPSSample Vamas_type data for the analyzer transmission}
+\title{XPSVmsCorr}
 \usage{
 XPSVmsCorr()
 }
 \description{
-This routine divides raw data intensity for the value of the analyzer transmission
-The routine applies the correction to the selected coreline or to all the XPSSample
-spectra, baselines and fit components when present.
+XPSVmsCorr funciton corrects Vamas_type data for the analyzer transmission
+  This routine divides raw data intensity for the value of the analyzer transmission
+  The routine applies the correction to the selected coreline or to all the XPSSample
+  spectra, baselines and fit components when present.
+  The transmission function must be provided by the XPS-Instrument manufacturer
 }
 \examples{
-
 \dontrun{
-XPSVmsCorr()
+	XPSVmsCorr()
 }
-
 }

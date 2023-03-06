@@ -1,18 +1,13 @@
-#Function to add labels and text to graphs
+# XPSAnnotate function to add labels and text to lattice graphs
 
-#'Annotate: graphic function to add text to plots
-#'
-#'Add text to spectra plotted using (\code{matplot})base function.
-#'No parameters are passed to the this function
-#'
-#'@seealso \link{matplot}, \link{plot}
-#'@examples
-#'
-#'\dontrun{
-#'	XPSAnnotate()
-#'}
-#'
-#'@export
+#' @title XPSAnnotate is graphic function to add text to lattice plots
+#' @description XPSAnnotate() adds text to spectra plotted using (\code{matplot})base function.
+#' @seealso \link{matplot}, \link{plot}
+#' @examples
+#' \dontrun{
+#' 	XPSAnnotate()
+#' }
+#' @export
 #'
 
 

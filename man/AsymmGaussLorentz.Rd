@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{AsymmGaussLorentz}
 \alias{AsymmGaussLorentz}
-\title{AsymmGaussLorentz function
-Tail modified Gauss-Lorentz Sum modifed by using an exponential function}
+\title{AsymmGaussLorentz function}
 \usage{
 AsymmGaussLorentz(x, h, mu, sigma, lg, asym)
 }
@@ -21,6 +20,5 @@ AsymmGaussLorentz(x, h, mu, sigma, lg, asym)
 \item{asym}{function asymmetry value}
 }
 \description{
-AsymmGaussLorentz function
 Tail modified Gauss-Lorentz Sum modifed by using an exponential function
 }

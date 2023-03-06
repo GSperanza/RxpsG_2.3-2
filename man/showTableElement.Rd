@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSElements.r
 \name{showTableElement}
 \alias{showTableElement}
-\title{Elements functions utility}
+\title{showTableElement}
 \usage{
 showTableElement(element, analyzer = c("scienta", "kratos"))
 }
@@ -15,11 +15,7 @@ showTableElement(element, analyzer = c("scienta", "kratos"))
 Return values named by \code{what}.
 }
 \description{
-Unified functions to acces and get values from the references files supplied
-for Scienta and Kratos instruments. These function are internal functions and
-not intended for the user.
-}
-\details{
-Unified functions to acces and get values from the references files supplied
-for Scienta and Kratos instruments.
+showTableElement() function extract the values of
+ BE, KE, RSF for all the orbitals of a given chemical element
+ showTableElement is internal not intended for the user.
 }

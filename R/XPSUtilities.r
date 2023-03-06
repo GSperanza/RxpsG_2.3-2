@@ -10,25 +10,19 @@
 ##==============================================================================
 # findXIndex: finds the index corresponding to a given value in an array of abscisse
 ##==============================================================================
-#'findXIndex function utility
-#'
-#'finds the index of X vector corresponding to a given abscissa value
-#'
-#'@param X numeric vector
-#'@param Value numeric value
-#'@return Returns X index
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	findXIndex(X, Value)
-#'}
-#' 
-#'@export
+#' @title findXIndex
+#' @description findXIndex finds the index of X vector corresponding to a given abscissa value
+#' @param X numeric vector
+#' @param Value numeric value
+#' @return Returns X index
+#' @examples
+#' \dontrun{
+#' 	findXIndex(X, Value)
+#' }
+#' @export
 #'
 
 findXIndex <- function(X, Value) {
-
    if (is.na(Value)){
        gmessage("WARNING: value to search for index == NA", title="BAD SEARCH VALUE", icon="error")
        return()
@@ -38,36 +32,29 @@ findXIndex <- function(X, Value) {
    DE <- diff(X[1:2])
    if (abs(Value-X[1]) < abs(DE/10^3)) return(1)      #to avoid probems at X edges due to decimal errors in double precision numbers
    if (abs(Value-X[LL]) < abs(DE/10^3)) return(LL)
-   if (Value > max(RngX) || Value < min(RngX)){
-      gmessage(msg="FindXindex: X-Value out of Core Line range!", title = "WARNING: WRONG LIMITS",  icon = "warning")
-      return()
-   }
+   if (Value < min(RngX)) Value <- min(RngX)
+   if (Value > max(RngX)) Value <- max(RngX)
    if ( DE > 0 ) {  ## if data are increasing sorted
-      return(max(which(X<=Value)))
+      return(max(which(X <= Value)))
    } else {
-      return(max(which(X>=Value)))
+      return(max(which(X >= Value)))
    }
 }
 
 ##==============================================================================
 # findYIndex: finds the index corresponding to a given value in an array of ordinate
 ##==============================================================================
-#'findYIndex function utility
-#'
-#'finds the index of Y vector corresponding to a given Value
-#'
-#'@param Y numeric vector
-#'@param Value numeric value
-#'@param tolerance numeric value, precision required to find out Y
-#'@return Returns Y index
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	findYIndex(Y, Value, tolerance=0.01)
-#'}
-#' 
-#'@export
+#' @title findYIndex
+#' @description findYIndex finds the index of Y vector corresponding to a given Value
+#' @param Y numeric vector
+#' @param Value numeric value
+#' @param tolerance numeric value, precision required to find out Y
+#' @return Returns Y index
+#' @examples
+#' \dontrun{
+#' 	findYIndex(Y, Value, tolerance=0.01)
+#' }
+#' @export
 #'
 
 findYIndex <- function(Y, Value, tolerance=0.01) {
@@ -78,8 +65,8 @@ findYIndex <- function(Y, Value, tolerance=0.01) {
    }
    Ymax <- max(Y)
    Ymin <- min(Y)
-   LL<-length(Y)
-   DE<- (Ymax-Ymin)*tolerance #tolerance defines the range around Value where to search for Y index
+   LL <- length(Y)
+   DE <- (Ymax-Ymin)*tolerance #tolerance defines the range around Value where to search for Y index
    Yindx <- NULL
    if (Value > Ymax || Value < Ymin){
       gmessage(msg="FindYindex: Y-Value out of Core Line range!", title = "WARNING: WRONG LIMITS",  icon = "warning")
@@ -101,25 +88,20 @@ findYIndex <- function(Y, Value, tolerance=0.01) {
 ##==============================================================================
 # findY: finds the Y value corresponding to a given X value
 ##==============================================================================
-#'findY function utility
+#' @title findY
+#' @description findY finds the Y value corresponding to a given X value
+#' @param XY numeric matrix composed by X and Y columns
+#' @param Xvalue numeric value
+#' @return Returns Y value
+#' @examples
+#' \dontrun{
+#' 	findY(XY, Xvalue)
+#' }
+#' @export
 #'
-#'finds the Y value corresponding to a given X value
-#'
-#'@param XY numeric XY matrix
-#'@param Xvalue numeric value
-#'@return Returns Y value
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	findYIndex(XY, Xvalue)
-#'}
-#' 
-#'@export
-#'
-findY <- function(XY, Xvalue) {    #XY is a list of X and Y numbers for example FName@RegionToFit
-   idx<-findXIndex(XY$x, Xvalue)   #XY$x is the array ob abscissas, Value the Xvalue to look for the correspondent Yvalue
-   Yvalue<-XY$y[idx]
+findY <- function(XY, Xvalue) {     #XY is a list of X and Y numbers for example FName@RegionToFit
+   idx <- findXIndex(XY$x, Xvalue)   #XY$x is the array ob abscissas, Value the Xvalue to look for the correspondent Yvalue
+   Yvalue <- XY$y[idx]
    return(Yvalue)
 }
 
@@ -127,20 +109,15 @@ findY <- function(XY, Xvalue) {    #XY is a list of X and Y numbers for example 
 ##==============================================================================
 # findMaxPos: finds the abscissa corresponding to the Y max
 ##==============================================================================
-#'findMaxPos function utility
-#'
-#'finds the abscissa corresponding to the y-vector maximum
-#'
-#'@param XY numeric XY matrix
-#'@return Returns c(x, max) values
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	findYIndex(XY)
-#'}
-#' 
-#'@export
+#' @title findMaxPos
+#' @description findMaxPos finds the abscissa corresponding to the y-vector maximum
+#' @param XY numeric matrix composed by X and Y columns
+#' @return Returns c(x, max) values
+#' @examples
+#' \dontrun{
+#' 	findMaxPos(XY)
+#' }
+#' @export
 #'
 
 findMaxPos <- function(XY) {    #XY is a list of X and Y numbers for example FName@RegionToFit
@@ -154,6 +131,15 @@ findMaxPos <- function(XY) {    #XY is a list of X and Y numbers for example FNa
 ##==============================================================================
 # labformula used in plot but useful also for label any type of plot
 ##==============================================================================
+#' @title FitCompLbl
+#' @description FitCompLbl function to draw the label identifying the fit components
+#'   in a plotted spectrum
+#' @param position.list list containing x and y coordinates of the label
+#' @param label character the label the label associated to the fit-component
+#' @param color character the color of the label
+#' @param ... additional parameters for the FitCompLbl function
+
+
 FitCompLbl <- function(position.list, label, color="blue", ...) {
   ## position.list = list(x,y)
   X0 <- position.list$x
@@ -176,26 +162,25 @@ FitCompLbl <- function(position.list, label, color="blue", ...) {
 ##==============================================================================
 # MakeTable to write tables using ASCII text parameters: Font=GCourierNew
 ##==============================================================================
-#'Font=GCourierNew is the CourierNew modified with symbols for drawing tab borders.
-#'Provides commands to print borders and cell text alignment (left, center, right)
-#'Borders are made using ascii characters
+#' @title MakeTable
+#' @description MakeTable function to construct table rows in a formatted
+#'   Font=GCourierNew is the CourierNew with symbols for drawing tab borders.
+#'   MakeTable print cell text aligned (left, center, right) cell borders and
+#'   row separators
+#' @param Type string = BorderUp, BorderIn, BorderBottom, TableRow: prints border or table rows
+#' @param txt array containing the txt of the table row
+#' @param CellLength array containing the number of character of each table column
+#' @param align string = left, center, right: text alignment of the table cells
+#' @return Returns the processed \code{object}.
+#' @examples
+#' \dontrun{
+#'    txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")    #Voci Tabella
+#'    CellLgth<-c(12, 15, 8, 7, 8, 9)
+#'    cell<-MakeTable("MultiCell", txt,CellLength, "center")
+#' }
+#' @export
 #'
-#'@param Type string = BorderUp, BorderIn, BorderBottom, TableRow: prints border or table rows
-#'@param txt array containing the txt of the table row
-#'@param CellLength array containing the number of character of each table column
-#'@param align string = left, center, right: text alignment of the table cells
-#'@return Returns the processed \code{object}.
-#'
-#'@examples
-#'
-#'\dontrun{
-#'   txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")    #Voci Tabella
-#'   CellLgth<-c(12, 15, 8, 7, 8, 9)
-#'   cell<-MakeTable("MultiCell", txt,CellLength, "center")
-#'}
-#'
-#'@export
-#'
+
     MakeTable <- function(Type,txt,CellLength, align){
          cell<-""
          if(Type=="BordTopM"){      # Bordo Top MultiCell tipo:   |```|`````|```````|```|
@@ -332,31 +317,28 @@ FitCompLbl <- function(position.list, label, color="blue", ...) {
 ##==============================================================================
 # printCell to print data in table fashion using text just text chacters
 ##==============================================================================
-#'printCell prints data in a table constructed by MakeTable()
-#'Borders are made using ascii characters  - and |
-#'
-#'@param Type label for labels such as the title, 
-#'         separator to print a ---------- like separator,
-#'         tableRow to print a sequence of data in a table row
-#'@param txt the text to print, single string in label mode, an array of strungs in tableRow
-#'@param CellB cell border can be "|", " " or ""
-#'@param CellLength = in tableRow mode is an array containing the width (nchar) of each table column,
-#'                    in label mode it is the witdth of the tableRow (sum of column widths)
-#'@param align text alignment used in tableRow mode: left, center, right
-#'
-#'@examples
-#'
-#'\dontrun{
-#'   CellLgth<-c(12, 15, 8, 7, 8, 9)
-#'   cell<-printCell(Type="separator", txt="-", cellB="", CellLength=sum(CellLgth), align="")
-#'   txt<-"XPS Au24.vms"
-#'   cell<-printCell("label", txt, "|", sum(CellLgth), "")
-#'   txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")    #Voci Tabella
-#'   cell<-printCell("tableRow", txt, "|", CellLgth, "center")
-#'   cell<-printCell("separator", "-", "|", sum(CellLgth), "")
-#'}
-#'
-#'@export
+#' @title printCell
+#' @description printCell prints data in a table constructed by MakeTable()
+#'   Borders are made using ascii characters  - and |
+#' @param Type label for labels such as the title,
+#'          separator to print a ---------- like separator,
+#'          tableRow to print a sequence of data in a table row
+#' @param txt the text to print, single string in label mode, an array of strungs in tableRow
+#' @param CellB cell border can be "|", " " or ""
+#' @param CellLength = in tableRow mode is an array containing the width (nchar) of each table column,
+#'                     in label mode it is the witdth of the tableRow (sum of column widths)
+#' @param align text alignment used in tableRow mode: left, center, right
+#' @examples
+#' \dontrun{
+#'    CellLgth<-c(12, 15, 8, 7, 8, 9)
+#'    cell<-printCell(Type="separator", txt="-", cellB="", CellLength=sum(CellLgth), align="")
+#'    txt<-"XPS Au24.vms"
+#'    cell<-printCell("label", txt, "|", sum(CellLgth), "")
+#'    txt<-c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")    #Voci Tabella
+#'    cell<-printCell("tableRow", txt, "|", CellLgth, "center")
+#'    cell<-printCell("separator", "-", "|", sum(CellLgth), "")
+#' }
+#' @export
 #'
 
     printCell <- function(Type,txt,CellB, CellLength, align){
@@ -364,37 +346,37 @@ FitCompLbl <- function(position.list, label, color="blue", ...) {
          LL=length(txt)   #txt may be a single string or a vector
 
          if(Type=="label"){                       #if txt is a vector select the max of nchar
-            Nspaces<-max(CellLength-nchar(txt)+6) #6 are the character used for the table vertical separators
-            spaces<-paste(rep(" ",Nspaces), collapse="")
-            cell<-paste(txt, spaces, sep="")
+            Nspaces <- max(CellLength-nchar(txt)+6) #6 are the character used for the table vertical separators
+            spaces <- paste(rep(" ",Nspaces), collapse="")
+            cell <- paste(txt, spaces, sep="")
          }
          if(Type=="separator"){
-            Nspaces<-0
-            txt<-paste(rep(txt,CellLength+6), collapse="")  #6 sono i caratteri aggiuntivi per fare i separatori verticali nella tabella
-            cell<-paste(txt, sep="")
+            Nspaces <- 0
+            txt <- paste(rep(txt,CellLength+6), collapse="")  #6 sono i caratteri aggiuntivi per fare i separatori verticali nella tabella
+            cell <- paste(txt, sep="")
          }
          if(Type=="tableRow"){
             for (ii in 1:LL){
                if (align=="right"){
-                  Nspaces<-CellLength[ii]-nchar(txt[ii])
-                spaces<-paste(rep(" ",Nspaces), collapse="")
-                  cell<-paste(cell,CellB, spaces, txt[ii], sep="")
+                  Nspaces <- CellLength[ii]-nchar(txt[ii])
+                  spaces <- paste(rep(" ",Nspaces), collapse="")
+                  cell <- paste(cell,CellB, spaces, txt[ii], sep="")
                }
                if (align=="left"){
-                  Nspaces<-CellLength[ii]-nchar(txt[ii])
-                  spaces<-paste(rep(" ",Nspaces), collapse="")
-                  cell<-paste(cell,CellB, txt[ii], spaces, sep="")
+                  Nspaces <- CellLength[ii]-nchar(txt[ii])
+                  spaces <- paste(rep(" ",Nspaces), collapse="")
+                  cell <- paste(cell,CellB, txt[ii], spaces, sep="")
                }
                if (align=="center"){
-                  Nspaces<-CellLength[ii]-nchar(txt[ii])
-                  Nspaces1<-as.integer(Nspaces/2)
-                  Nspaces2<-Nspaces-Nspaces1 #recupero spazio divisione non intera
-                  spaces1<-paste(rep(" ",Nspaces1), collapse="")
-                  spaces2<-paste(rep(" ",Nspaces2), collapse="")
-                  cell<-paste(cell,CellB,spaces1, txt[ii], spaces2, sep="")
+                  Nspaces <- CellLength[ii]-nchar(txt[ii])
+                  Nspaces1 <- as.integer(Nspaces/2)
+                  Nspaces2 <- Nspaces-Nspaces1 #recupero spazio divisione non intera
+                  spaces1 <- paste(rep(" ",Nspaces1), collapse="")
+                  spaces2 <- paste(rep(" ",Nspaces2), collapse="")
+                  cell <- paste(cell,CellB,spaces1, txt[ii], spaces2, sep="")
                }
             }
-            cell<-paste(cell, CellB, sep="")
+            cell <- paste(cell, CellB, sep="")   
          }
          return(cell)
     }
@@ -404,22 +386,20 @@ FitCompLbl <- function(position.list, label, color="blue", ...) {
 # MinDist Min distance between point P0 and points P1, P2
 ##==============================================================================
 #MinDist function utility
-#'
-#'finds the minimum distance between point P0 and points P1, P2
-#'
+
+#'@title MinDist
+#'@description MinDist finds which is the minimum distance between point P0 and points P1, P2
 #'@param posP0 numeric position of probe point
 #'@param posP1 numeric position of reference point 1
 #'@param posP2 numeric position of reference point 2
 #'@return Returns index 1 or 2 indicating min distance from P1 or P2
-#'
 #'@examples
-#'
 #'\dontrun{
 #'	MinDist(posP0, posP1, posP2)
 #'}
-#' 
 #'@export
 #'
+
 MinDist<-function(posP0, posP1, posP2){   #minima distanza tra un punto e altri due punti nel piano XY
          D1<-((posP0$x-posP1$x)^2 + (posP0$y-posP1$y)^2)^0.5  #dist P0 P1
          D2<-((posP0$x-posP2$x)^2 + (posP0$y-posP2$y)^2)^0.5  #dist P0 P2
@@ -430,22 +410,19 @@ MinDist<-function(posP0, posP1, posP2){   #minima distanza tra un punto e altri 
 ##==============================================================================
 # FitLin: linear fitting functin
 ##==============================================================================
-#'FitLin function utility
+
+#' @title FitLin
+#' @description FitLin function performs a linear fit
+#' @param X abscissa
+#' @param Y ordinate
+#' @return Returns c(m, c) slope m and intercept c
+#' @examples
+#' \dontrun{
+#' 	MinDist(posP0, posP1, posP2)
+#' }
+#' @export
 #'
-#'linear fit function
-#'
-#'@param X abscissa
-#'@param Y ordinate
-#'@return Returns c(m, c) slope m and intercept c
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	MinDist(posP0, posP1, posP2)
-#'}
-#' 
-#'@export
-#'
+
 FitLin<-function(X, Y){   #make the linear fit on a set of data
 
      SumXi<-0         # y=mx + c

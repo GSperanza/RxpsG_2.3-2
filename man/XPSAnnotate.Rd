@@ -2,20 +2,17 @@
 % Please edit documentation in R/XPSAnnotateGUI.r
 \name{XPSAnnotate}
 \alias{XPSAnnotate}
-\title{Annotate: graphic function to add text to plots}
+\title{XPSAnnotate is graphic function to add text to lattice plots}
 \usage{
 XPSAnnotate()
 }
 \description{
-Add text to spectra plotted using (\code{matplot})base function.
-No parameters are passed to the this function
+XPSAnnotate() adds text to spectra plotted using (\code{matplot})base function.
 }
 \examples{
-
 \dontrun{
-XPSAnnotate()
+	XPSAnnotate()
 }
-
 }
 \seealso{
 \link{matplot}, \link{plot}

@@ -6,19 +6,13 @@
 \title{Class "XPSSample"}
 \description{
 The package provides classes for XPS spectra (class \code{XPSSample}) and
-collections of such lists (class \code{XPSCoreLine}). \code{XPSSample} are
-mass-intensity value pairs stored in a two column \code{list} and several
-additional parameters stored in slots.
+  collections of such lists (class \code{XPSCoreLine}). \code{XPSSample} are
+  energy-intensity value pairs stored in a two column \code{list} and several
+  additional parameters stored in slots.
+  Objects from the Class: Objects can be created by calls of the form \code{new("XPSSample", data, Project, Sample, Comments, User, Filename)}.
 }
-\section{Objects from the Class}{
- Objects can be created by calls of the form
-\code{new("XPSSample", data, Project, Sample, Comments, User, Filename)}.
-}
-
 \examples{
-
 \dontrun{
 SiOx <- new("XPSSample",info="test",experiment="Si-Ti Waveguides")
 }
 }
-\keyword{classes}

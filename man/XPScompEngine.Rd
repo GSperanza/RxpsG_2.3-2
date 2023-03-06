@@ -2,9 +2,7 @@
 % Please edit documentation in R/XPSCompareEngine.r
 \name{XPScompEngine}
 \alias{XPScompEngine}
-\title{XPScompare Engine is the software powering the XPSCompareGUI.
-This function compares corelines in multi-panel mode following
-options selected in XPScompareGUI}
+\title{XPScompare allows compare Core-Line and their best fits}
 \usage{
 XPScompEngine(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 }
@@ -23,7 +21,8 @@ XPScompEngine(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 Returns c(Xlim, Ylim) eventually modified
 }
 \description{
-XPScompare Engine is the software powering the XPSCompareGUI.
-This function compares corelines in multi-panel mode following
-options selected in XPScompareGUI
+XPScompEngine is the software powering the XPSCompareGUI.
+  XPScompEngine() is called by XPScompareGUI() and not directly accesible.
+  This macro compares corelines in multi-panel mode following
+  options selected by the user in XPScompareGUI
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSElements.r
 \name{getElementValue}
 \alias{getElementValue}
-\title{Elements functions utility}
+\title{getElementValue}
 \usage{
 getElementValue(
   element,
@@ -12,23 +12,19 @@ getElementValue(
 )
 }
 \arguments{
-\item{element}{element symbol as character}
+\item{element}{character = element symbol as character}
 
-\item{orbital}{atom orbital}
+\item{orbital}{character = atom orbital}
 
-\item{analyzer}{name of reference instrument dependent table of values}
+\item{analyzer}{character = name of reference instrument dependent table of values}
 
-\item{what}{name of value to get. Default \code{"RSF"}}
+\item{what}{character = name of value to get. Default \code{"RSF"}}
 }
 \value{
-Return values named by \code{what}.
+getElementValue returns values named by \code{what}.
 }
 \description{
-Unified functions to access and get values from the references files supplied
-for Scienta and Kratos instruments. These function are internal functions and
-not intended for the user.
-}
-\details{
-Unified functions to acces and get values from the references files supplied
-for Scienta and Kratos instruments.
+getElementValue function is used to to access and get values from the
+  element libraries supplied for Scienta and Kratos instruments. This function
+  is internal not intended for the user.
 }

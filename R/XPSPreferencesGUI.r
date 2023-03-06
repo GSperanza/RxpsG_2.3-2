@@ -23,20 +23,19 @@
 # NA	           thistle	    23111111	  CircleCross	     13	cadetblue	 grey45	 orangered
 # NA	           grey40	     222222A2	  Cross	           3	 cadetblue	 grey45	 orangered
 
-
-#'To select a dimensions of the graphic window depending on the dimensions of the screen used
-#'
-#'To select a dimensions of the graphic window depending on the dimensions of the screen used
-#'No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSPreferences()
-#'}
-#'
-#'@export
+#' @title XPSPreferences
+#' @description XPSPreferences function allows selection of preferences as
+#'   - plot colors, the default set of line patterns and set of symbols
+#'   - the character style used in RxpsG outputs
+#'   - the XPS excitatio source (Al, Mg)
+#'   - the default working directory
+#'   - the default operating system
+#' Preferences are stored in the XPSSettings.ini file saved in the ...Library/RxpsG/extdata.
+#' @examples
+#' \dontrun{
+#' 	XPSPreferences()
+#' }
+#' @export
 #'
 
 
@@ -113,12 +112,11 @@ XPSPreferences <- function() {
    group1 <- ggroup(horizontal=FALSE, container=group0)
    frameDim <- gframe(text=" WINDOW DIMENSIONS ", horizontal=FALSE, spacing=5, container=group1)
    LabBox <- ggroup(spacing=1, horizontal=TRUE, container=frameDim)
-   glabel("WinSize: ", container=LabBox)
-   WSvalue <- glabel(as.character(WinSize), container=LabBox)
+   WSvalue <- glabel("Graphical Window size: ", container=LabBox)
    WinObj1 <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
-                       WinSize <- as.character(svalue(WinObj1))
-                       delete(LabBox, WSvalue)
-                       WSvalue <<- glabel(WinSize, container=LabBox)
+                       WinSize <- svalue(WinObj1)
+                       svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
+                       WinSize <<- dev.size()*WinSize   #rescale the graphic window
                  }, container=frameDim)
 
    frameDev <- gframe("SELECT THE OPERATING SYSTEM FOR GRAPHICS", spacing=5, container=group1)
@@ -126,7 +124,7 @@ XPSPreferences <- function() {
                       OS <- svalue(GrDevice)
                       if (OS=="Windows") {Gdev <- "x11(xpos=600, ypos=5, title=' ')"} #top right position
                       if (OS=="MacOS-X") {Gdev <- "quartz(title=' ')"} #quartz() doesn't allow to set the opening position
-                      if (OS=="Linux") {Gdev <- "x11(type='Xlib', xpos=600, ypos=5, title=' ')"}
+                      if (OS=="Linux") {Gdev <- "x11(type='cairo', xpos=600, ypos=5, title=' ')"}
                  }, container = frameDev) # function(h,...){ }
 
 

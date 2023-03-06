@@ -2,9 +2,7 @@
 % Please edit documentation in R/XPSGetHvalue.r
 \name{GetHvalue}
 \alias{GetHvalue}
-\title{In interactive graphic panels the ordinate of the cursor positin is used to
-compute the intensity of the selected fit function to add or to move.
-see analysis or Move Component options.}
+\title{GetHvalue}
 \usage{
 GetHvalue(Object, Comp, FitFunct, A)
 }
@@ -21,7 +19,9 @@ GetHvalue(Object, Comp, FitFunct, A)
 Returns the component intensity.
 }
 \description{
-In interactive graphic panels the ordinate of the cursor positin is used to
-compute the intensity of the selected fit function to add or to move.
-see analysis or Move Component options.
+GetHvalue function is use to provide the correct intensity
+  of a fit component. In interactive graphic panels the ordinate
+  of the cursor position is used to compute the intensity of the
+  selected fit function to add or to move using GetHvalue().
+  see analysis or Move Component options.
 }

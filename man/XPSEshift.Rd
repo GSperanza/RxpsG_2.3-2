@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSEshiftGUI.r
 \name{XPSEshift}
 \alias{XPSEshift}
-\title{XPSEShift function}
+\title{XPSEShift}
 \usage{
 XPSEshift()
 }
 \description{
-Function to alligne the energy scale through a reference peak
-As reference peaks C1s from hydrocarbons at BE=285eV or Au4f 7/2 at BE=84eV
-are generally chosen.
-No parameters are passed to this function
+XPSEshift function correct the energy scale of spectra
+  affected by charging effects. Generally C1s from hydrocarbons at BE=285eV
+  or Au4f 7/2 at BE=84eV  are chosen as reference peaks. Charges spectra are 
+  shifted forcing the reference spectra to fall at their correct BE position.
 }
 \examples{
-
-\dontrun{
-XPSEshift()
+ \dontrun{
+	XPSEshift()
 }
-
 }

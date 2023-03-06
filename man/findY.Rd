@@ -2,12 +2,12 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{findY}
 \alias{findY}
-\title{findY function utility}
+\title{findY}
 \usage{
 findY(XY, Xvalue)
 }
 \arguments{
-\item{XY}{numeric XY matrix}
+\item{XY}{numeric matrix composed by X and Y columns}
 
 \item{Xvalue}{numeric value}
 }
@@ -15,12 +15,10 @@ findY(XY, Xvalue)
 Returns Y value
 }
 \description{
-finds the Y value corresponding to a given X value
+findY finds the Y value corresponding to a given X value
 }
 \examples{
-
 \dontrun{
-findYIndex(XY, Xvalue)
+	findY(XY, Xvalue)
 }
-
 }

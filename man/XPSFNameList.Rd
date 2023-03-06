@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFNameList.r
 \name{XPSFNameList}
 \alias{XPSFNameList}
-\title{Provide a list of the XPS-Sample names loaded}
+\title{XPSFNameList}
 \usage{
 XPSFNameList(warn = TRUE)
 }
@@ -10,13 +10,12 @@ XPSFNameList(warn = TRUE)
 \item{warn}{logical enables warning messages}
 }
 \description{
-Provide a list of names (strings) relative to the XPS-Samples
-loaded in the XPS-Analysis software. No parameters are passed to this function.
+Provide a list of the XPS-Sample names loaded
+  Provide a list of names (strings) relative to the XPS-Samples
+  loaded in the XPS-Analysis software. No parameters are passed to this function.
 }
 \examples{
-
 \dontrun{
-XPSFNameList()
+	XPSFNameList()
 }
-
 }

@@ -2,22 +2,22 @@
 % Please edit documentation in R/XPSSpectList.r
 \name{XPSSpectList}
 \alias{XPSSpectList}
-\title{Show the list of spctra related to an XPSSample identified by its Spectral ID}
+\title{XPSSpectList}
 \usage{
-XPSSpectList(activeFName, noIdx = FALSE)
+XPSSpectList(SelectedFName, noIdx = FALSE)
 }
 \arguments{
-\item{activeFName}{the name (string) of the selected XPSSample}
+\item{SelectedFName}{the name (string) of the selected XPSSample}
 
-\item{noIdx}{logical if TRUE a numerical index is added to any CoreLine name}
+\item{noIdx}{logical if FALSE a numerical index is added to any CoreLine name}
 }
 \description{
-Show the list of spctra related to an XPSSample identified by its Spectral ID
+XPSSpectList shows the list of spctra related to
+  object of class XPSSample. The spectra are identified by their
+  an index or by the CoreLine name
 }
 \examples{
-
 \dontrun{
-XPSSampleInfo(activeFName, noIdx=FALSE)
+	XPSSampleInfo(SelectedFName, noIdx=FALSE)
 }
-
 }

@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSSwitchBE.KE.GUI.r
 \name{XPSSwitch.BE.KE}
 \alias{XPSSwitch.BE.KE}
-\title{function to set the energy scale i <<-n a selected XPSSample}
+\title{XPSSwitch.BE.KE}
 \usage{
 XPSSwitch.BE.KE()
 }
 \description{
-The energy scale in a XPSSample may be set as Binding Energy or Kinetic Energy
-This function converts Binding energy into Kinetic and viceversa. The selected energy scale
-for a given core line will be used  to plot the correspondent spectral data.
-No parameters are passed to this function
+XPSSwitch.BE.KE function to set the energy scale in an object of class XPSSample
+  The energy scale in a XPSSample may be set as Binding Energy or Kinetic Energy
+  This function converts Binding energy into Kinetic and viceversa. The selected energy scale
+  for a given CoreLine will be used  to plot the correspondent spectral data.
 }
 \examples{
-
 \dontrun{
-XPSSetWinSize()
+	XPSSwitch.BE.KE()
 }
-
 }

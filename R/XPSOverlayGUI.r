@@ -1,27 +1,16 @@
-#function to perform plots in overlay mode
+# XPSOverlay function to superpose plots of CoreLine spectra
 
-#function to perform plots in overlay mode
-
-#'Performs overlay of XPS-Spectra
-#'
-#'Provides a userfriendly interface to select XPS-Corelines to overlay
-#'and a selection of plotting options for a personalized data representation
-#'This function is based on the (/code{Lattice}) Package.  No parameters passed
-#'No parameters passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSOverlay()
-#'}
-#'
-#'@export
+#' @title XPSOverlay
+#' @description function to superpose plots of CoreLine spectra
+#'   Provides a userfriendly interface to select XPS-Corelines to overlay
+#'   and a selection of plotting options for a personalized data representation
+#'   This function is based on the (/code{Lattice}) package.
+#' @examples
+#' \dontrun{
+#' 	XPSOverlay()
+#' }
+#' @export
 #'            
-
-
-#Plot_Args$factor$labels ->  Plot_Args$labels   Plot_Args$strip$strip.custom$var.name
-
 
 
 XPSOverlay <- function(){
@@ -424,10 +413,11 @@ setFileCheckBox <- function(){
    # list of graphical variables
    PatternList <- NULL
    FontSize <- c(0.6,0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,2.6,2.8,3)
-   AxLabOrient <- c("Horizontal", "Rot-20", "Rot-45", "Rot-70", "Vertical")
+   AxLabOrient <- c("Horizontal", "Rot-20", "Rot-45", "Rot-70", "Vertical", "Parallel", "Normal")
    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    Colors <- XPSSettings$Colors
    LType <- XPSSettings$LType
+#LType <- c("dashed", "solid", "dotted", "dotdash")
    SType <- XPSSettings$Symbols
    STypeIndx <- XPSSettings$SymIndx
    CLPalette <- as.matrix(Colors)
@@ -620,7 +610,7 @@ setFileCheckBox <- function(){
                                                                            layoutAmpli[1,4] <<- objFunctAmpliCL <<- gcombobox(SelectedNames$CoreLines, selected=-1, spacing=1, container=layoutAmpli)
                                                                            enabled(objFunctFact) <- TRUE
                                                                        }, container=layoutAmpli)
-                              CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                              CtrlPlot() 
                            }
 #                           enabled(T2group1) <- TRUE
 #                           enabled(T3group1) <- TRUE
@@ -718,7 +708,8 @@ setFileCheckBox <- function(){
                            T1FNameListCK <<- gcheckboxgroup(FNameListTot,checked=FALSE, handler=function(h,...){
                                                setFileCheckBox()
                            }, container=T1frameFName)
-
+                           delete(T1group1, NameTable)
+                           NameTable <<- gtable(dummy, expand=TRUE, fill=TRUE, container=T1group1) #table with the selected FNames
                            ResetPlot()
                            plot.new()
      }, container=T1groupButtons)
@@ -747,32 +738,33 @@ setFileCheckBox <- function(){
                     if ( svalue(objFunctNorm)) {   #Normalize option TRUE
                        Plot_Args$ylab$label <<- "Intensity [a.u.]"
                     }
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    CtrlPlot()
                  }, container=T2group2)
 
 ###Funct2: Y-Aligne
 
    objFunctAlign <- gcheckbox("Aligne bkg to 0",checked=FALSE, handler=function(h,...){
                     PlotParameters$Aligne <<- svalue(objFunctAlign)
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    CtrlPlot()
                  }, container=T2group2)
 
 ###Funct3: Reverse X axis
 
    objFunctRev <- gcheckbox("Reverse X axis",checked=TRUE, handler=function(h,...){
                     PlotParameters$Reverse <<- svalue(objFunctRev)
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    CtrlPlot()
                  }, container=T2group2)
 
 ###Funct4: Switch Binding to Kinetic Energy scale
 
    objFunctSwitch <- gcheckbox("Switch BE/KE energy scale",checked=FALSE, handler=function(h,...){
                     PlotParameters$SwitchE <<- svalue(objFunctSwitch)
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    CtrlPlot()
                  }, container=T2group2)
 
 ###Funct5: Normalize to a selected peak
-   T2group3 <- ggroup(label="FUNCTIONS", horizontal=TRUE, container=T2frame2) #needed to make tkconfigure to work
+   T2group3 <- ggroup(horizontal=TRUE, container=T2frame2) #needed to make tkconfigure to work
+   glabel("Normalize to Peak: position (eV)", container=T2group3)
    objFunctNormPeak <- gedit("", initial.msg = "Peak position = ", handler=function(h,...){
                     PlotParameters$NormPeak <<- as.numeric(svalue(objFunctNormPeak))
                     if ( is.na(PlotParameters$NormPeak) ) PlotParameters$NormPeak <<- 0
@@ -783,7 +775,7 @@ setFileCheckBox <- function(){
                     if ( svalue(objFunctNorm)) {   #Normalize option TRUE
                        Plot_Args$ylab$label <<- "Intensity [a.u.]"
                     }
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    CtrlPlot()
                  }, container=T2group3)
    tkconfigure(objFunctNormPeak$widget, width=20)
 
@@ -801,7 +793,7 @@ setFileCheckBox <- function(){
    layoutAmpli[1,6] <- objFunctFact <- gedit(" ", handler=function(h,...){
                          indx <- as.numeric(svalue(objFunctAmpliXS, index=TRUE))
                          SelectedNames$Ampli[indx] <<- as.numeric(svalue(objFunctFact))
-                         CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                         CtrlPlot()
                  }, container=layoutAmpli)
 
    tkconfigure(objFunctFact$widget, width=7)
@@ -881,14 +873,14 @@ setFileCheckBox <- function(){
    glabel("Azymuth rotation:", container=AzyGroup)
    T2AzymutRot <- gslider(from = 0, to = 90, by = 5, value = 35, handler=function(h,...){
                     PlotParameters$AzymuthRot <<- svalue(T2AzymutRot)
-                    CtrlPlot() ###Plot following the selections
+                    CtrlPlot()
                  }, container=AzyGroup)
 
    layoutTreD[2,2] <- ZenGroup <- ggroup(horizontal=TRUE, spacing=1, container = layoutTreD)
    glabel("Zenith rotation:", container=ZenGroup)
    T2ZenithRot <- gslider(from = 0, to = 90, by = 5, value = 15, handler=function(h,...){
                     PlotParameters$ZenithRot <<- svalue(T2ZenithRot)
-                    CtrlPlot() ###Plot following the selections
+                    CtrlPlot() 
                  }, container=ZenGroup)
 
 ###Funct8: Zoom
@@ -1001,6 +993,16 @@ setFileCheckBox <- function(){
                        Plot_Args$ylim <<- sort(c(y1, y2))
                    }
                    CtrlPlot() }, container = T2group6)
+
+   gbutton("  RESET SCALES  ", handler=function(h,...){
+                    Plot_Args$xlim <<- NULL    #xlim set in XPSOverlayEngine
+                    Plot_Args$ylim <<- NULL    #ylim set in XPSOverlayEngine
+                    svalue(x1) <- ""
+                    svalue(x2) <- ""
+                    svalue(y1) <- ""
+                    svalue(y2) <- ""
+                    CtrlPlot()
+                 }, container = T2group6)
 
    glabel(text="Position Left button  EXIT Right button", spacing=1,container=T2frame4)
    T2group7 <- ggroup(label="FUNCTIONS", horizontal=TRUE, spacing=1, container=T2frame4)
@@ -1157,7 +1159,7 @@ setFileCheckBox <- function(){
                              Plot_Args$type <<- "l"
                              palette <- svalue(T3_BW_Col)
                              if (svalue(T3_LineType)=="solid") {
-                                svalue(T3_BW_Col) <<- "RainBow"
+#                                svalue(T3_BW_Col) <<- "RainBow"
                                 Plot_Args$lty <<- "solid"
                                 Plot_Args$pch <<- STypeIndx[1]
                                 PlotParameters$Colors <<- Colors
@@ -1168,8 +1170,8 @@ setFileCheckBox <- function(){
                                 AutoKey_Args$col <<- Colors
                              }
                              if (svalue(T3_LineType)=="patterns") {
-                                svalue(T3_BW_Col) <<- "B/W"
-                                PlotParameters$Colors <<- "black"
+#                                svalue(T3_BW_Col) <<- "B/W"
+#                                PlotParameters$Colors <<- "black"
                                 Plot_Args$lty <<- LType
                                 Plot_Args$pch <<- STypeIndx
                                 Plot_Args$par.settings$superpose.symbol$col <<- "black"
@@ -1389,12 +1391,19 @@ setFileCheckBox <- function(){
    layoutAxis[3,3] <- T4F_AxLabOrient <- gframe("AXIS LABEL ORIENTATION", spacing=5, container=layoutAxis)
    T4_AxLabOrient <- gcombobox(AxLabOrient, selected=1, editable=FALSE, handler= function(h,...){
                              LabOrient <- svalue(T4_AxLabOrient)
-                             if (LabOrient == "Horizontal"){LabOrient <- 0}
-                             if (LabOrient == "Rot-20"){LabOrient <- 20}
-                             if (LabOrient == "Rot-45"){LabOrient <- 45}
-                             if (LabOrient == "Rot-70"){LabOrient <- 70}
-                             if (LabOrient == "Vertical"){LabOrient <- 90}
-                             Plot_Args$scales$rot <<- LabOrient
+                             if (LabOrient == "Horizontal"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 0}
+                             if (LabOrient == "Rot-20"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 20}
+                             if (LabOrient == "Rot-45"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 45}
+                             if (LabOrient == "Rot-70"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 70}
+                             if (LabOrient == "Vertical"){Plot_Args$scales$x$rot <<- Plot_Args$scales$y$rot <<- 90}
+                             if (LabOrient == "Parallel"){
+                                 Plot_Args$scales$x$rot <<- 0
+                                 Plot_Args$scales$y$rot <<- 90
+                             }
+                             if (LabOrient == "Normal"){
+                                 Plot_Args$scales$x$rot <<- 90
+                                 Plot_Args$scales$y$rot <<- 0
+                             }
                              CtrlPlot() }, container=T4F_AxLabOrient)
 
 

@@ -2,13 +2,16 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{Generic}
 \alias{Generic}
-\title{Generic function to create the new Fit Component Slots}
+\title{Generic}
 \usage{
 Generic(x)
 }
 \arguments{
 \item{x}{numeric vector}
 }
+\value{
+a series of NA of length = length(x)
+}
 \description{
-Generic function to create the new Fit Component Slots
+Generic is a function to initialize the new Fit Component Slots
 }

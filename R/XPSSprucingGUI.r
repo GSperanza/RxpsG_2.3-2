@@ -1,18 +1,14 @@
 #-----------------------------------------
 # XPS Sprucing with gWidgets2 and tcltk
 #-----------------------------------------
-#'Sprucing XPSSample data
-#'
-#'GUI to correct original XPS spectral data
-#'
-#'@return Returns the \code{Object} with corrected Survey spectrum.
-#'
+
+#'@title XPSSprucingGUI
+#'@description XPSSprucingGUI function to correct original XPS spectral data
+#'@return Returns the \code{Object} with the corrected spectrum.
 #'@examples
-#'
 #'\dontrun{
 #'	XPSSprucingGUI()
 #'}
-#'
 #'@export
 #'
 
@@ -27,15 +23,16 @@ XPSSprucingGUI <- function() {
       yy <- grconvertY(y, from="ndc", to="user")
       coords <<- c(xx, yy)
 
-      Xlim1 <- min(range(Object@.Data[[1]]))   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(range(Object@.Data[[1]]))
-      Ylim1 <- min(range(Object@.Data[[2]]))
-      Ylim2 <- max(range(Object@.Data[[2]]))
+      Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
+      Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
+      Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
+      Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
 
       if (xx < Xlim1 ) {xx <- Xlim1}
       if (xx > Xlim2 ) {xx <- Xlim2}
       if (yy < Ylim1 ) {yy <- Ylim1}
       if (yy > Ylim2 ) {yy <- Ylim2}
+
       if (buttons == 0) { LBmousedown() }
       if (buttons == 2) { cat("\n Please use Left Mouse Button") }
       return()
@@ -115,10 +112,10 @@ XPSSprucingGUI <- function() {
          Xlimits <- Object[[coreline]]@Boundaries$x
 	        if (point.index <= 2) {
 	  	         plot(Object[[coreline]], xlim=Xlimits)
-             points(point.coords, col="red", cex=1, lwd=1.5, pch=3)
+             points(point.coords, col="blue", cex=1, lwd=2.5, pch=3)
  	       } else if (point.index>2){
 	  	         plot(Object[[coreline]], xlim=Xlimits, ylim=Ylimits)
-             points(Corners, type="p", col="red", cex=1, lwd=1.5, pch=3)
+             points(Corners, type="p", col="blue", cex=1, lwd=2.5, pch=3)
              rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
 	        }
       }
@@ -200,7 +197,7 @@ XPSSprucingGUI <- function() {
 
 
 #====== Widget Definition =======
-  SPwin <- gwindow("XPS SPRUCING GUI", parent=c(100,-10), toolkit = "tcltk", visible = FALSE)
+  SPwin <- gwindow("XPS SPRUCING GUI", parent=c(50,10), toolkit = "tcltk", visible = FALSE)
   addHandlerDestroy(SPwin, handler=function(h, ...){  #if MainWindow unproperly closed with X
 #-----                         stopping mouse handler
                                setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
@@ -242,7 +239,7 @@ XPSSprucingGUI <- function() {
 
   gframe22 <- gframe(text = " SELECT DATA ", spacing=3, horizontal = FALSE, container = MainGroup)
 
-  gbutton(" SELECT REGION ", container = gframe22, handler = function(h, ...){
+  gbutton(" SELECT REGION ", handler = function(h, ...){
               OldCoords <<- Object[[coreline]]@Boundaries
               SelReg <<- SelReg+1
               rngX <- range(point.coords$x)
@@ -263,7 +260,7 @@ XPSSprucingGUI <- function() {
               Ylimits <<- c(point.coords$y[1]-rngY/10, point.coords$y[2]+rngY/10)
  	            slot(Object[[coreline]],"Boundaries") <<- point.coords
               replot()
-         } )
+         }, container = gframe22 )
 
   gbutton(" EDIT REGION ", handler = function(h, ...){
               do.editRegion()
@@ -312,7 +309,7 @@ XPSSprucingGUI <- function() {
   WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
                         WinSize <- svalue(WSize)
                         svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <- dev.size()*as.numeric(WinSize)   #rescale the graphic window
+                        WinSize <<- dev.size()*as.numeric(WinSize)   #rescale the graphic window
 #                        graphics.off()
 #                        OS <- Sys.info["sysname"]
 #                        switch (OS,

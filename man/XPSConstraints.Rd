@@ -2,22 +2,20 @@
 % Please edit documentation in R/XPSConstraintsGUI.r
 \name{XPSConstraints}
 \alias{XPSConstraints}
-\title{GUI to add a fit constraints to the fitting functions of a XPSCoreLine}
+\title{XPSConstraints is a user interface to add a fit constraints}
 \usage{
 XPSConstraints()
 }
 \description{
-Add constraints among fit components defined for a XPSCoreLine object. 
-This function is called after the definition of the baseline (\code{XPSbaseline}) 
-and fitting components (\code{XPSaddFitComponent}). No parameters are passed to
-this function
+XPSConstraints function is a user interface to simplyfy
+  It adds constraints among fit components defined for a XPSCoreLine object.
+  This function is called after the definition of the baseline (\code{XPSbaseline})
+  and fitting components (\code{XPSaddFitComponent}).
 }
 \examples{
-
 \dontrun{
-XPSConstraints()
+	XPSConstraints()
 }
-
 }
 \seealso{
 \link{XPSConstrain}, \link{XPSbaseline}, \link{XPSaddFitComponent}, \link{XPSfitAlgorithms}

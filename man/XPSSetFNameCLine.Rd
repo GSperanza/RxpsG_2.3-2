@@ -2,19 +2,18 @@
 % Please edit documentation in R/XPSSetFNameCLineGUI.r
 \name{XPSSetFNameCLine}
 \alias{XPSSetFNameCLine}
-\title{To select a XPS-Sample and a Core Line}
+\title{XPSSetFNameCLine}
 \usage{
 XPSSetFNameCLine()
 }
 \description{
-The list of XPS-Samples loaded is presented for selection.
-After selection of the XPS-Sample the list of correspondent Corelines is available for selection.
-No parameters are passed to this function
+XPSSetFNameCLine function to select an objects of class XPSSample
+  and objects of class CoreLine
+  The list of XPS-Samples loaded is presented for selection.
+  After selection of the XPS-Sample the list of correspondent Corelines is available for selection.
 }
 \examples{
-
 \dontrun{
-XPSSetFNameCLine()
+	XPSSetFNameCLine()
 }
-
 }

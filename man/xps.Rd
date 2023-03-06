@@ -2,16 +2,17 @@
 % Please edit documentation in R/RXPSGUI.r
 \name{xps}
 \alias{xps}
-\title{Main GUI to process XPS-Samples data files}
+\title{xps is the main interface of the Package RxpsG}
 \usage{
 xps()
 }
 \description{
-Main GUI to process XPS-Samples data files
+xps() activates the RxpsG front-end to use
+  all the functions to load raw data perform the spectral
+  analysis and plot raw and analyzed spectra
 }
 \examples{
-
-\dontrun{
-xps()
+ \dontrun{
+ xps()
 }
 }

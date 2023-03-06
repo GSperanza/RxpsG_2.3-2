@@ -2,14 +2,12 @@
 % Please edit documentation in R/XPSCustomBaseline.r
 \name{Shirley2P}
 \alias{Shirley2P}
-\title{Shirley2P  is a two parameter Bs, Cs expressely evaluated for the Shirley background
-Shirley Cross Section described by: B*T/(C + T^2)     T=energy loss
-see J. Vegh, Surface Science 563 (2004) 183,    J. Vegh  J.Electr.Spect.Rel.Phen. 151 (2006) 159}
+\title{Shirley2P a two parameter Shirley function}
 \usage{
 Shirley2P(object, limits)
 }
 \arguments{
-\item{object}{XPSSample object}
+\item{object}{XPSSample CoreLine}
 
 \item{limits}{limits of the XPSSample object}
 }
@@ -17,7 +15,12 @@ Shirley2P(object, limits)
 returns the Two_parameter Shirley background.
 }
 \description{
-Shirley2P  is a two parameter Bs, Cs expressely evaluated for the Shirley background
-Shirley Cross Section described by: B*T/(C + T^2)     T=energy loss
-see J. Vegh, Surface Science 563 (2004) 183,    J. Vegh  J.Electr.Spect.Rel.Phen. 151 (2006) 159
+Shirley2P  is a Shirley backgroung generated
+  using the two parameter Bs, Cs. Shirley(E) = S(E)is evaluated iteratively.
+  S(E) = Integral[ K(E'-E) * J(E)dE' ]
+  J(E) is the acquired spectrum
+  K(E'-E) describes the energy loss E-E' and is described by: B*(E-E')/[C + (E-E')^2]
+  see J. Vegh, Surface Science 563 (2004) 183,
+  J. Vegh  J.Electr.Spect.Rel.Phen. 151 (2006) 159
+  This function is called by the XPSAnalysisGUI
 }

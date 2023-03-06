@@ -2,18 +2,16 @@
 % Please edit documentation in R/XPSSetCoreLineGUI.r
 \name{XPSSetCoreLine}
 \alias{XPSSetCoreLine}
-\title{To select a Core Line}
+\title{XPSSetCoreLine}
 \usage{
 XPSSetCoreLine()
 }
 \description{
-The list of corelines of a give XPS-Sample are presented for selection
-no parameters are passed to this function
+XPSSetCoreLine function to select a Core Line
+  The list of corelines of a give XPS-Sample are presented for selection
 }
 \examples{
-
 \dontrun{
 XPSSetCoreLine()
 }
-
 }

@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSSprucingGUI.r
 \name{XPSSprucingGUI}
 \alias{XPSSprucingGUI}
-\title{Sprucing XPSSample data}
+\title{XPSSprucingGUI}
 \usage{
 XPSSprucingGUI()
 }
 \value{
-Returns the \code{Object} with corrected Survey spectrum.
+Returns the \code{Object} with the corrected spectrum.
 }
 \description{
-GUI to correct original XPS spectral data
+XPSSprucingGUI function to correct original XPS spectral data
 }
 \examples{
-
 \dontrun{
 XPSSprucingGUI()
 }
-
 }

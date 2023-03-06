@@ -2,19 +2,22 @@
 % Please edit documentation in R/XPSFitInfoGUI.r
 \name{XPSFitInfo}
 \alias{XPSFitInfo}
-\title{Provides information about a Core Line fit}
+\title{XPSFitInfo}
 \usage{
 XPSFitInfo()
 }
+\value{
+XPSFitInfo returns a table summarizing the area, FWHM, RSF, BE, % for
+  each of the fit components if the active CoreLine
+}
 \description{
-Makes the computation of the integral intensity of each of the fitting components
-of a given coreline. The sum of the component integral intensities =100% (it is the
-best fit integral intensity). No parameters are passed to this function.
+Provides information about a Core Line fit
+  Makes the computation of the integral intensity of each of the fitting components
+  of a given coreline. The sum of the component integral intensities =100% (it is the
+  best fit integral intensity).
 }
 \examples{
-
 \dontrun{
-XPSFitInfo()
+	XPSFitInfo()
 }
-
 }

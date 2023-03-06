@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSRead.Vamas.r
 \name{read.vamas}
 \alias{read.vamas}
-\title{read.vamas function reads data in standard vamas format}
+\title{read.vamas}
 \usage{
 read.vamas(file = NULL, debug = FALSE)
 }

@@ -1,22 +1,16 @@
-#function to perform plots in overlay mode
-
-#function to perform plots in overlay mode
-
-#'Performs overlay of XPS-Spectra
+#XPSCompare() function to create plots in multi-panel mode
 #'
-#'Provides a userfriendly interface to select XPS-Corelines to overlay
-#'and a selection of plotting options for a personalized data representation
-#'This function is based on the (/code{Lattice}) Package.  No parameters passed
-#'No parameters passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSOverlay()
-#'}
-#'
-#'@export
+#' @title XPSCompare is used to compare Core-Line spectra
+#' @description XPSCompare provides a userfriendly interface to select 
+#'   the XPS-Core-Lines together with their best fit to be plotted in 
+#'   individual panels. XPSCompare permits the selection of plotting options
+#'   for a personalized data representation.
+#'   This function is based on the (/code{Lattice}) Package.
+#' @examples
+#' \dontrun{
+#' 	XPSOverlay()
+#' }
+#' @export
 #'
 
 
@@ -526,7 +520,7 @@ XPSCompare <- function(){
 
 #===== NoteBook =====
 
-   win <- gwindow(" COMPARE SPECTRA ", parent=c(0,50), visible=FALSE)
+   win <- gwindow(" COMPARE SPECTRA ", parent=c(50,10), visible=FALSE)
    size(win) <- c(400,400)
    maingroup <- ggroup(horizontal=FALSE, container=win)
    nb <- gnotebook(expand=TRUE, container = maingroup)
@@ -1058,7 +1052,7 @@ XPSCompare <- function(){
                              RngXmax <- round(unlist(Xlim[[3]]), digits=0)
                              names(RngXmin) <- Xlim[[1]]
                              names(RngXmax) <- Xlim[[1]]
-                             winTick <- gwindow(" X AXIS TICK INCREMENT ", parent=c(50,0), visible=FALSE)
+                             winTick <- gwindow(" X AXIS TICK INCREMENT ", parent=c(50,10), visible=FALSE)
                              DFgroup <- ggroup(horizontal=FALSE, container=winTick)
                              glabel("Please, give the increment between ticks", container=DFgroup)
                              Tick.Increment <- rep("?",NCL) #this is needed to construct correctly the data.frame
@@ -1089,7 +1083,7 @@ XPSCompare <- function(){
                              RngYmax <- round(unlist(Ylim[[3]]), digits=0)
                              names(RngYmin) <- Xlim[[1]]
                              names(RngYmax) <- Xlim[[1]]
-                             winTick <- gwindow(" Y AXIS TICK INCREMENT ", parent=c(50,0), visible=FALSE)
+                             winTick <- gwindow(" Y AXIS TICK INCREMENT ", parent=c(50,10), visible=FALSE)
                              DFgroup <- ggroup(horizontal=FALSE, container=winTick)
                              glabel("Please, give the increment between ticks", container=DFgroup)
                              Tick.Increment <- rep("?",NCL) #this is needed to construct correctly the data.frame

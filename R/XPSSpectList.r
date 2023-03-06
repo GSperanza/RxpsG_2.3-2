@@ -1,32 +1,31 @@
-# crea la lista degli spettri associati ad un dato Spectral identifier
+# creates the list of spectra associated to an XPSSample
 
-#'Show the list of spctra related to an XPSSample identified by its Spectral ID
-#'
-#'@param activeFName the name (string) of the selected XPSSample
-#'@param noIdx logical if TRUE a numerical index is added to any CoreLine name
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSSampleInfo(activeFName, noIdx=FALSE)
-#'}
-#'
-#'@export
+#' @title XPSSpectList
+#' @description XPSSpectList shows the list of spctra related to
+#'   object of class XPSSample. The spectra are identified by their
+#'   an index or by the CoreLine name
+#' @param SelectedFName the name (string) of the selected XPSSample
+#' @param noIdx logical if FALSE a numerical index is added to any CoreLine name
+#' @examples
+#' \dontrun{
+#' 	XPSSampleInfo(SelectedFName, noIdx=FALSE)
+#' }
+#' @export
 #'
 
 
-XPSSpectList <- function(activeFName, noIdx=FALSE) {
-     if (is.na(activeFName)){
+XPSSpectList <- function(SelectedFName, noIdx=FALSE) {
+     if (is.na(SelectedFName)){
         gmessage("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
         return()
      }
-     FName<-get(activeFName,envir=.GlobalEnv)
+     FName <- get(SelectedFName, envir=.GlobalEnv)
      CoreLineList=""
-     CoreLineList<-FName@names
-     LL<-length(CoreLineList)
+     CoreLineList <- FName@names
+     LL <- length(CoreLineList)
      if (noIdx==FALSE){
         for (ii in 1:LL){
-               CoreLineList[ii]<-paste(ii,".",CoreLineList[ii], sep="")   #Aggiungo N. all'inizio nome coreline per distinguere spettri con eguale nome
+               CoreLineList[ii] <- paste(ii,".",CoreLineList[ii], sep="")   #Add number at beginning of the corelines to identify spectra with saame name
         }
      }
      return(CoreLineList)

@@ -5,13 +5,12 @@
 #'Provides the list of components and the relative fitting parameters
 #'for a selected XPSCoreLine. No parameters are passed to this function
 #'
-#'
 #'@examples
 #'
 #'\dontrun{
 #'	XPSFitParamInfo()
 #'}
-#'
+#'@docType methods
 #'@export
 #'
 
@@ -75,11 +74,36 @@ XPSFitParamInfo <- function() {
 
 
    SetDataFrame <- function() {
-#--- Quantificazione sul FIT ---
-         activeFName <- get("activeFName", envir=.GlobalEnv)
-         FName <- get(activeFName, envir=.GlobalEnv)
-         Indx <- get("activeSpectIndx", envir=.GlobalEnv)
-         N_Comp <- length(FName[[Indx]]@Components)
+      activeFName <- get("activeFName", envir=.GlobalEnv)
+      FName <- get(activeFName, envir=.GlobalEnv)
+      Indx <- get("activeSpectIndx", envir=.GlobalEnv)
+      N_Comp <- length(FName[[Indx]]@Components)
+      CompNames <- names(FName[[Indx]]@Components)
+
+      fnName <- sapply(FName[[Indx]]@Components, function(x)  x@funcName) #was VBtop analysis performed on coreline?
+      if ("VBtop" %in% fnName){
+         for(jj in 1:N_Comp){ #jj runs on the fit components
+            Area <- rbind(Area, "//")
+            FWHM <- rbind(FWHM, "//")
+            RSF <- rbind(RSF, "//")
+            if (FName[[Indx]]@Components[[jj]]@funcName=="VBtop"){
+                BE <- rbind(BE, as.character(round(FName[[Indx]]@Components[[jj]]@param[1,1], 3))) #Component BE
+                CompNames[jj] <- paste(CompNames[jj], "VBtop", sep=" ")
+            } else {
+                BE <- rbind(BE, "//")
+            }
+            Conc  <- rbind(Conc, "//")
+         }
+         CompNames <- encodeString(CompNames, width=10, justify="centre")
+         Area <- encodeString(Area, width=10, justify="right")
+         FWHM <- encodeString(FWHM, width=10, justify="right")
+         RSF <- encodeString(RSF, width=10, justify="right")
+         BE <- encodeString(BE, width=10, justify="right")
+         Conc <- encodeString(Conc, width=10, justify="right")
+         fitParam <- data.frame(CompNames, Area, FWHM, RSF, BE, Conc, stringsAsFactors=FALSE)
+
+      } else {
+#--- Fit Quantification sul FIT ---
          RSF <- FName[[Indx]]@RSF
          if (RSF==0) RSF <- 1
          sumCoreLine <- sum(FName[[Indx]]@Fit$y)/RSF #Fit contribution
@@ -93,9 +117,8 @@ XPSFitParamInfo <- function() {
          }
 #---Set DataFrame Table
          RSF <- NULL
-         CompNames <- names(FName[[Indx]]@Components)
          for(jj in 1:N_Comp){ #jj runs on the FitComponents
-#            CompNames <- rbind(CompNames, paste("C", jj, sep=""))
+#           CompNames <- rbind(CompNames, paste("C", jj, sep=""))
             Area <- rbind(Area,round(sumComp[jj], 3))
             FWHM <- rbind(FWHM,round(FName[[Indx]]@Components[[jj]]@param[3,1], 2)) #FWHM component jj
             RSF <- rbind(RSF,unlist(FName[[Indx]]@Components[[jj]]@rsf)) #RSF component jj
@@ -108,9 +131,9 @@ XPSFitParamInfo <- function() {
          RSF <- encodeString(RSF, width=10, justify="right")
          BE <- encodeString(BE, width=10, justify="right")
          Conc <- encodeString(Conc, width=10, justify="right")
-
          fitParam <- data.frame(CompNames, Area, FWHM, RSF, BE, Conc, stringsAsFactors=FALSE)
-         return(fitParam)
+      }
+      return(fitParam)
    }
 
 
@@ -159,6 +182,8 @@ XPSFitParamInfo <- function() {
                           SetSpectrum()
                           updateObj()
                         }  , container = Infoframe1)
+   svalue(InfoObj1) <- activeFName
+
    InfoObj2 <- gcombobox(SpectList, selected=Indx, editable=FALSE, spacing=10, handler=function(h,...){
                           activeSpectName <<- svalue(InfoObj2)
                           Indx <<- svalue(InfoObj2, index=TRUE)
@@ -172,12 +197,12 @@ XPSFitParamInfo <- function() {
                           txt <- paste("                              Extension of the fit region:  ", fitrng[1], "-", fitrng[2])
                           SpectInfo1 <<- glabel(text=txt, container=InfoGroup3)
                           fitrng <- round(range(FName[[Indx]]@RegionToFit$y),2)
-                          txt <- paste("                              Intensity of the fit region:  ",fitrng[1],"-", fitrng[2])
+                          txt <- paste("                              Intensity of the fitted spectrum:  ",fitrng[1],"-", fitrng[2])
                           SpectInfo2 <<- glabel(text=txt, container=InfoGroup3)
                           BLtype <- FName[[Indx]]@Baseline$type
                           txt <- paste("                              Base Line Type:  ",BLtype)
                           SpectInfo3 <<- glabel(text=txt, container=InfoGroup3)
-                          txt=paste("                             ", FName@Filename, ":  ",activeSpectName, "  FIT PARAMETERS                                    ")
+                          txt <- paste("                             ", FName@Filename, ":  ",activeSpectName, "  FIT PARAMETERS                                    ")
                           SpectInfo4 <<- glabel(text=txt, container=InfoGroup3)
 
                           if (length(FName[[Indx]]@Components) == 0){  #no information if Baseline not defined
@@ -191,7 +216,6 @@ XPSFitParamInfo <- function() {
                           }
                        }, container=Infoframe2)
 
-   svalue(InfoObj1) <- activeFName
 
    InfoGroup3 <- ggroup(horizontal=FALSE, container=InfoGroup1)
 
@@ -215,12 +239,18 @@ XPSFitParamInfo <- function() {
       message <- paste("No Fit found for", activeSpectName, sep=" ")
       gmessage(msg=message, title = "CORE LINE INFO",  icon = "warning")
    }
+
    InfoTable <- gtable(items=fitParam, container=InfoGroup4)
    size(InfoTable) <- c(550,250)
 
    SpectInfo5 <- glabel(text="Component Line Shape: ", container=InfoGroup4)
 
    addHandlerDoubleclick(InfoTable, handler=function(h,...){ #addHandlerDoubleclick returns the index of selected component
+                          fnName <- sapply(FName[[Indx]]@Components, function(x)  x@funcName) #was VBtop analysis performed on coreline?
+                          if ("VBtop" %in% fnName){
+                             gmessage(msg="No additional information for VBtop analysis", title="INFO", icon="info")
+                             return()
+                          }
                           CompIndx <- svalue(InfoTable, index=TRUE)    #reuse fitparam to load component fitting parameters
                           activeFName <- get("activeFName", envir=.GlobalEnv) #set the activeSpectrum be equal to the last loaded file
                           FName <- get(activeFName, envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato

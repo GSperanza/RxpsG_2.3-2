@@ -2,20 +2,19 @@
 % Please edit documentation in R/XPSCompareGUI.r
 \name{XPSCompare}
 \alias{XPSCompare}
-\title{Performs overlay of XPS-Spectra}
+\title{XPSCompare is used to compare Core-Line spectra}
 \usage{
 XPSCompare()
 }
 \description{
-Provides a userfriendly interface to select XPS-Corelines to overlay
-and a selection of plotting options for a personalized data representation
-This function is based on the (/code{Lattice}) Package.  No parameters passed
-No parameters passed to this function
+XPSCompare provides a userfriendly interface to select 
+  the XPS-Core-Lines together with their best fit to be plotted in 
+  individual panels. XPSCompare permits the selection of plotting options
+  for a personalized data representation.
+  This function is based on the (/code{Lattice}) Package.
 }
 \examples{
-
 \dontrun{
-XPSOverlay()
+	XPSOverlay()
 }
-
 }

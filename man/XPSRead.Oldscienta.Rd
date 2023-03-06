@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSRead.OldScienta.r
 \name{XPSRead.Oldscienta}
 \alias{XPSRead.Oldscienta}
-\title{Read XPS data from old-DOS-Scienta format}
+\title{XPSRead.Oldscienta}
 \usage{
 XPSRead.Oldscienta(
   filename = NULL,
@@ -21,15 +21,21 @@ XPSRead.Oldscienta(
 \item{out}{output class type default list()}
 }
 \value{
-list object class
+XPSRead.Oldscienta returns and object of class XPSSample
 }
 \description{
-Reads XPS data 'old-Scienta' format Data.
+XPSRead.Oldscienta function is used to read XPS data
+  in the old-DOS-Scienta format
+  Data are saved in the following folder which must be present
+   /Analysis
+   /Regions
+   /Results
+   /Specific
+  Selection of the DataFile in the /Analysis folder activates reading
+  data in all the folders.
 }
 \examples{
-
 \dontrun{
-pk1 <- read.xps("/Volumes/GoogleDrive/Il mio Drive/R/OldScientaFiles/Specific/DLC.48")
+ pk1 <- read.xps("c:/R/Analysis/OldScientaFiles/Analysis/DLC.48")
 }
-
 }

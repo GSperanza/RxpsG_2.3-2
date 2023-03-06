@@ -1,17 +1,12 @@
 #Function to select Corelines for Fit Constraints
 
-#'To select a Core Line
-#'
-#'The list of corelines of a give XPS-Sample are presented for selection
-#'no parameters are passed to this function
-#'
-#'
+#'@title XPSSetCoreLine
+#'@description XPSSetCoreLine function to select a Core Line
+#'   The list of corelines of a give XPS-Sample are presented for selection
 #'@examples
-#'
 #'\dontrun{
 #'	XPSSetCoreLine()
 #'}
-#'
 #'@export
 #'
 

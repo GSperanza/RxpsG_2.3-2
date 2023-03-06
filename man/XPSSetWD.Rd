@@ -2,18 +2,17 @@
 % Please edit documentation in R/XPSSetWDGUI.r
 \name{XPSSetWD}
 \alias{XPSSetWD}
-\title{To set the default working dir if it is not defined}
+\title{XPSSetWD}
 \usage{
 XPSSetWD()
 }
 \description{
-The new default working dir will be saved in the XPSSettings.ini
-which uincludes also the user preferences.
+XPSSetWD function To set the default working dir if it is not defined
+ The new default working dir will be saved in the /R/library/RxpsG/extdata/XPSSettings.ini
+ which contains also the user preferences.
 }
 \examples{
-
 \dontrun{
 XPSSetWD()
 }
-
 }

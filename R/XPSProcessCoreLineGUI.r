@@ -1,20 +1,18 @@
 #CoreLine processing: adding/deleting corelines or Baseline and Fits to exiting Corelines
 
-#'Add a CoreLine (with fit if existing)to an XPS-Sample, or just BaseLine and Fit
-#'or remove a Coreline from a XPS-Sample
-#'
-#'Add a Coreline from a source XPS-Sample into a destination XPS-Sample or
-#'Add a just a BaseLine and Fit from a source XPS-Sample into a destination XPS-Sample or
-#'remove a CoreLine from a XPS-Sample. No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSProcessCoreLine()
-#'}
-#'
-#'@export
+
+#' @title XPSProcessCoreLine
+#' @description XPSProcessCoreLine function adds a CoreLine (with fit if existing)
+#'   to an object of class XPSSample, or just a BaseLine and Fit to an existing CoreLine
+#'   (class XPSCoreLine) or remove a CoreLine from an object of class XPSSample
+#'   XPSProcessCoreLine may be used to perform some simple math operations on CoreLines
+#'   (class XPSCoreLine) like addition, subtraction, multiplication by a constant value
+#'    normalization, differentiation, combination of two CoreLines.
+#' @examples
+#' \dontrun{
+#' 	XPSProcessCoreLine()
+#' }
+#' @export
 #'
 
 XPSProcessCoreLine <- function(){
@@ -42,20 +40,29 @@ XPSProcessCoreLine <- function(){
       visible(winCL) <- TRUE
       winCL$set_modal(TRUE)  #nothing can be done while running this macro
    }                         #modal mode takes the control of the 'return' value which CANNOT be used to return variable values
+   
+   RenumCL <- function(SourceFile){
+      CLnames <- names(SourceFile)
+      LL <- length(SourceFile)
+      for(ii in 1:LL){
+          SourceFile[[ii]]@Symbol <- paste(ii,".",CLnames[ii], sep="")
+      }
+      return(SourceFile)
+   }
 
-   updateObj <- function(SFpointer, FRMpointer, CLpointer,...){
+   updateObj <- function(SFpointer, CNTRpointer, CLpointer,...){
       SelectedFName <- svalue(SFpointer)
       SpectList <<- XPSSpectList(SelectedFName)
       SourceFName <- get(SelectedFName,envir=.GlobalEnv)  #load the source XPSSample file
-      delete(FRMpointer,CLpointer)
+      delete(CNTRpointer,CLpointer)
       CLpointer <- gcombobox(SpectList, selected=-1, handler=function(h, ...){
                                   SourceCoreline <- svalue(CLpointer)
                                   SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #slipt strin at character "."
                                   indx <- as.integer(SourceCoreline[1])
                                   plot(SourceFName[[indx]])
                                   enabled(DestFileName) <- TRUE # disable selection of the destination file
-                             }, editable=FALSE, container=FRMpointer)
-      add(FRMpointer,CLpointer)
+                             }, editable=FALSE, container=CNTRpointer)
+      add(CNTRpointer,CLpointer)
       plot(SourceFName)
       enabled(CLpointer) <- TRUE #enable core line selection
       return(CLpointer)
@@ -72,13 +79,14 @@ XPSProcessCoreLine <- function(){
 
         if (BasLinType == "shirley"){BasLinType <- "Shirley"}       #different names for old/new RXPSG packages
         if (BasLinType == "2p.shirley"){BasLinType <- "2P.Shirley"} #transform to new BaseLineNames.
-        if (BasLinType == "3p.Shirley"){BasLinType <- "3P.Shirley"} #Exact Baseline Names required to generate the Baseline see XPSClass
+        if (BasLinType == "3p.shirley"){BasLinType <- "3P.Shirley"} #Exact Baseline Names required to generate the Baseline see XPSClass
         if (BasLinType == "lp.shirley"){BasLinType <- "LP.Shirley"}
         if (BasLinType == "2p.tougaard"){BasLinType <- "2P.Tougaard"}
         if (BasLinType == "3p.tougaard"){BasLinType <- "3P.Tougaard"}
         if (BasLinType == "4p.tougaard"){BasLinType <- "4P.Tougaard"}
 
-        if (BasLinType == "linear" || BasLinType == "Shirley" || BasLinType == "2P.Shirley" || BasLinType == "2P.Tougaard" || BasLinType == "3P.Tougaard") {
+        if (BasLinType == "linear" ||
+           BasLinType == "Shirley" || BasLinType == "2P.Shirley" || BasLinType == "2P.Tougaard" || BasLinType == "3P.Tougaard") {
            txt <- paste(BLinfo[1], " background found!\n  ==> Set the Baseline Limits")
            gmessage(msg=txt, title="HELP INFO", icon="info")
            plot(DestFile[[destIndx]])
@@ -223,9 +231,9 @@ XPSProcessCoreLine <- function(){
       gmessage(msg=" Remember to save data after each operation \n otherwise you will loss the results", title="SAVE RESULTS", icon="warning")
 
 #####----main---
-      AddWin <- gwindow("CORELINE PROCESSING", parent=c(100, 0), visible=FALSE)
+      ProcessWin <- gwindow("CORELINE PROCESSING", parent=c(50, 10), visible=FALSE)
 
-      Addgroup <- ggroup(horizontal=FALSE, container=AddWin)
+      Addgroup <- ggroup(horizontal=FALSE, container=ProcessWin)
       NoteBK <- gnotebook(expand=TRUE, container = Addgroup)
 
 #--- TAB1
@@ -333,7 +341,7 @@ XPSProcessCoreLine <- function(){
                                   SpectIndx <- as.integer(SourceCoreline[1])
                                   SpectName <- SourceCoreline[2]
                                   CoreLineList <- names(DestFName)
-                                  destIndx <- grep(SpectName, CoreLineList)   #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
+                                  destIndx <- grep(SpectName, CoreLineList) #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
 
                                   if (length(destIndx) > 1){                #The same coreline can be present more than one time
                                      CtrlRepCL(destIndx, SpectName, DestSpectList)
@@ -344,12 +352,12 @@ XPSProcessCoreLine <- function(){
                                       text <- paste(SpectName, "not present in the Destination File: Fit copy stopped")
                                       gmessage(msg=text , title = "FIT COPY TO DESTINATION",  icon = "warning")
                                   } else {
-                                      if (length(SourceFile[[SpectIndx]]@RegionToFit)==0){
+                                      if (length(SourceFile[[SpectIndx]]@RegionToFit) == 0){
                                           text <- paste("ATTENTION: NO fit found for ",SpectName, " of the Source XPS-Sample. Operation stopped!", sep="")
                                           gmessage(msg=text , title = "BAD SOURCE CORELINE SELECTION",  icon = "warning")
                                           return()
                                       }
-                                      if (length(DestFName[[destIndx]]@Components)>0) {  #a fit is present for the selected coreline
+                                      if (length(DestFName[[destIndx]]@Components) > 0) {  #a fit is present for the selected coreline
                                           text <- paste("ATTENTION: constraints of ",SpectName, " fit will be kept! Continue?", sep="")
                                           answ <- gconfirm(msg=text , title = "WARNING!",  icon = "warning")
                                           if (answ) {
@@ -378,7 +386,7 @@ XPSProcessCoreLine <- function(){
                                           }
                                           tmp <- sapply(DestFName[[destIndx]]@Components, function(z) matrix(data=z@ycoor))
                                           DestFName[[destIndx]]@Fit$y <<- (colSums(t(tmp)) - length(DestFName[[destIndx]]@Components)*(DestFName[[destIndx]]@Baseline$y))
-                                      }
+                                      }                                           #transpose of tmp
 
                                       plot(DestFName[[destIndx]])
                                       activeSpectIndx <<- destIndx
@@ -533,6 +541,7 @@ XPSProcessCoreLine <- function(){
                                   answ <- gconfirm(msg=text, title="WARNING", icon="warning")
                                   if (answ) {
                                      SourceFile[[SpectIndx]] <- NULL #this eliminates the coreline
+#                                     SourceFile <- RenumCL(SourceFile)
                                      DestFName <<- SourceFile      #move updated XPSSample in the destinatin file for saving
                                      activeSpectIndx <<- 1
                                      activeSpectName <<- names(SourceFile)[1]
@@ -581,9 +590,13 @@ XPSProcessCoreLine <- function(){
                                   enabled(SaveAndExit) <- TRUE
                                   svalue(DestFileName) <<- SourceFile
                                   DestFName <<- get(SourceFile, envir=.GlobalEnv)
-                                  SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #Skip the CoreLine index
-                                  SpectIndx <- as.integer(SourceCoreline[1])
-                                  SpectName <- SourceCoreline[2]
+                                  #--- eliminates the initial N. and reconstruct CLname also 
+                                  #    in presence of compex names as 10.D.2.ST.VB
+                                  tmp <- unlist(strsplit(SourceCoreline, "\\."))
+                                  SpectIndx <- as.integer(tmp[1])
+                                  LL1 <- nchar(tmp[1])+2   # +2: substr(x,start,stop) start includes the character at 'start'
+                                  LL2 <- nchar(SourceCoreline)
+                                  SpectName <- substr(SourceCoreline, start=LL1, stop=LL2) #In case of XPSCLname="4.D1.C1s" SpectName must be "D1.C1s"
                                   CoreLineList <- names(DestFName)
                                   destIndx <- length(DestFName)+1
                                   DestFName[[destIndx]] <<- DestFName[[SpectIndx]]
@@ -715,10 +728,11 @@ XPSProcessCoreLine <- function(){
       T2group <- ggroup(label="CORELINE MATH", horizontal=FALSE, spacing=3, container=NoteBK)
       layoutT2 <- glayout(homogeneous=FALSE, spacing=3, container=T2group)
 
-
-      layoutT2[1,1] <- MathFrame1 <- gframe("SELECT XPS-SAMPLE 1", spacing=3,container=layoutT2)
+      layoutT2[1,1] <- MathFrame1 <- gframe(text="SELECT XPS-SAMPLE 1", horizontal = FALSE, spacing=3, container=layoutT2)
+      MathGroup1 <- ggroup(horizontal=FALSE, spacing=3, container=MathFrame1)
       SourceFile11 <- gcombobox(FNameList, selected=-1, editable=FALSE, handler=function(h,...){
 #                                  svalue(infoWin) <- ""
+                                  svalue(DestFileName) <- svalue(SourceFile11)
                                   CoreLine11 <<- updateObj(SourceFile11,MathGroup2,CoreLine11)
                                   addHandlerChanged(CoreLine11, handler=function(h,...) {
                                               SourceFile <- svalue(SourceFile11)
@@ -728,12 +742,14 @@ XPSProcessCoreLine <- function(){
                                               SpectIndx <- as.integer(Coreline[1])
                                               Range <- range(SourceFile[[SpectIndx]]@.Data[1])
                                               Range <- round(Range, 1)
-                                              svalue(CLRange11) <<- paste("Range", "  ", Coreline[2], ": ", Range[1], ",  ", Range[2], sep="")
+                                              svalue(CLRange11) <<- paste("Range", "  ", Coreline[2], " X: ", Range[1], ",  ", Range[2], sep="")
                                               enabled(DestFileName) <- TRUE # Enable the choice of the destination file
                                   })
-                             }, container = MathFrame1)
+                             }, container = MathGroup1)
+      
 
-      layoutT2[1,2] <- MathFrame11 <- gframe("SELECT XPS-SAMPLE 2", spacing=3,container=layoutT2)
+      layoutT2[1,2] <- MathFrame11 <- gframe("SELECT XPS-SAMPLE 2", horizontal = FALSE, spacing=3,container=layoutT2)
+      MathGroup11 <- ggroup(horizontal=FALSE, spacing=3, container=MathFrame11)
       SourceFile22 <- gcombobox(FNameList, selected=-1, editable=FALSE, handler=function(h,...){
 #                                  svalue(infoWin) <- ""
                                   if (length(svalue(CoreLine11))==0) {
@@ -749,22 +765,22 @@ XPSProcessCoreLine <- function(){
                                               SpectIndx <- as.integer(Coreline[1])
                                               Range <- range(SourceFile[[SpectIndx]]@.Data[1])
                                               Range <- round(Range, 1)
-                                              svalue(CLRange22) <<- paste("Range", "  ", Coreline[2], ": ", Range[1], ",  ", Range[2], sep="")
+                                              svalue(CLRange22) <<- paste("Range", "  ", Coreline[2], " X: ", Range[1], ",  ", Range[2], sep="")
 
                                      })
                                   }
-                             }, container = MathFrame11)
+                             }, container = MathGroup11)
 
-      layoutT2[2,1] <- MathFrame2 <- gframe(text="SELECT CORELINE 1", spacing=3, container=layoutT2)
+      layoutT2[2,1] <- MathFrame2 <- gframe(text="SELECT CORELINE 1", horizontal = FALSE, spacing=3, container=layoutT2)
       MathGroup2 <- ggroup(horizontal=FALSE, spacing=3, container=MathFrame2)
-      CLRange11 <- glabel(text="Range CoreLine1: ", container=MathGroup2)
       CoreLine11 <- gcombobox(SpectList, selected=-1, editable=FALSE, container=MathGroup2)
+      CLRange11 <- glabel(text="Range CoreLine1: ", container=MathFrame2)
       enabled(CoreLine11) <- FALSE
 
-      layoutT2[2,2] <- MathFrame22 <- gframe(text="SELECT CORELINE 2", spacing=3, container=layoutT2)
+      layoutT2[2,2] <- MathFrame22 <- gframe(text="SELECT CORELINE 2", horizontal = FALSE, spacing=3, container=layoutT2)
       MathGroup22 <- ggroup(horizontal=FALSE, spacing=3, container=MathFrame22)
-      CLRange22 <- glabel(text="Range CoreLine2: ", container=MathGroup22)
       CoreLine22 <- gcombobox(SpectList, selected=-1, editable=FALSE, container=MathGroup22)
+      CLRange22 <- glabel(text="Range CoreLine2: ", container=MathFrame22)
       enabled(CoreLine22) <- FALSE
 
       layoutT2[3,1] <- MathGroup3 <- ggroup(horizontal=FALSE, container=layoutT2)
@@ -1061,29 +1077,49 @@ XPSProcessCoreLine <- function(){
                                    }
                              }, container=MathFrame44)
 
-      layoutT2[5,1] <- MathFrame5 <- gframe("NORMALIZE", horizontal=FALSE, spacing=3, container=layoutT2)
-      DiffButt <- gbutton("NORMALIZE CORELINE1", handler=function(h, ...){
+      layoutT2[5,1] <- MathFrame5 <- gframe("SELEC NORMALIZ ATION MODE", horizontal=FALSE, spacing=3, container=layoutT2)
+      NormButt <- gcombobox(c("Normalize to the main Peak", "Normalize to Selected Peak"), selected=-1, handler=function(h, ...){
 #                                   svalue(infoWin) <- ""
                                    SourceFile <- svalue(DestFileName) <- svalue(SourceFile11)
                                    CoreLine1 <- svalue(CoreLine11)
-                                   SourceFile <- get(SourceFile, envir=.GlobalEnv)
                                    CoreLine1 <- unlist(strsplit(CoreLine1, "\\."))   #tolgo il "NUMERO." all'inizio del nome coreline
                                    SpectIndx <- as.integer(CoreLine1[1])
                                    SpectName <- CoreLine1[2]
-	                                  maxY <- max(SourceFile[[SpectIndx]]@.Data[[2]])
-	                                  minY <- min(SourceFile[[SpectIndx]]@.Data[[2]])
-	                                  SourceFile[[SpectIndx]]@.Data[[2]] <- (SourceFile[[SpectIndx]]@.Data[[2]]-minY)/(maxY-minY)
+                                   if (length(SourceFile) == 0 || length(CoreLine1) == 0){
+                                       gmessage("Source XPSSample or Source Core-Line not defined!", title="WARNING", icon="warning")
+                                       return()
+                                   }
+                                   SourceFile <- get(SourceFile, envir=.GlobalEnv)
+                                   answ <- svalue(NormButt, index=TRUE)
+                                   if (answ == 1){
+	                                      maxY <- max(SourceFile[[SpectIndx]]@.Data[[2]])
+	                                      minY <- min(SourceFile[[SpectIndx]]@.Data[[2]])
+                                   } else if (answ == 2){
+                                       gmessage("Define the Reference Peak Edges", title="PEAK EDGES DEFINITION", icon="info")
+                                       pos <- locator(n=2, type="p", col="red", cex=1.5, lwd=2, pch=1)
+                                       LL <- length(SourceFile[[SpectIndx]]@.Data[[1]])
+                                       idx <- NULL
+                                       idx[1] <- findXIndex(SourceFile[[SpectIndx]]@.Data[[1]], pos$x[1])
+                                       idx[2] <- findXIndex(SourceFile[[SpectIndx]]@.Data[[1]], pos$x[2])
+                                       idx <- sort(idx, decreasing = FALSE)
+	                                      maxY <- max(SourceFile[[SpectIndx]]@.Data[[2]][idx[1]:idx[2]])
+	                                      minY <- min(SourceFile[[SpectIndx]]@.Data[[2]][idx[1]:idx[2]])
+                                   }
+                                   SourceFile[[SpectIndx]]@.Data[[2]] <- (SourceFile[[SpectIndx]]@.Data[[2]]-minY)/(maxY-minY)
                                    if(length(SourceFile[[SpectIndx]]@RegionToFit) > 0){
                                       SourceFile[[SpectIndx]]@RegionToFit$y <- (SourceFile[[SpectIndx]]@RegionToFit$y-minY)/(maxY-minY)
                                    }
                                    if(length(SourceFile[[SpectIndx]]@Baseline) > 0){
                                       SourceFile[[SpectIndx]]@Baseline$y <- (SourceFile[[SpectIndx]]@Baseline$y-minY)/(maxY-minY)
                                    }
-                                   if(LL <- length(SourceFile[[SpectIndx]]@Components) > 0){
+                                   LL <- length(SourceFile[[SpectIndx]]@Components)
+                                   if(LL > 0){
                                       for(ii in 1:LL){
-                                         SourceFile[[SpectIndx]]@Components[[ii]]$ycoor <- (SourceFile[[SpectIndx]]@Components[[ii]]$ycoor-minY)/(maxY-minY)
+                                         SourceFile[[SpectIndx]]@Components[[ii]]@ycoor <- (SourceFile[[SpectIndx]]@Components[[ii]]@ycoor-minY)/(maxY-minY)
                                       }
+                                      SourceFile[[SpectIndx]]@Fit$y <- SourceFile[[SpectIndx]]@Fit$y/(maxY-minY)
                                    }
+                                   SourceFile[[SpectIndx]]@Boundaries$y <- c(0, 1)
                                    plot(SourceFile[[SpectIndx]])
                                    DestFName <<- SourceFile
                                    activeSpectIndx <<- SpectIndx
@@ -1094,6 +1130,7 @@ XPSProcessCoreLine <- function(){
                                    prefix <<- ""
                                    msg <- paste(CoreLine1[2], " normalized", sep="")
                                    cat("\n ==> ", msg)
+                                   svalue(NormButt, index=TRUE) <- -1
 #                                   svalue(infoWin) <- msg
                              }, container=MathFrame5)
 
@@ -1134,7 +1171,7 @@ XPSProcessCoreLine <- function(){
                                    }
                              }, container=MathFrame6)
 
-      layoutT2[6,2] <- MathFrame66 <- gframe("SUBTRACT CORELINE2 FROM CORELINE1", horizontal=FALSE, spacing=3, container=layoutT2)
+      layoutT2[5,2] <- MathFrame55 <- gframe("SUBTRACT CORELINE2 FROM CORELINE1", horizontal=FALSE, spacing=3, container=layoutT2)
       SubtrSpectButt <- gbutton("SUBTRACT SPECTRA", handler=function(h, ...){
 #                                   svalue(infoWin) <- ""
                                    SourceFile1 <- svalue(DestFileName) <- svalue(SourceFile11)
@@ -1218,7 +1255,8 @@ XPSProcessCoreLine <- function(){
                                           }
                                       }
                                   }
-                             }, container=MathFrame66)
+                             }, container=MathFrame55)
+
 
 
 #---InfoWin
@@ -1243,19 +1281,20 @@ XPSProcessCoreLine <- function(){
                                   } else {
                                       SaveSpectrum()
                                   }
-                                  dispose(AddWin)
+                                  dispose(ProcessWin)
                                   XPSSaveRetrieveBkp("save")
                          }, container=ButtGroup1)
       enabled(SaveAndExit) <- FALSE # Saving data blocked: ctrls on Dest file needed
 
       gbutton("       EXIT       ",  handler=function(h, ...) {
-                                  dispose(AddWin)
+                                  dispose(ProcessWin)
                                   XPSSaveRetrieveBkp("save")
                          },container=ButtGroup1)
       
-      visible(AddWin) <- TRUE
+      visible(ProcessWin) <- TRUE
       svalue(NoteBK) <- 2
       svalue(NoteBK) <- 1     #set the first page
+      ProcessWin$set_modal(TRUE)
 
 }
 

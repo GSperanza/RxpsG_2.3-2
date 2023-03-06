@@ -1,18 +1,15 @@
 #function to save XPS dataframes analyzed by XPS program
 
-#'To Save data in the Hard Disk
-#'
-#'Provides a userfriendly interface to select a FileName and Directory
-#'to save the analyzed XPS-Sample data.
-#'Analyzed data by default have extension .Rdata.
-#'No parameters are passed to this function
-#'@examples
-#'
-#'\dontrun{
-#'	XPSSaveData()
-#'}
-#'
-#'@export
+#' @title XPSSaveData
+#' @description To Save data in the Hard Disk
+#'   Provides a userfriendly interface to select a FileName and Directory
+#'   to save the analyzed object of class XPSSample.
+#'   Analyzed data by default have extension .RData.
+#' @examples
+#' \dontrun{
+#' 	XPSSaveData()
+#' }
+#' @export
 #'
 
 
@@ -36,6 +33,7 @@ XPSSaveData <- function() {
 
      SaveSingle <- function(){
           FName <- get(activeFName, envir=.GlobalEnv)
+          saveFName <- svalue(SampName)
           saveFName <<- unlist(strsplit(saveFName, "\\."))
           saveFName <<- paste(saveFName[1],".RData", sep="")  #Define the Filename to be used to save the XPSSample
           if (PathName != getwd()){  #original folder different from the current wirking directory
@@ -45,11 +43,13 @@ XPSSaveData <- function() {
                 ChDir()
              }
           }
+
           FName@Filename <- saveFName #save the new FileName in the relative XPSSample slot
           PathFileName <- paste(PathName, "/",saveFName, sep="")
           FName@Sample <- PathFileName
 
-          assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.Rdata XPSSample in the .GlobalEnv
+          assign(activeFName, saveFName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
+          assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
           RVersion <- as.integer(svalue(SaveToOldR, index=TRUE)) #by default no indication of the R Version is saved
           if (RVersion == 1) {
               RVersion <- NULL
@@ -61,7 +61,7 @@ XPSSaveData <- function() {
           save(list=saveFName, file=PathFileName, version=RVersion, compress=TRUE)
           removeFName <- unlist(strsplit(activeFName, "\\."))   #in activeFName are initially .vms or .pxt or OldScienta fileNames
           if (removeFName[2] != "RData" || saveFName != activeFName){ #activeFName contains the original XPSSample Name
-             remove(list=activeFName,pos=1,envir=.GlobalEnv)  #Now remove xxx.vms, xxx.pxt or the xxx.Rdata if a new name is given
+             remove(list=activeFName,pos=1,envir=.GlobalEnv)  #Now remove xxx.vms, xxx.pxt or the xxx.RData if a new name is given
           }
           assign("activeFName", saveFName, envir=.GlobalEnv)  #change the activeFName in the .GlobalEnv
           ShortPathName <- CutPathName(PathFileName)
@@ -90,16 +90,25 @@ XPSSaveData <- function() {
                  PathName <- substr(PathFileName, 1, idx[1]-1)  #corresponds to Z:/X/LAVORI/R/Analysis/IPZS/
                  FNameList[jj] <- substr(xxx, idx[1], idx[2]-2) #corresponds to Test.vms
               }
+
+              RVersion <- as.integer(svalue(SaveToOldR, index=TRUE)) #by default no indication of the R Version is saved
+              if (RVersion == 1) {
+                  RVersion <- NULL
+              } else if (RVersion == 2) {
+                  RVersion <- 1  # code for R version < 1.4
+              } else if (RVersion == 3) {
+                  RVersion <- 2  # code for R version <= 2
+              }
               saveFName <<- unlist(strsplit(FNameList[jj], "\\."))
               saveFName <<- paste(saveFName[1],".RData", sep="")  #Define the Filename to be used to save the XPSSample
               FName@Filename <- saveFName  #save the new FileName in the relative XPSSample slot
               PathFileName <- paste(PathName,"/",saveFName, sep="")
               FName@Sample <- PathFileName #the first time .vms files are transformed in .Rata new name will be saved
-              assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.Rdata XPSSample in the .GlobalEnv
-              save(list=saveFName, file=PathFileName, compress=TRUE)
+              assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
+              save(list=saveFName, file=PathFileName, version=RVersion, compress=TRUE)
               removeFName <- unlist(strsplit(FNameList[jj], "\\."))   #in FNameList are initially .vms or .pxt or OldScienta fileNames
               if (removeFName[2] != "RData" || saveFName != FNameList[jj]){
-                remove(list=FNameList[jj],pos=1,envir=.GlobalEnv)   #xxx.Rdata is saved in .GlobalEnv Now remove xxx.vms, xxx.pxt
+                remove(list=FNameList[jj],pos=1,envir=.GlobalEnv)   #xxx.RData is saved in .GlobalEnv Now remove xxx.vms, xxx.pxt
               }
               if (FNameList[jj] == activeFName){
                  assign("activeFName", saveFName, envir=.GlobalEnv) #change the activeFName in the .GlobalEnv
@@ -140,6 +149,22 @@ XPSSaveData <- function() {
           XPSSaveRetrieveBkp("save")
      }
 
+     ResetVars <- function(){
+         if (is.na(activeFName)){
+            gmessage("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+            return()
+         }
+         saveFName <<- ""
+         PathName <<- getwd()
+         saveFName <<- get("activeFName", envir=.GlobalEnv)
+         saveFName <<- unlist(strsplit(saveFName, "\\."))     #not known if extension will be present
+         saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
+         FNameList <<- XPSFNameList()
+         SpectIdx <<- grep(activeFName, FNameList)
+         DirName <<- getwd()
+     }
+     
+
 
 #===== Variables =====
    if (is.na(activeFName)){
@@ -148,9 +173,10 @@ XPSSaveData <- function() {
    }
    saveFName <- ""
    PathName <- getwd()
+   FilePath <- ""
    saveFName <- get("activeFName", envir=.GlobalEnv)
    saveFName <- unlist(strsplit(saveFName, "\\."))     #not known if extension will be present
-   saveFName <- paste(saveFName[1], ".Rdata", sep="")  #Compose the new FileName, adding .Rdata extension
+   saveFName <- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
    FNameList <- XPSFNameList()
    SpectIdx <- grep(activeFName, FNameList)
    DirName <- getwd()
@@ -170,16 +196,19 @@ XPSSaveData <- function() {
 
    SourceFrame <- gframe("Source XPSSample", spacing=3, horizontal=FALSE, container=group1)
    XPSSample <- gcombobox(FNameList, selected=-1, spacing=7, handler=function(h,...){
+                      ResetVars()
+                      svalue(DestFolder) <- PathName
                       saveFName <<- svalue(XPSSample)
                       assign("activeFName", saveFName, envir=.GlobalEnv)   #change the activeFName in the .GlobalEnv
                       saveFName <<- unlist(strsplit(saveFName, "\\."))      #not known if extension will be present
-                      saveFName <<- paste(saveFName[1], ".Rdata", sep="")  #Compose the new FileName, adding .Rdata extension
+                      saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
                       svalue(SampName) <- saveFName
                       FName <- get(activeFName, envir=.GlobalEnv)
-                      FilePath <- dirname(FName@Sample)
+                      FilePath <<- dirname(FName@Sample)
                       if (FilePath == ""){
                           FilePath <<- getwd()
                       }
+
                       if (PathName != "" && PathName != FilePath){
                           txt= paste("Warning: current and original directories are different. Do you want to save data in folder: \n", PathName, sep="")
                           answ <- gconfirm(msg=txt, title="SET DESTINATION FOLDER", icon="warning")
@@ -201,13 +230,14 @@ XPSSaveData <- function() {
    SaveToOldR <- gradio(c("Default R", "Save for R < 1.4.0", "Save for R <= 2"), selected=1, horizontal=TRUE, container=DestFrame)
    gbutton("   Save Selected XPS-Sample   ", spacing=7, handler=function(h,...){
                      SaveSingle()
-                     delete(DestFrame, XPSSample)
                      FNameList <<- XPSFNameList()
+                     delete(SourceFrame, XPSSample)
+#--- update XPSSample list with extension .RData
                      XPSSample <<- gcombobox(FNameList, selected=-1, spacing=7, handler=function(h,...){
                                              saveFName <<- svalue(XPSSample)
                                              assign("activeFName", saveFName, envir=.GlobalEnv)   #change the activeFName in the .GlobalEnv
                                              saveFName <<- unlist(strsplit(saveFName, "\\."))      #not known if extension will be present
-                                             saveFName <<- paste(saveFName[1], ".Rdata", sep="")  #Compose the new FileName, adding .Rdata extension
+                                             saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
                                              svalue(SampName) <- saveFName
                                              FName <- get(activeFName, envir=.GlobalEnv)
                                              PathName <<- dirname(FName@Sample)

@@ -2,17 +2,18 @@
 % Please edit documentation in R/XPSDiffGUI.r
 \name{XPSDiff}
 \alias{XPSDiff}
-\title{Differentiate is a function to compute the derivative of the XPSSpectra.}
+\title{XPSDiff for spectra differentiation}
 \usage{
 XPSDiff()
 }
 \description{
-Differentiate is a function to compute the derivative of the XPSSpectra.
+XPSDiff function is used to compute the derivative of the XPSSpectra.
+  The user can select the degree of differentiation. Tje result of the differentiation
+  is oplotted together with the original data. It is possible to amplify the
+  differentiated spectrum to be on the scale of the original spectrum.
 }
 \examples{
-
 \dontrun{
-XPSDiff()
+	XPSDiff()
 }
-
 }

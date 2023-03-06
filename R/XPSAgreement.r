@@ -1,4 +1,6 @@
+#'XPSAgreement
 #'
+#'@description
 #'Agreement to use the RxpsG package
 #'
 #'@examples
@@ -7,6 +9,7 @@
 #'XPSAgreement()
 #'}
 #'
+#'@docType methods
 #'@export
 #'
 

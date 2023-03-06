@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{findXIndex}
 \alias{findXIndex}
-\title{findXIndex function utility}
+\title{findXIndex}
 \usage{
 findXIndex(X, Value)
 }
@@ -15,12 +15,10 @@ findXIndex(X, Value)
 Returns X index
 }
 \description{
-finds the index of X vector corresponding to a given abscissa value
+findXIndex finds the index of X vector corresponding to a given abscissa value
 }
 \examples{
-
 \dontrun{
-findXIndex(X, Value)
+	findXIndex(X, Value)
 }
-
 }

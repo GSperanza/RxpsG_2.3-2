@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSUtilities.r
 \name{FitLin}
 \alias{FitLin}
-\title{FitLin function utility}
+\title{FitLin}
 \usage{
 FitLin(X, Y)
 }
@@ -15,12 +15,10 @@ FitLin(X, Y)
 Returns c(m, c) slope m and intercept c
 }
 \description{
-linear fit function
+FitLin function performs a linear fit
 }
 \examples{
-
 \dontrun{
-MinDist(posP0, posP1, posP2)
+	MinDist(posP0, posP1, posP2)
 }
-
 }

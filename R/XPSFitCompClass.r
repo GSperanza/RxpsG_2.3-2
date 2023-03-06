@@ -2,32 +2,24 @@
 ### Classes and methods for describing fit components
 ### 
 
-#'Class "fitComponents"
-#'
-#'A class that describes a fit component.  The class has the definition of all
-#'the necessary informations needed to use a component algorithm with the
-#'optimisation framework and the graphical user interface (but see Notes
-#'below).
-#'
-#'
-#'@docType class
-#'@note The goal is that the optimisation framework and the GUI code should get
-#'all information about available baseline algorithms through a list of
-#'\code{fitComponents} objects.  This will make it relatively simple to add new
-#'baseline algorithms.
-#'@section Objects from the Class: Objects can be created by calls of the form
-#'\code{new("fitComponents", ...)}.
-#'@author Roberto Canteri, modified Giorgio Speranza
-#'@keywords classes
-#'@examples
-#'
-#'\dontrun{
-#'showClass("fitComponents")
-#'}
-#'@keywords classes
-#'@docType class
-#'
-#'@export
+#' @title Class "fitComponents"
+#' @description a class that describes a fit component.  The class has the
+#'   definition of all the necessary informations needed to use a fit component
+#'   algorithm store all the related infromation, enable specific plot functionalities
+#'   Objects from the Class: Objects can be created by calls of the form
+#'   \code{new("fitComponents", ...)}.
+#' @slot funcName the name of the fitting function
+#' @slot description the description of the fitting function
+#' @slot label label of the fit component associated to the added fit component
+#' @slot param the list of fitting parameters
+#' @slot rsf the RSF associated to the fit component (the same as that of the Core-Line)
+#' @slot ycoor the y values of the best fit
+#' @slot link the list containing the series of links associated to this fit component
+#' @examples
+#' \dontrun{
+#'  showClass("fitComponents")
+#' }
+#' @export
 #'
 
 setClass("fitComponents",
@@ -54,13 +46,34 @@ setClass("fitComponents",
 #setGeneric("funcName", function(object) standardGeneric("funcName"))
 #setMethod("funcName", "fitComponents", function(object) object@funcName)
 
+#' @title setParam
+#' @description S4method 'setParam' method for setting fitting parameters.
+#' @param object an object of class \code{XPSCoreLine}
+#' @param parameter character is one of the "start", "max" or "min" parameter to be set
+#' @param variable character as "mu", "sigma"... indicates the parameter to set
+#' @param value numeric the value to set
+#' @return 'setParam' returns the object withthe parameter set
 setGeneric("setParam", function(object, parameter=NULL, variable=NULL, value= NULL) standardGeneric("setParam"))
-setMethod("setParam", "fitComponents", function(object, parameter=NULL, variable=NULL, value=NULL) 
+
+#' @title setParam
+#' @description method to set fitting parameters of a object@Component[[j]]
+#'    where object is of class 'XPSCoreLine' and j indicates the jth fit component
+#' @param object a Core_Line object of class \code{XPSCoreLine}
+#' @param parameter character is one of the "start", "max" or "min" parameter to be set
+#' @param variable character as "mu", "sigma"... indicates the parameter to set  
+#' @param value numeric the value to set
+#' @return 'setParam' returns the object withthe parameter set
+#' @examples
+#' \dontrun{
+#'  setParam(test[["C1s"]]@Component[[2]], parameter="start", variable="mu", value="285")
+#' }
+#' @export
+setMethod("setParam", "fitComponents", function(object, parameter=NULL, variable=NULL, value=NULL)
   {
      if ( is.null(value) ) stop(" value is required.")
      rownamesParam <- rownames(slot(object,"param"))
      if ( ! is.null(parameter) ) {
-        parameter <- match.arg(parameter,c("start","min", "max"))
+        parameter <- match.arg(parameter,c("start","min", "max"))    #set the single value START, MIN, MAX
         if ( ! is.null(variable) ) {
            variable <- match.arg(variable, rownamesParam)
            slot(object,"param")[variable,parameter] <- value
@@ -73,9 +86,15 @@ setMethod("setParam", "fitComponents", function(object, parameter=NULL, variable
      } else {
         if ( is.null(variable) ) {
              warning(" if 'parameter' = NULL then 'variable' must be != NULL.")
+        } else if (variable == "all"){
+           LL <- length(rownamesParam)
+           for(ii in 1:LL){
+               parma <- rownamesParam[ii]
+               slot(object,"param")[variable,] <- value
+           }
         } else {
              variable <- match.arg(variable, rownamesParam)
-             if (length(value) != 3 ) { stop("wrong value length") }
+             if (length(value) != 3 ) { stop("wrong value length") } #set all three values START, MIN, MAX
              else { slot(object,"param")[variable,] <- value }
         }
     }
@@ -83,8 +102,27 @@ setMethod("setParam", "fitComponents", function(object, parameter=NULL, variable
     }
 )
 
+#' @title getParam
+#' @description S4method 'getParam' method for get information about a fitting parameters.
+#' @param object an object of class \code{XPSCoreLine}
+#' @param parameter character is one of the "start", "max" or "min" parameter to be set
+#' @param variable character as "mu", "sigma"... indicates the parameter to set
+#' @return 'getParam' returns the value of the requested parameter
 setGeneric("getParam", function(object, parameter=NULL, variable=NULL) standardGeneric("getParam"))
-setMethod("getParam", "fitComponents", function(object, parameter=NULL, variable=NULL) 
+
+#' @title getParam
+#' @description method to get the value of the specified fitting parameter from an object@Component[[j]]
+#'    where object is of class 'XPSCoreLine' and j indicates the jth fit component
+#' @param object a Core_Line object of class \code{XPSCoreLine}
+#' @param parameter character is one of the "start", "max" or "min" parameter to be set
+#' @param variable character as "mu", "sigma"... indicates the parameter to set
+#' @return 'getParam' returns the value of the requested parameter
+#' @examples
+#' \dontrun{
+#'   getParam(test[["C1s"]]@Component[[2]], parameter="start", variable="mu")
+#' }
+#' @export
+setMethod("getParam", "fitComponents", function(object, parameter=NULL, variable=NULL)
   {
      if ( ! is.null(parameter) ) {
         parameter <- match.arg(parameter,c("start","min", "max"))
@@ -108,32 +146,56 @@ setMethod("getParam", "fitComponents", function(object, parameter=NULL, variable
 ##==============================================================================
 # returns a list with the y values for the component n
 ##==============================================================================
+#' @title Ycomponent
+#' @description S4method 'Ycomponent' method for generate the Y values of the
+#'   fit component using the chosen fitting function and the associated fit parameters
+#' @param object a fit component object of the type CL@Components[[j]] where
+#'   CL is of class 'XPSCoreLine', j indicates the jth fit component
+#' @param x numeric vector of the type CL@RegionToFit$x where
+#'   CL is of class 'XPSCoreLine'
+#' @param y numeric vector of the type CL@Baseline$y where
+#'   CL is of class 'XPSCoreLine'
+#' @return 'Ycomponent' returns Baseline subtracted vales of the fit component
 setGeneric("Ycomponent", function(object, x, y)   standardGeneric("Ycomponent"))
 
+#' @title Ycomponent
+#' @description S4method 'Ycomponent' method for generate the Y values of the
+#'   fit component using the chosen fitting function and the associated fit parameters
+#' @param object a fit component object of the type CL@Components[[j]] where
+#'   CL is of class 'XPSCoreLine', j indicates the jth fit component
+#' @param x numeric vector of the type CL@RegionToFit$x where
+#'   CL is of class 'XPSCoreLine'
+#' @param y numeric vector of the type CL@Baseline$y where
+#'   CL is of class 'XPSCoreLine'
+#' @return 'Ycomponent' returns Baseline subtracted vales of the fit component
+#' @examples
+#' \dontrun{
+#'   Ycomponent(test[["C1s"]]@Component[[2]],test[["C1s"]]@RegionToFit$x, test[["C1s"]]@Baseline$y)
+#' }
+#' @export
 setMethod("Ycomponent", signature(object="fitComponents"),
 	function(object, x, y)
 	{
-		## let's take the starting values
-		startPar <- getParam(object, parameter = "start")
-		# combine x with start values
-		parm <- list(x=x) # object@RegionToFit$x
-		parm <- c(parm,startPar)
-		# formula e parameters to do the call
-		fmla <- slot(object,"funcName")
-		names(parm) <- formalArgs(fmla)
-		## calculate y values
-		ycomponent <- do.call(fmla, parm)
-		## exit with ycomp + Baseline$y
-		slot(object, "ycoor") <- ( ycomponent + y ) # y=object@Baseline$y
-		return(object)
+  		# let's take the starting values
+  		startPar <- getParam(object, parameter = "start")
+		  # combine x with start values
+		  parm <- list(x=x) # x = object@RegionToFit$x
+		  parm <- c(parm,startPar)
+		  # formula e parameters to do the call
+		  fmla <- slot(object,"funcName")
+		  names(parm) <- formalArgs(fmla)
+
+		  # calculate y values using the fit lineshape=funcName for the given x values
+		  ycomponent <- do.call(fmla, parm)
+		  # exit with ycomp + Baseline$y
+		  slot(object, "ycoor") <- ( ycomponent + y ) # y=object@Baseline$y
+		  return(object)
 	}
 )
 
 
-## A list with objects for each implemented algorithm:
+## fitAlgorithms is a list containing the default data defining each of the fit functions
 fitAlgorithms <- list(
-
-#Modified Giorgio 17-1-2017 to insert empty component structure (needed for VBTop procedure
 
 Initialize = new("fitComponents",
     funcName = "Initialize",
@@ -144,9 +206,9 @@ Initialize = new("fitComponents",
         start = c(NA, NA, NA),
         min = c(NA, NA, NA),
         max = c(NA, NA, NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+  	 rsf = 0,
+	   link = list()
     ),
 
 Generic = new("fitComponents",
@@ -157,9 +219,9 @@ Generic = new("fitComponents",
         start = c(NA, NA, NA),
         min = c(NA, NA, NA),
         max = c(NA, NA, NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+	   rsf = 0,
+	   link = list()
     ),
 
 Gauss = new("fitComponents",
@@ -182,7 +244,7 @@ Lorentz = new("fitComponents",
     label = "Lorentz",
    	param = data.frame(
         row.names = c("h", "mu", "sigma"),
-        start = c(1, NA, 1),
+        start = c(1, NA, 0.7),
         min = c(0, 0, 0.1),
         max = c(Inf, Inf, 10) ),
     ycoor = 0,
@@ -196,12 +258,12 @@ Voigt = new("fitComponents",
     label = "Voigt",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "lg"),
-        start = c(1, NA, 0.3, 0.2),
+        start = c(1, NA, 1, 0.2),
         min = c(0, 0, 0.05, 0.01),
         max = c(Inf, Inf, 10, 1) 	),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+	   link = list()
     ),
 
 Sech2 = new("fitComponents",
@@ -214,8 +276,8 @@ Sech2 = new("fitComponents",
         min = c(0, 0, 0.1),
         max = c(Inf, Inf, 10) ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+  	 link = list()
     ),
 
 GaussLorentzProd = new("fitComponents",
@@ -224,12 +286,12 @@ GaussLorentzProd = new("fitComponents",
     label = "GaussLorentzProd",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "lg"),
-        start = c(1, NA, 1.2, 0.75),
+        start = c(1, NA, 1, 0.75),
         min = c(0, 0, 0.1, 0.01),
         max = c(Inf, Inf, 10, 1) ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+  	 link = list()
     ),
 
 GaussLorentzSum = new("fitComponents",
@@ -238,12 +300,12 @@ GaussLorentzSum = new("fitComponents",
     label = "GaussLorentzSum",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "lg"),
-        start = c(1, NA, 1.2, 0.95),
+        start = c(1, NA, 1, 0.95),
         min = c(0, 0, 0.1, 0),
         max = c(Inf, Inf, 10, 1) ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 rsf = 0,
+	   link = list()
     ),
 
 AsymmGauss = new("fitComponents",
@@ -255,10 +317,26 @@ AsymmGauss = new("fitComponents",
         start = c(1, NA, 1, 0.3),
         min = c(0, 0, 0.05, 0.01),
         max = c(Inf, Inf, 10, 1) 	),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+	   rsf = 0,
+  	 link = list()
     ),
+
+
+AsymmLorentz = new("fitComponents",
+    funcName = "AsymmLorentz",
+    description = "Simple Asymmetric Lorentz shape",
+    label = "AsymmLorentz",
+    param = data.frame(
+        row.names = c("h", "mu", "sigma", "asym"),           #min e max values are set in XPSaddFitComponent()
+        start = c(1, NA, 0.7, 0.3),
+        min = c(0, 0, 0.1, 0.01),
+        max = c(Inf, Inf, 10, 1) 	),
+  	 ycoor = 0,
+	   rsf = 0,
+  	 link = list()
+    ),
+
 
 AsymmVoigt = new("fitComponents",
     funcName = "AsymmVoigt",
@@ -269,9 +347,9 @@ AsymmVoigt = new("fitComponents",
         start = c(1, NA, 0.4, 0.1, 0.1),
         min = c(0, 0, 0.1, 0.01, 0.01),
         max = c(Inf, Inf, 10, 1, 1) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+	   rsf = 0,
+	   link = list()
     ),
 
 
@@ -285,8 +363,8 @@ AsymmGaussLorentz = new("fitComponents",
         min = c(0, 0, 0.05, 0.4, 1e-5),
         max = c(Inf, Inf, 5, 1, 0.4)  ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+  	 link = list()
     ),
 
 AsymmGaussVoigt = new("fitComponents",
@@ -295,12 +373,12 @@ AsymmGaussVoigt = new("fitComponents",
     label = "AsymmGaussVoigt",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "lg", "asym", "gv"),
-        start = c(1, NA, 0.6, 0.1, 0.3, 0.4),
+        start = c(1, NA, 0.6, 0.1, 0.2, 0.4),
         min = c(0, 0, 0.01, 0.01, 0.01, 0.01),
         max = c(Inf, Inf, 5, 1, 1, 1)  ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 rsf = 0,
+  	 link = list()
     ),
 
 AsymmGaussLorentzProd = new("fitComponents",
@@ -309,12 +387,12 @@ AsymmGaussLorentzProd = new("fitComponents",
     label = "AsymmGaussLorentzProd",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "asym", "lg"),
-        start = c(1, NA, 1, 0.3, 0.8),
+        start = c(1, NA, 1, 0.2, 0.8),
         min = c(0, 0, 0.05, 0.1, 1e-5),
         max = c(Inf, Inf, 5, 1, 0.4)  ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+	   link = list()
     ),
 
 
@@ -324,12 +402,12 @@ DoniachSunjic = new("fitComponents",
     label = "DoniachSunjic",
     param = data.frame(
         row.names = c("h", "mu", "sigmaDS", "asym"),
-        start = c(1, NA, 1, 0.05),
+        start = c(1, NA, 1, 0.02),
         min = c(0, 0, 0.01, 0.01),
         max = c(Inf, Inf, 10, 1)),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 rsf = 0,
+	   link = list()
     ),
 
 DoniachSunjicTail = new("fitComponents",
@@ -338,12 +416,12 @@ DoniachSunjicTail = new("fitComponents",
     label = "DoniachSunjicTail",
     param = data.frame(
         row.names = c("h", "mu", "sigmaDS", "asym", "tail"),
-        start = c(1, NA, 1, 0.05, 0.6),
+        start = c(1, NA, 1, 0.05, 0.2),
         min = c(0, 0, 0.01, 0.01, 0.01),
         max = c(Inf, Inf, 10, 1, 5)  ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 rsf = 0,
+	   link = list()
     ),
 
 DoniachSunjicGauss = new("fitComponents",
@@ -352,12 +430,12 @@ DoniachSunjicGauss = new("fitComponents",
     label = "DoniachSunjicGauss",
     param = data.frame(
         row.names = c("h", "mu", "sigmaDS", "sigmaG", "asym"),
-        start = c(1, NA, 1, 0.8, 0.15),
+        start = c(1, NA, 1, 0.8, 0.02),
         min = c(0, 0, 0.01, 0.01, 0.01),
         max = c(Inf, Inf, 5, 5, 1) ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+	   link = list()
     ),
 
 DoniachSunjicGaussTail = new("fitComponents",
@@ -366,12 +444,12 @@ DoniachSunjicGaussTail = new("fitComponents",
     label = "DoniachSunjicGaussTail",
     param = data.frame(
         row.names = c("h", "mu", "sigmaDS", "sigmaG", "asym", "tail"),
-        start = c(1, NA, 1, 0.8, 0.05, 0.8),
+        start = c(1, NA, 1, 0.8, 0.02, 0.2),
         min = c(0, 0, 0.01, 0.01, 0.01, 0.01),
         max = c(Inf, Inf, 5, 5, 1, 5) ),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   rsf = 0,
+	   link = list()
     ),
 
 SimplfiedDoniachSunjic = new("fitComponents",
@@ -380,13 +458,15 @@ SimplfiedDoniachSunjic = new("fitComponents",
     label = "SimplfiedDoniachSunjic",
     param = data.frame(
         row.names = c("h", "mu", "sigma", "asym"),
-        start = c(1, NA, 0.6, 0.01),
+        start = c(1, NA, 0.6, 0.02),
         min = c(0, 0, 0.01, 0.01),
         max = c(Inf, Inf, 5, 1)	),
     ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 rsf = 0,
+	   link = list()
     ),
+
+#----- Special Fit Components -----
 
 Linear = new("fitComponents",
     funcName = "Linear",
@@ -397,9 +477,9 @@ Linear = new("fitComponents",
         start = c(NA, 0, NA),
         min = c(-Inf, -Inf, NA),
         max = c(Inf, Inf, NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+  	 rsf = 0,
+	   link = list()
     ),
 
 ExpDecay = new("fitComponents",
@@ -411,9 +491,9 @@ ExpDecay = new("fitComponents",
         start = c(1, NA, 1, 0),
         min = c(0, 0, 0, 0),
         max = c(Inf, Inf, 5, Inf) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+  	 rsf = 0,
+	   link = list()
     ),
 
 PowerDecay = new("fitComponents",
@@ -425,9 +505,9 @@ PowerDecay = new("fitComponents",
         start = c(1, NA, 2, 0),
         min = c(0, 0, 0.1, 0),
         max = c(Inf, Inf, 5, Inf) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+	   rsf = 0,
+  	 link = list()
     ),
 
 Sigmoid = new("fitComponents",
@@ -439,38 +519,53 @@ Sigmoid = new("fitComponents",
         start = c(1, NA, 1, 0),
         min = c(0, 0, 0, 0),
         max = c(Inf, Inf, 5, Inf) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+  	 rsf = 0,
+	   link = list()
     ),
 
 HillSigmoid = new("fitComponents",
     funcName = "HillSigmoid",
     description = "Hill Sigmoid function",
-    label = "HillSigmoid",
+    label = "HS",
     param = data.frame(
         row.names = c("h", "mu", "pow", "A", "B"),     #mu, A, B values are set by do.fit() in XPSVBTopGUI()
-        start = c(NA, NA, 1, NA, NA),
+        start = c(NA, NA, 8, NA, NA),
         min = c(0, 0, 0, 0, 0),
-        max = c(Inf, Inf, 5, Inf, Inf) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+        max = c(Inf, Inf, 50, Inf, Inf) ),
+	   ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
+    ),
+
+
+HillSigmoid.KE = new("fitComponents",
+    funcName = "HillSigmoid.KE",
+    description = "Hill Sigmoid function",
+    label = "HS",
+    param = data.frame(
+        row.names = c("h", "mu", "pow", "A", "B"),     #mu, A, B values are set by do.fit() in XPSVBTopGUI()
+        start = c(NA, NA, 8, NA, NA),
+        min = c(0, 0, 0, 0, 0),
+        max = c(Inf, Inf, 50, Inf, Inf) ),
+	   ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
     ),
 
 
 VBFermi = new("fitComponents",
     funcName = "VBFermi",
     description = "Fermi Distribution function",
-    label = "VBFermi",
+    label = "Ef",
     param = data.frame(
-        row.names = c("h", "Ef", "k"),
+        row.names = c("h", "mu", "k"),
         start = c(1, 0, 1),
         min = c(0, 0, 0),
         max = c(10, 2, 5) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
     ),
 
 
@@ -483,9 +578,9 @@ VBtop = new("fitComponents",     #Together with FitAlgorithms this is needeed to
         start = c(NA),
         min = c(NA),
         max = c(NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
     ),
 
 Derivative = new("fitComponents",     #Together with FitAlgorithms this is needeed to create a slot
@@ -497,9 +592,9 @@ Derivative = new("fitComponents",     #Together with FitAlgorithms this is neede
         start = c(NA),
         min = c(NA),
         max = c(NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+	   ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
     ),
 
 FitProfile = new("fitComponents",
@@ -511,8 +606,8 @@ FitProfile = new("fitComponents",
         start = c(NA, 10, NA, NA),
         min = c(NA, 0, NA, NA),
         max = c(NA, 50, NA, NA) ),
-	 ycoor = 0,
-	 rsf = 0,
-	 link = list()
+  	 ycoor = 0,
+  	 rsf = 0,
+  	 link = list()
     )
 )

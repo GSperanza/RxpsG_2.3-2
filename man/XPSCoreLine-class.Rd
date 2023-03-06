@@ -6,20 +6,40 @@
 \title{Class "XPSCoreLine"}
 \description{
 The package provides a class for XPS spectra (class \code{XPSCoreLine}) and
-lists of such objects (class \code{XPSSample}). \code{XPSCoreLine} are values
-pairs stored in a \code{list} and several additional parameters stored in
-slots.
+ lists of such objects (class \code{XPSSample}). \code{XPSCoreLine} are values
+ pairs stored in a \code{list} and several additional parameters stored in
+ slots.
 }
-\section{Objects from the Class}{
- Objects can be created by calls of the form
-\code{new("XPSCoreLine", ...)}.
-}
+\section{Slots}{
+
+\describe{
+\item{\code{.Data}}{contains the X, Y spectral data and is generated automatically when the Class is generated}
+
+\item{\code{RegionToFit}}{the portion of the spectrum to fit}
+
+\item{\code{Baseline}}{the Baseline applied to subtract background}
+
+\item{\code{Components}}{the fitting components}
+
+\item{\code{Fit}}{the best fit}
+
+\item{\code{Boundaries}}{the values of the RegionToFit edges}
+
+\item{\code{RSF}}{the relative seisitivity factor associated to the element spectrum}
+
+\item{\code{Shift}}{the energy correction shift if charging present}
+
+\item{\code{units}}{the adopted units: kinetic/binding energy, counts/counts_per_second}
+
+\item{\code{Flags}}{logical}
+
+\item{\code{Info}}{information regarding the spectrum acquisition}
+
+\item{\code{Symbol}}{symbol of the element associated to the spectrum}
+}}
 
 \examples{
-
 \dontrun{
 test <- new("XPSCoreLine", Info="test", units=c("Binding [eV]", "Counts"))
 }
-
 }
-\keyword{classes}

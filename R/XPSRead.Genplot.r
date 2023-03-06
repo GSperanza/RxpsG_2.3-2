@@ -1,21 +1,13 @@
-### $Id: readRPL.R,v 0.0.1
-###
-###             Read Genplot RPL data
-###
+# Read Genplot RPL data
 
-#'read.vamas
-#'
-#'Read Genplot RPL data
-#'
-#'Read Genplot analyzed spectra in RPL format
-#'a RPL folder containing analyzed data must be present
-#'
+#'@title readGenplot
+#'@description Read Genplot RPL data
+#'  Read Genplot analyzed spectra in RPL format
+#'  a RPL folder containing analyzed data must be present
+#'  This function is called by using the RxpsG menu
 #'@param Object an XPSSample object where to put the read data
 #'@param file File
 #'@param debug debug switch
-#'
-#' 
-#'@export
 #'
 
 

@@ -1,17 +1,17 @@
-## XPScomparePlot: engine to compare corelines in multi-panel mode
+## XPScomparePlot: macro to compare corelines in multi-panel mode
 
-#'XPScompare Engine is the software powering the XPSCompareGUI.
-#'This function compares corelines in multi-panel mode following
-#'options selected in XPScompareGUI
-#'
-#'@param PlotParameters the plot parameters asociated to the XPSOverlayGUI options;
-#'@param Plot_Args list of plot options;
-#'@param SelectedNames list containing the XPSSample names and the Corelines to be plotted;
-#'@param Xlim Xrange of the data to be plotted;
-#'@param Ylim Yrange of the data to be plotted;
-#'@return Returns c(Xlim, Ylim) eventually modified
-#'
-#'@export
+#' @title XPScompare allows compare Core-Line and their best fits
+#' @description XPScompEngine is the software powering the XPSCompareGUI.
+#'   XPScompEngine() is called by XPScompareGUI() and not directly accesible.
+#'   This macro compares corelines in multi-panel mode following
+#'   options selected by the user in XPScompareGUI
+#' @param PlotParameters the plot parameters asociated to the XPSOverlayGUI options;
+#' @param Plot_Args list of plot options;
+#' @param SelectedNames list containing the XPSSample names and the Corelines to be plotted;
+#' @param Xlim Xrange of the data to be plotted;
+#' @param Ylim Yrange of the data to be plotted;
+#' @return Returns c(Xlim, Ylim) eventually modified
+#' @export
 #'
 
 XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {

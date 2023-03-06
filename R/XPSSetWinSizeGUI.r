@@ -1,18 +1,13 @@
 #function to set the dimensions of the analysis window (XPSGUI.r)
 
-#'To select a dimensions of the graphic window depending on the dimensions of the screen used
-#'
-#'To select a dimensions of the graphic window depending on the dimensions of the screen used
-#'No parameters are passed to this function
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSSetWinSize()
-#'}
-#'
-#'@export
+#' @title XPSSetWinSize
+#' @description XPSSetWinSize function to select a dimensions of the graphic
+#'   window depending on the dimensions of the screen used
+#' @examples
+#' \dontrun{
+#' 	XPSSetWinSize()
+#' }
+#' @export
 #'
 
 

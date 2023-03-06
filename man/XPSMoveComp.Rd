@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSMoveCompGUI.r
 \name{XPSMoveComp}
 \alias{XPSMoveComp}
-\title{XPSMoveComp function to modify component position and intensity in a fit}
+\title{XPSMoveComp}
 \usage{
 XPSMoveComp()
 }
 \description{
-Provides a userfriendly interface change position and intensity of each
-individual fitting component of a selected XPSCoreline. Changes are saved
-in the .GlobalEnv main software memory.
-No parameters are passed to this function.
+XPSMoveComp function to modify component position and intensity in a fit
+  this function provides a userfriendly interface change position and intensity of each
+  individual fitting component of a selected XPSCoreline. Changes are saved
+  in the .GlobalEnv main software memory.
 }
 \examples{
-
 \dontrun{
-XPSMoveComp()
+	XPSMoveComp()
 }
-
 }

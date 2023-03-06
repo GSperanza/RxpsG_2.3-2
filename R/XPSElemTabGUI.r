@@ -1,15 +1,13 @@
-#'CoreLine and Auger Transition tables
-#'
-#'GUI to help identification of elements in Survey spectra.
-#'
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSElemTab()
-#'}
-#'
-#'@export
+# XPSElemTab builds the element tables for assigning elements in a survey spectrum
+
+#' @title XPSElemTab
+#' @description XPSElemTab constructs the CoreLine and Auger Transition tables
+#'   this function helps the identification of chemical elements in Survey spectra.
+#' @examples
+#' \dontrun{
+#' 	XPSElemTab()
+#' }
+#' @export
 #'
 
 XPSElemTab <-function() {
@@ -152,7 +150,7 @@ ShowLines <- function(){
                      replayPlot(RecPlot) #refresh graph  to cancel previous cursor markers
                },  container = elmtGroup)
 
-   CurPos <- glabel(text = " ", editable = FALSE, spacing=10, container = elmtGroup)
+   CurPos <- glabel(text = "X, Y: ", editable = FALSE, spacing=10, container = elmtGroup)
 #   tkconfigure(CurPos$widget, width=18)  #limits the glabel to 18 chars
    ResetPlt <- gbutton(" UNDO ", handler=function(h,...){
                             elmt <<- ""

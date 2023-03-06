@@ -1,20 +1,21 @@
 #-----------------------------------------
 # XPS processing with gWidgets2 and tcltk
 #-----------------------------------------
-#'Extract a portion of spectrum from a XPS survey
+#' @title XPSExtract extract a portion of spectrum from a XPS survey
 #'
-#'Extract a portion (abscissa) from a XPS survey in a XPSSample. It use a GUI
-#'to interact with the x-axis and to get the \code{Symbol} of the new
-#'XPSCoreLine. XPSExtract() does not need any parameter.
-#'
-#'@return returns the \code{object} with a coreline added.
-#'@examples
-#'
-#'\dontrun{
-#' XPSextractGUI()
-#'}
-#'
-#'@export
+#' @description XPSExtract function extracts spectral features from
+#'   a XPS survey in a XPSSample. Mouse is used to identify the portion
+#'   of the spectrum to extract. The user is asked to assign a name
+#'   (i.e. Cl2p, Li1s, Br3d...) to the extracted spectrum representing
+#'   a Core-Line associated to an element. Coherently with the
+#'   name, a RSF will be automatically assigned to that spectrum.
+#' @return XPSExtract returns the extracted spectrum, and the original 
+#'   XPSSample will show an additional coreline
+#' @examples
+#' \dontrun{
+#'  XPSextractGUI()
+#' }
+#' @export
 #'
 
 XPSExtract <- function() {
@@ -155,13 +156,23 @@ XPSExtract <- function() {
          elesymbol <- gedit("", label="Element Name:", container=flyt)
          gseparator(container=gBox)
          bg <- ggroup(container=gBox)
-         gbutton("OK", container=bg, handler=function(...){  #input spectrum name
+         gbutton("OK", container=bg, handler=function(...){   #input spectrum name
+                 dispose(winExt)
                  Symbol <- svalue(elesymbol)
-                 Symbol <- gsub(" ", "", Symbol)    #eliminates white spaces from Symbol
-                 pattern <- c("[[:alpha:]]{1,2}")   #matches only the first two char
-                 mpat <- regexpr(pattern, Symbol)
+                 Element <- Symbol <- gsub(" ", "", Symbol)   #eliminates white spaces from Symbol
+                 Orbital <- c("1s", "2s", "3s", "4s", "5s", "6s", "2p", "3p", "4p", "5p", "6p", "3d", "4d", "5d", "4f")
+                 for(ii in 1:length(Orbital)){
+                     Element <- sub(Orbital[ii], "", Element) #eliminates the orbital from the Symbol
+                 }
+                 Orbital <- sub(Element, "", Symbol) #retrieve the orbital
+                 if(nchar(Orbital)==0){
+                    gmessage(" ATTENTION: incorrect Core-Line Name, Orbital lacking!", title="WARNING", icon="warning")
+                    return()
+                 }
+                 pattern <- c("[[:alpha:]]")         #matches letters in Symbol (dot excluded)
+                 idx <- regexpr(pattern, Element)     #returns the index of the first letter in Symbol
                  ## symbol element
-                 Element <- regmatches(Symbol, mpat)
+                 Element <- substr(Element, start=idx, stop=nchar(Element))
                  if (ElementCheck(Element)==FALSE ) {    #see XPSelement.r
                      yesno <- gconfirm(msg=" ATTENTION: element Name NOT found in Element Table! \n Proceed anyway?", icon="warning")
                      if (yesno==FALSE){
@@ -169,7 +180,7 @@ XPSExtract <- function() {
                          return()
                     }
                  }
-                 dispose(winExt)
+                 Symbol <- paste(Element, Orbital, sep="") #biold the exact CoreLine name
 
                  newcoreline <- Object   #creates a new coreline
                  Xmax <- max(range(newcoreline@.Data[1]))
@@ -445,7 +456,7 @@ XPSExtract <- function() {
   WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
                         WinSize <- svalue(WSize)
                         svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <- dev.size()*WinSize   #rescale the graphic window
+                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
 #                        graphics.off()
 #                        OS <- Sys.info["sysname"]
 #                        switch (OS,

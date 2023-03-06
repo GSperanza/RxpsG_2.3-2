@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSRead.Genplot.r
 \name{readGenplot}
 \alias{readGenplot}
-\title{read.vamas}
+\title{readGenplot}
 \usage{
 readGenplot(Object, file = NULL, debug = FALSE)
 }
@@ -15,8 +15,7 @@ readGenplot(Object, file = NULL, debug = FALSE)
 }
 \description{
 Read Genplot RPL data
-}
-\details{
-Read Genplot analyzed spectra in RPL format
-a RPL folder containing analyzed data must be present
+ Read Genplot analyzed spectra in RPL format
+ a RPL folder containing analyzed data must be present
+ This function is called by using the RxpsG menu
 }

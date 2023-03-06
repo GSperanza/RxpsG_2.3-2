@@ -2,17 +2,16 @@
 % Please edit documentation in R/XPSElemTabGUI.r
 \name{XPSElemTab}
 \alias{XPSElemTab}
-\title{CoreLine and Auger Transition tables}
+\title{XPSElemTab}
 \usage{
 XPSElemTab()
 }
 \description{
-GUI to help identification of elements in Survey spectra.
+XPSElemTab constructs the CoreLine and Auger Transition tables
+  this function helps the identification of chemical elements in Survey spectra.
 }
 \examples{
-
 \dontrun{
-XPSElemTab()
+	XPSElemTab()
 }
-
 }

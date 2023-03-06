@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{AsymmGaussLorentzProd}
 \alias{AsymmGaussLorentzProd}
-\title{AsymmGaussLorentzProd function
-Asym Gaussian Lorentz cross product from UNIFIT Publication}
+\title{AsymmGaussLorentzProd function}
 \usage{
 AsymmGaussLorentzProd(x, h, mu, sigma, asym, lg)
 }
@@ -21,6 +20,5 @@ AsymmGaussLorentzProd(x, h, mu, sigma, asym, lg)
 \item{lg}{mix Gauss-Lorentz}
 }
 \description{
-AsymmGaussLorentzProd function
 Asym Gaussian Lorentz cross product from UNIFIT Publication
 }

@@ -1,16 +1,14 @@
-#'GUI to estimate the position of the Valence Band Top
-#'
-#'Interactive GUI to add BaseLines and Fitting components to
-#'the region of the VB proximal to the Fermi Edge needed
-#'for the estimation of the VB-Top position
-#'
-#'@examples
-#'
-#'\dontrun{
-#' XPSVBTop()
-#'}
-#'
-#'@export
+
+#' @title XPSVBTop
+#' @description XPSVBTop function to estimate the position of the Valence Band Top
+#'   the interactive GUI adds a BaseLines and Fitting components to
+#'   the region of the VB proximal to the Fermi Edge needed
+#'   for the estimation of the VB-Top position
+#' @examples
+#' \dontrun{
+#'  XPSVBTop()
+#' }
+#' @export
 #'
 
 
@@ -25,10 +23,10 @@ XPSVBTop <- function() {
       yy <- grconvertY(y, from="ndc", to="user")
       coords <<- c(xx, yy)
 
-      Xlim1 <- min(range(Object@.Data[[1]]))   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(range(Object@.Data[[1]]))
-      Ylim1 <- min(range(Object@.Data[[2]]))
-      Ylim2 <- max(range(Object@.Data[[2]]))
+      Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
+      Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
+      Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
+      Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
 
       if (xx < Xlim1 ) {xx <- Xlim1}
       if (xx > Xlim2 ) {xx <- Xlim2}
@@ -88,7 +86,7 @@ XPSVBTop <- function() {
             point.coords$y[1] <<- point.coords$y[2]   #keep linear BKG alligned to X
          }
          slot(Object[[coreline]],"Boundaries") <<- point.coords
-         do.baseline(deg, splinePoints)  #modify the baseline
+         MakeBaseline(deg, splinePoints)  #modify the baseline
          if (VBbkgOK==FALSE){ #we are still modifying the Shirley baseline
             LL <- length(Object[[coreline]]@.Data[[1]])
             VBintg <<- sum(Object[[coreline]]@RegionToFit$y - Object[[coreline]]@Baseline$y)/LL #Integral of BKG subtracted VB / number of data == average intensity of VB points
@@ -131,20 +129,6 @@ XPSVBTop <- function() {
      return()
   }
 
-#  RBmousedown <- function() {
-#     tab1 <- svalue(nbMain)
-#     tab2 <- svalue(nbVBfit)
-#     if ( tab1 == 2 && tab2 == 1 ) { ### tab=VB Fit, Linear Fit
-#        if (coreline == 0) {
-#           gmessage(msg="Please select the VB spectrum", title = "WARNING: WRONG CORELINE SELECTION",  icon = "warning")
-#        }
-#        point.coords$x <<- c(point.coords$x, coords[1])
-#        point.coords$y <<- c(point.coords$y, coords[2])
-#        replot()
-#     }
-#  }
-
-
   replot <- function(...) {
      tab1 <- svalue(nbMain)
      tab2 <- svalue(nbVBfit)
@@ -157,42 +141,44 @@ XPSVBTop <- function() {
                baseline.ylim <- c( min(Object[[coreline]][[2]]),
                                 2*max( c(Object[[coreline]][[2]][1], Object[[coreline]][[2]][lastX]) ) )
                plot(Object[[coreline]], ylim=baseline.ylim)
-               points(point.coords, col=1.8, cex=SymSiz, lwd=1.5, pch=MarkSym)
+               points(point.coords, col="red", cex=SymSiz, lwd=1.5, pch=MarkSym)
             } else {
                plot(Object[[coreline]])     #plots the Baseline limits
-               points(point.coords, col=2, cex=SymSiz, lwd=1.5, pch=MarkSym)
+               points(point.coords, col="red", cex=SymSiz, lwd=1.5, pch=MarkSym)
             }
         } else if ((tab1 == 2) && (tab2==1) ){ ### tab VB Fit, Linear Fit
             Xrng <- range(Object[[coreline]]@RegionToFit$x)
             Yrng <- range(Object[[coreline]]@RegionToFit$y)
             plot(Object[[coreline]], xlim=Xrng, ylim=Yrng)  #plot confined in the original X, Y range
-            if (length(point.coords$x)>0 && length(point.coords$x)<5) { #Points defining the 2 regions for the linear fit
-                points(point.coords, col=3, cex=1.2, lwd=2, pch=3)
+            if (length(point.coords$x) > 0 && VBtEstim == FALSE) { #Points defining the 2 regions for the linear fit
+                points(point.coords, col="green", cex=1.2, lwd=2, pch=3)
             }
-            if (length(point.coords$x)==5) {     #Point defining the intercept of the two linear fit
-                Lx <- c(point.coords$x[5], point.coords$x[5])
-                Ly <- c(point.coords$y[5], Yrng[2]/2)
-                points(point.coords$x[5],point.coords$y[5], col="orange", cex=3, lwd=2, pch=3)
+            if (VBtEstim == TRUE) {     #Point defining the intercept of the two linear fit
+                points(point.coords$x, point.coords$y, col="orange", cex=3, lwd=2, pch=3)
             }
         } else if ((tab1 == 2) && (tab2==2) ){ ### tab VB Fit, NON-Linear Fit
             if (svalue(plotFit) == "residual" && hasFit(Object[[coreline]])) {
                 XPSresidualPlot(Object[[coreline]])
-            } else if (VBTop==TRUE) {
+            }
+            if (VBtEstim == FALSE){
+                plot(Object[[coreline]])
+                points(point.coords, col="green", cex=1.2, lwd=2, pch=3)       #plots the point where to add the component
+            }
+            if (VBtEstim == TRUE) {
                 plot(Object[[coreline]])
                 points(point.coords, col="orange", cex=3, lwd=2, pch=3)  #plots the VB top
-            } else {
-                plot(Object[[coreline]])
-                points(point.coords, col=3, cex=1.2, lwd=2, pch=3)       #plots the point where to add the component
             }
         } else if ((tab1 == 2) && (tab2==3) ){ ### tab VB Fit, Hill Sigmoid Fit
             if (svalue(plotFit) == "residual" && hasFit(Object[[coreline]])) {
                 XPSresidualPlot(Object[[coreline]])
-            } else if (VBTop==TRUE) {
+            }
+            if (VBtEstim == FALSE){
+                plot(Object[[coreline]])
+                points(point.coords, col="green", cex=1.2, lwd=2, pch=3)       #plots the point where to add the component
+            }
+            if (VBtEstim == TRUE) {
                 plot(Object[[coreline]])
                 points(point.coords, col="orange", cex=3, lwd=2, pch=3)    #plots the VB top
-            } else {
-                plot(Object[[coreline]])
-                points(point.coords, col=3, cex=1.2, lwd=2, pch=3)         #plots the point where to add the component
             }
         }
      }
@@ -227,7 +213,9 @@ XPSVBTop <- function() {
              gmessage(msg="Analysis already present on this Coreline!", title = "WARNING: Analysis Done",  icon = "warning")
              return()
          }
+         VBtEstim <<- FALSE
          enabled(T1group1) <- TRUE   #enable NB-baseline
+         enabled(OK_btn1) <- TRUE
          enabled(OK_btn2) <- FALSE
 
 # Now computes the VB integral needed for the VBtop estimation by NON-Linear Fit
@@ -267,7 +255,7 @@ XPSVBTop <- function() {
   }
 
 
-  do.baseline <- function(deg,splinePoints, ...){
+  MakeBaseline <- function(deg,splinePoints, ...){
      if ( coreline != 0 && hasBoundaries(Object[[coreline]]) ) {
         Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])  #Define RegionToFit see XPSClass.r
         Object[[coreline]] <<- XPSbaseline(Object[[coreline]], BType, deg, splinePoints )
@@ -305,9 +293,9 @@ XPSVBTop <- function() {
 
 
   update.outputArea <- function(...) {
-     coreline <- svalue(Core.Lines)
-     coreline <- unlist(strsplit(coreline, "\\."))   #drops the NUMBER. before the CoreLine name
-     coreline <- as.integer(coreline[1])
+     coreline <<- svalue(Core.Lines)
+     coreline <<- unlist(strsplit(coreline, "\\."))   #drops the NUMBER. before the CoreLine name
+     coreline <<- as.integer(coreline[1])
   }
 
 
@@ -325,10 +313,12 @@ XPSVBTop <- function() {
      ObjectBKP <<- Object[[coreline]]
      tab2 <- svalue(nbVBfit)
      if (coreline != 0 && hasBaseline(Object[[coreline]])) {
+         Xrange <- Object[[coreline]]@Boundaries$x
+         Sigma <- abs(Xrange[2]-Xrange[1])/7
          if (! is.null(point.coords$x[1]) && tab2==2 ) {   #NON-Linear Fit
 #Fit parameter are set in XPSAddComponent()
              Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(Fit.type),
-                                             peakPosition = list(x = point.coords$x, y = point.coords$y) )
+                                             peakPosition = list(x = point.coords$x, y = point.coords$y), sigma=Sigma)
 ## to update fit remove Component@Fit and make the sum of Component@ycoor including the newone
              tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
              CompNames <<- names(Object[[coreline]]@Components)
@@ -338,8 +328,9 @@ XPSVBTop <- function() {
          }
          if (! is.null(point.coords$x[1]) && tab2==3 ) {   #Hill Sigmoid Fit
 #Fit parameter are set in XPSAddComponent()
+
              Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "HillSigmoid",
-                                             peakPosition = list(x = point.coords$x, y = point.coords$y) )
+                                             peakPosition = list(x = point.coords$x, y = point.coords$y), ...)
              Object[[coreline]]@Fit$y <<- Object[[coreline]]@Components[[1]]@ycoor-Object[[coreline]]@Baseline$y #subtract the Baseline
              point.coords <<- list(x=NULL,y=NULL)
              Object[[coreline]]@RegionToFit$x <- ObjectBKP@RegionToFit$x #restore original abscissas changed in XPSAddComponent()
@@ -358,7 +349,7 @@ XPSVBTop <- function() {
          }
          if (coreline != 0 && hasComponents(Object[[coreline]])) {
              txt <- c("Select the fit component to delete")
-             delWin <- gwindow("DELETE", parent = window, visible = FALSE)
+             delWin <- gwindow("DELETE", parent = c(50,10), visible = FALSE)
              g <- gvbox(container=delWin); g$set_borderwidth(10L)
              glabel(txt, container=g)
              gseparator(container=g)
@@ -393,7 +384,7 @@ XPSVBTop <- function() {
      newFitParam <- NULL
      indx <- NULL
 
-     EditWin <- gwindow("EDIT", parent = window, visible = FALSE)
+     EditWin <- gwindow("EDIT", parent = c(50,10), visible = FALSE)
      size(EditWin) <- c(450, 230)
      EditGroup1 <- ggroup(horizontal = FALSE, container = EditWin)
      Editframe1 <- gframe(" Select the Function To Edit", spacing=5, container=EditGroup1)
@@ -436,7 +427,7 @@ XPSVBTop <- function() {
   }
 
 
-  do.Fit <- function(h, ...) {
+  MakeFit <- function(h, ...) {
      ObjectBKP <<- Object[[coreline]]
      FitRes <- NULL
      tab1 <- svalue(nbMain)
@@ -449,7 +440,7 @@ XPSVBTop <- function() {
          }
          ###First Linear fit considered as component to compute the VB Top
          Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "Linear",
-                                             peakPosition = list(x = NA, y = NA) )
+                                             peakPosition = list(x = NA, y = NA), ...)
          #restrict the RegionToFit to the FIRST rengion selected with mouse for the linear fit
          idx1 <- findXIndex(Object[[coreline]]@RegionToFit$x, point.coords$x[1]) #Inside object@RegionToFit$x extract the region between selected points: limit1
          idx2 <- findXIndex(Object[[coreline]]@RegionToFit$x, point.coords$x[2]) #Inside object@RegionToFit$x extract the region between selected points: limit2
@@ -473,7 +464,7 @@ XPSVBTop <- function() {
 
          ###Second Linear fit considered as component to compute the VB Top
          Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "Linear",
-                                             peakPosition = list(x = NA, y = NA) )
+                                             peakPosition = list(x = NA, y = NA), ...)
 
          #restrict the RegionToFit to the SECOND rengion selected with mouse for the linear fit
          idx1 <- findXIndex(Object[[coreline]]@RegionToFit$x, point.coords$x[3]) #All-interno di object@RegionToFit$x estraggo la regione selezionata per i fit lineare: estremo1
@@ -495,13 +486,18 @@ XPSVBTop <- function() {
          Object[[coreline]]@Components[[2]]@param["m", "start"] <<- Fit2[1]
          Object[[coreline]]@Components[[2]]@param["c", "start"] <<- Fit2[2]
          Object[[coreline]]@Components[[2]]@ycoor <<- FitRes #-Object[[coreline]]@Baseline$y   #Baseline has to be subtracted to match the orig. data
+         Object[[coreline]]@Fit$y <- FitRes
          replot()   #plot of the two linear fits
      }
      if (coreline != 0 && tab2==2) {  #VB NON-Linear Fit
          if (reset.fit==FALSE){
+             NComp <- length(Object[[coreline]]@Components)
+             for(ii in 1:NComp){
+                 Object[[coreline]]@Components[[ii]]@param["sigma", "min"] <- 0.5 #limits the lower limit of component FWHM
+             }
              Xbkp <- Object[[coreline]]@RegionToFit$x  #save the original X coords = RegionToFit$x
 #Fit parameter are set in XPSAddComponent()
-             Object[[coreline]] <<- XPSFitLM(Object[[coreline]], plt=FALSE, verbose=FALSE)  #Levenberg Marquardt fit
+             Object[[coreline]] <<- XPSFitLM(Object[[coreline]], plt=FALSE, verbose=FALSE)  #Lev.Marq. fit returns all info stored in Object[[coreline]]
              Object[[coreline]]@RegionToFit$x <<- Xbkp
              replot()
          } else if (reset.fit==TRUE){
@@ -516,15 +512,27 @@ XPSVBTop <- function() {
 #Fit parameter and new X coords are set in XPSAddComponent()
 #HillSigmoid was defined using the new X coords
 #New X coords must be used also for the fit
-             Xbkp <- Object[[coreline]]@RegionToFit$x  #save the original X coords = RegionToFit$x
-             FlexPos <- Object[[coreline]]@Components[[1]]@param[2,1] #Save Hill Sigmoid flex position relative to the modified Xcoords
-             Object[[coreline]]@RegionToFit$x <<- Object[[coreline]]@Fit$x  #Set sigmoid Xcoords as modified in XPSAddFitComp()
-             Object[[coreline]] <<- XPSFitLM(Object[[coreline]], plt=FALSE, verbose=FALSE)   #Levenberg Marquardt fit
 
-             DFPos <- FlexPos-Object[[coreline]]@Components[[1]]@param[2,1] #difference between the initial and the fitted flex position
-             idx <- Object[[coreline]]@Fit$idx  #retrive the index correspondent to the flex point position
+             LL <- length(Object[[coreline]]@RegionToFit$x)
+             dx <- (Object[[coreline]]@RegionToFit$x[2]-Object[[coreline]]@RegionToFit$x[1])
+             Xbkp <- Object[[coreline]]@RegionToFit$x  #save the original X coords
+
+#Hill sigmoid defined only for positive X abscissas. Then (i)generate a temporary X array
+#(ii)generate the  Hill sigmoid. (iii)Perform fitting (iv)restore the original X values
+#compute the HillSigmoid position MU on the original abscissas
+             Object[[coreline]]@RegionToFit$x <<- Object[[coreline]]@Fit$x  #Set sigmoid Xcoords as modified in XPSAddFitComp()
+
+             Object[[coreline]] <<- XPSFitLM(Object[[coreline]], plt=FALSE, verbose=FALSE)   #Lev.Marq. fit returns all info stored in Object[[coreline]]
+             FlexPos <- Object[[coreline]]@Components[[1]]@param[2,1] #MU = fitted flex position HillSigmoid position
+             Object[[coreline]]@Fit$idx <<- FlexPos
+#temporary abscissa X = seq(1,lenght(RegToFit))
+#Observe that in the temporary abscissaa, each X represents both the value and the X-index
+#FlexPos*dx represents how many dx are needed to reach MU starting form X[1]
+
              Object[[coreline]]@RegionToFit$x <<- Xbkp  #restore the original X coods
-             Object[[coreline]]@Components[[1]]@param[2,1] <<- Xbkp[idx]+DFPos #Flex point position on the original X scale
+#now compute the HS position on the original X abscissas
+             FlexPos <- Object[[coreline]]@RegionToFit$x[1]+dx*(FlexPos-1)
+             Object[[coreline]]@Components[[1]]@param[2,1] <<- FlexPos #save Hill Sigmoid position
              replot()
          } else if (reset.fit==TRUE){
              Object[[coreline]] <<- XPSremove(Object[[coreline]],"fit")
@@ -535,7 +543,7 @@ XPSVBTop <- function() {
      }
   }
 
-  do.VBTop <- function(h, ...) {
+  CalcVBTop <- function(h, ...) {
      tab1 <- svalue(nbMain)
      tab2 <- svalue(nbVBfit)
      if ((tab1 == 2) && (tab2==1) ){ ##VB Fit tab, Linear Fit
@@ -553,19 +561,20 @@ XPSVBTop <- function() {
          dY <- Object[[coreline]]@RegionToFit$y[idx1+1]-Object[[coreline]]@RegionToFit$y[idx1]
          #VBtopX falls between RegToFit[idx1] and RegToFit[idx+1]: VBtopY found through proportionality relation
          VBtopY <- dY*(VBtopX-Object[[coreline]]@RegionToFit$x[idx1])/dX+Object[[coreline]]@RegionToFit$y[idx1]
-         point.coords$x <<- c(point.coords$x, VBtopX)
-         point.coords$y <<- c(point.coords$y, VBtopY)
+         point.coords$x <<- VBtopX
+         point.coords$y <<- VBtopY
+         VBtopX <- round(VBtopX, 3)
+         VBtopY <- round(VBtopY, 3)
 
-         txt <- paste("Estimated position of VB top : ", as.character(round(VBtopX, 2), sep=""))
-         svalue(sb) <- txt
+         svalue(sb) <- txt <- paste("Estimated position of VB top:", VBtopX, VBtopY, sep="  ")
+         cat("\n",txt)
          #creation of component3 of type VBtop to store VBtop position
-         Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBtop")
-         Object[[coreline]]@Components[[3]]@ycoor[idx1] <<- VBtopY  #to indicate the VBtop in the plot
+         Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBtop", ...)
          LL <- length(Object[[coreline]]@Baseline$x)
-         Object[[coreline]]@Fit$y <<- rep(NA, LL)  #coreline plot requires fit to be included
          #VBtop is stored in component3  param mu
          Object[[coreline]]@Components[[3]]@param["mu", "start"] <<- VBtopX
-         replot()
+         Object[[coreline]]@Components[[3]]@param["h", "start"] <<- VBtopY
+         Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
      }
      if ((tab1 == 2) && (tab2==2) ){ #VB Fit tab, NON-Linear Fit
          VBTop <<- TRUE #set the VBTop graphic mode (see draw.plot()
@@ -575,41 +584,62 @@ XPSVBTop <- function() {
          } else if ( coreline != 0 && hasComponents(Object[[coreline]]) ) {
          ## Control on the extension of the VB above the Fermi
 
-             VBtresh <<- VBintg/5   #define a treshold for VBtop estimation
+#             VBtresh <<- VBintg/5   #define a treshold for VBtop estimation
+             VBtresh <<- (max(Object[[coreline]]@Fit$y)-min(Object[[coreline]]@Fit$y))/10
              LL <- length(Object[[coreline]]@Fit$y)
              for(idxTop in LL:1){ #scan the VBfit to find where the spectrum crosses the threshold
                 if (Object[[coreline]]@Fit$y[idxTop] >= VBtresh) break
              }
-             point.coords$x <<- Object[[coreline]]@RegionToFit$x[idxTop]  #abscissa from Region to Fit
-             point.coords$y <<- Object[[coreline]]@RegionToFit$y[idxTop]  #ordinata from Fit
+             VBtopX <- Object[[coreline]]@RegionToFit$x[idxTop]  #abscissa from Region to Fit
+             VBtopY <- Object[[coreline]]@RegionToFit$y[idxTop]  #ordinata from Fit
+             point.coords$x <<- VBtopX
+             point.coords$y <<- VBtopY
              replot()
              VBTop <<- FALSE
-             txt <- paste("Estimated position of VB top : ", as.character(round(point.coords$x, 2), sep=""))
-             svalue(sb) <- txt
-
+             VBtopX <- round(VBtopX, 3)
+             VBtopY <- round(VBtopY, 3)
+             svalue(sb) <- txt <- paste("Estimated position of VB top:", VBtopX, VBtopY, sep="  ")
              cat("\n",txt)
-
              # now add a component to store VBtop Position in param mu
-             Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBtop")
+             Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBtop", ...)
              LL <- length(Object[[coreline]]@Components)
-             Object[[coreline]]@Components[[LL]]@param["mu", "start"] <<- point.coords$x  # VBtop stored in param "mu"
-#    update.outputArea()
+             Object[[coreline]]@Components[[LL]]@param["mu", "start"] <<- VBtopX  # VBtop stored in param "mu"
+             Object[[coreline]]@Components[[LL]]@param["h", "start"] <<- VBtopY  # VBtop stored in param "mu"
+             Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
          }
      }
      if ((tab1 == 2) && (tab2==3) ){ #VB Fit tab, Hill Sigmoid Fit
-         VBTop <<- TRUE #set the VBTop graphic mode (see draw.plot()
-         VBpos <- Object[[coreline]]@Components[[1]]@param[2,1]*(1-2/Object[[coreline]]@Components[[1]]@param[3,1]) #VBpos=mu*(1-2/pow)
-         idxTop <- findXIndex(Object[[coreline]]@RegionToFit$x, VBpos)
-         point.coords$x <<- VBpos  #abscissa of VBTop = VBTopX
-         point.coords$y <<- Object[[coreline]]@RegionToFit$y[idxTop]    #ordinata correspondent to VBTopX
-         Object[[coreline]]@Components[[1]]@label <<- "VBtop"           #Label indicating the VBtop in the plot
-         Object[[coreline]]@Components[[1]]@param[2,1] <<- VBpos       #save VBTop position
+         LL <- length(Object)
+         dx <- (Object[[coreline]]@RegionToFit$x[2]-Object[[coreline]]@RegionToFit$x[1])
+         VBTop <<- TRUE      #set the VBTop graphic mode (see draw.plot()
+         mu <- Object[[coreline]]@Components[[1]]@param[2,1]
+         pow <- Object[[coreline]]@Components[[1]]@param[3,1]
+         A <- Object[[coreline]]@Components[[1]]@param[4,1]
+         B <- Object[[coreline]]@Components[[1]]@param[5,1]
+         TmpMu <- Object[[coreline]]@Fit$idx   #MU position on the temporary X scale
+#Now computes MU*(1-2/pow) = knee position of the HS curve. See Bartali et al Mater Int. (2014), 24, 287
+#This position has to be computed on the temporary X scale (is positive and increasing)
+         TmpVtop <- TmpMu*(1+2/pow)            #bottom knee position of the Hill sigmoid
+         idx <- as.integer(TmpVtop)
+         bgnd <- Object[[coreline]]@Baseline$y[idx] #baseline value at the TmpVtop point
+         VBtopX <- Object[[coreline]]@RegionToFit$x[1]+dx*(TmpVtop-1) #knee position on the original scalecat("\n 2222", point.coords$x, point.coords$y)
+         VBtopY <- A - A*TmpVtop^pow/(TmpMu^pow + TmpVtop^pow)+bgnd   #ordinate correspondent to TmpVtop
+         point.coords$x <<- VBtopX
+         point.coords$y <<- VBtopY
          replot()
          VBTop <<- FALSE
-         txt <- paste("Estimated position of VB top : ", as.character(round(point.coords$x, 2), sep=""))
-         svalue(sb) <- txt
-         cat("\n", txt)
+         VBtopX <- round(VBtopX, 3)
+         VBtopY <- round(VBtopY, 3)
+         svalue(sb) <- txt <- paste("Estimated position of VB top:", VBtopX, VBtopY, sep="  ")
+         # now add a component to store VBtop Position in param mu
+         Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBtop", ...)
+         LL <- length(Object[[coreline]]@Components)
+         Object[[coreline]]@Components[[LL]]@param["mu", "start"] <<- VBtopX  # VBtop stored in param "mu"
+         Object[[coreline]]@Components[[LL]]@param["h", "start"] <<- VBtopY  # VBtop stored in param "mu"
+         Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")      
       }
+      VBtEstim <<- TRUE
+      replot()
   }
 #----Set Default Variable Values
 
@@ -623,18 +653,24 @@ XPSVBTop <- function() {
      Object[[coreline]] <<- XPSbaseline(Object[[coreline]], "Shirley", deg, splinePoints )
      VBintg <<- sum(Object[[coreline]]@RegionToFit$y - Object[[coreline]]@Baseline$y)/LL #Integral of BKG subtracted VB / number of data == average intensity of VB points
 
-     VBTop <<- FALSE
      VBbkgOK <<- FALSE
      VBlimOK <<- FALSE
+     VBTop <<- FALSE
+     VBtEstim <<- FALSE
      BType <<- "Shirley"
+     LinFit <<- FALSE
+     VBintg <<- NULL    #BKG subtracted VB integral
+     CompNames <<- "   "
+     reset.fit <<- FALSE
      MarkSym <<- 10
      SymSiz <<- 1.8
      point.coords$x <<- c(Object[[coreline]]@.Data[[1]][1], Object[[coreline]]@.Data[[1]][LL])
      point.coords$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
      svalue(sb) <<- "Estimated position of VB top : "
-
      svalue(nbMain) <<- 1
      enabled(T2group1) <<- FALSE
+     enabled(OK_btn1) <<- TRUE
+     enabled(OK_btn2) <<- FALSE
   }
 
 #=====VARIABLES==================
@@ -658,6 +694,7 @@ XPSVBTop <- function() {
   VBbkgOK <- FALSE
   VBlimOK <- FALSE
   VBTop <- FALSE
+  VBtEstim <- FALSE
   LinFit <- FALSE
   VBintg <- NULL    #BKG subtracted VB integral
   FitFunct <- c("Gauss", "Voigt", "ExpDecay", "PowerDecay", "Sigmoid")
@@ -666,13 +703,17 @@ XPSVBTop <- function() {
   MarkSym <- 10
   SymSiz <- 1.8
 
+
+
+
+
   WinSize <- as.numeric(XPSSettings$General[4])
   cat("\n Please set the background extremes to define the VB integral ")
 
 
 #====== Widget definition =======
 
-  VBwindow <- gwindow("XPS VB Top GUI", parent=c(80, 0), visible = FALSE)
+  VBwindow <- gwindow("XPS VB Top GUI", parent=c(50, 10), visible = FALSE)
   addHandlerDestroy(VBwindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
 #-----                           stopping mouse handler
                                  setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
@@ -718,26 +759,25 @@ XPSVBTop <- function() {
   T1Frame1 <- gframe(text = " Process ", horizontal=FALSE, container = T1group1)
 
   T1Frame2 <- gframe(text = " WARNING! ", horizontal=FALSE, container = T1Frame1)
-  glabel("Check the Shirley BKG properly set for the WHOLE VB", container = T1Frame2)
-  glabel("Press OK to proceed or modify BKG boundaries", container = T1Frame2)
+  WarnLab1 <- glabel("Check the Shirley BKG and set it properly below the WHOLE VB", container = T1Frame2)
+  WarnLab2 <- glabel("Modify BKG Markers and press 'Define the VB Integral'", container = T1Frame2)
   T1group2 <- ggroup(horizontal=TRUE, spacing = 15, container = T1Frame2)
   OK_btn1 <- gbutton(" Define the VB Integral ", handler = function(h, ...) {
                    VBbkgOK <<- TRUE
                    BType <<- "linear"
                    reset.baseline()  #reset baseline from Shirley to linear BKG
-                   enabled(OK_btn2) <<- TRUE
                    MarkSym <<- 9
                    SymSiz <<- 1.5
+                   svalue(WarnLab1) <- "Set the EXTENSION and LEVEL of the Background \nto select the VB top region only"
+                   svalue(WarnLab2) <- "Modify BKG Markers and press \n'Define the VB region proximal to the Fermi edge'"
+                   enabled(OK_btn2) <<- TRUE
+                   enabled(OK_btn1) <- FALSE
                    replot()
                 }, container = T1group2)
 
   Reset_Btn11 <- gbutton(" Reset Baseline ", handler = function(h, ...) {
-                   VBbkgOK <<- FALSE
-                   VBlimOK <<- FALSE
-                   BType <<- "Shirley"
                    reset.baseline()
-                   enabled(T2group1) <<- FALSE
-                   enabled(OK_btn2) <<- FALSE
+                   ResetVars()
                    MarkSym <<- 10
                    SymSiz <<- 1.8
                    replot()
@@ -752,6 +792,7 @@ XPSVBTop <- function() {
                    point.coords <<- list(x=NULL, y=NULL)
                    enabled(T2group1) <- TRUE
                    ObjectBKP <<- Object[[coreline]]
+                   enabled(OK_btn2) <- FALSE
                    replot()
                    svalue(nbMain) <- 2     #switch to the secvond page
                 }, container = T1Frame3)
@@ -767,7 +808,7 @@ XPSVBTop <- function() {
   WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
                         WinSize <- svalue(WSize)
                         svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <- dev.size()*WinSize   #rescale the graphic window
+                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
 #                        graphics.off()
 #                        OS <- Sys.info["sysname"]
 #                        switch (OS,
@@ -803,7 +844,8 @@ XPSVBTop <- function() {
   T21Frame1 <- gframe(text = " Linear Fit Regions ", horizontal=FALSE, container = T2group2)
   T21group1 <- ggroup( horizontal=TRUE, container = T21Frame1)
 
-  glabel("Left Mouse Butt. to Set two Fit Region Edges      ", container=T21group1)
+  Lbl1 <- glabel("Left Mouse Butt. to Set two Fit Region Edges      ", container=T21group1)
+  font(Lbl1) <- list(family="sans", size=11)
 
   Hlp21_btn1 <- gbutton("?", handler = function(h, ...){
                               txt <- paste("Two regions has to be defined to perform the linear fits: \n",
@@ -819,9 +861,9 @@ XPSVBTop <- function() {
 
   Reset21_Btn1 <- gbutton("Reset Fit Regions", expand=FALSE, handler = reset.LinRegions, container = T21Frame1 )
 
-  Fit21_btn1 <- gbutton("Fit", expand=FALSE, handler = do.Fit, container = T21Frame1 )
+  Fit21_btn1 <- gbutton("Fit", expand=FALSE, handler = MakeFit, container = T21Frame1 )
 
-  VBTop21_btn1 <- gbutton("Estimate VB Top", expand=FALSE, handler = do.VBTop, container = T21Frame1 )
+  VBTop21_btn1 <- gbutton("Estimate VB Top", expand=FALSE, handler = CalcVBTop, container = T21Frame1 )
 
   Reset21_Btn2 <- gbutton("Reset Analysis ", expand=FALSE, handler = function(h, ...){
                               LL <- length(Object[[coreline]]@.Data[[1]])
@@ -837,6 +879,8 @@ XPSVBTop <- function() {
 
   Reset21_btn3 <- gbutton("Reset All", expand=FALSE, handler = function(h, ...){
                               ResetVars()
+                              enabled(OK_btn1) <- TRUE
+                              enabled(OK_btn2) <- FALSE
                               replot()
                            }, container = T21Frame1 )
 
@@ -851,7 +895,9 @@ XPSVBTop <- function() {
   Fit.type <- gcombobox(FitFunct, selected = 1, handler = function(h, ...){
                               svalue(sb) <- sprintf("Selected component type %s", svalue(h$obj))
                            }, container = T22group1 )
-  glabel("                           ", container=T22group1)
+  Lbl2 <- glabel("Add fit components        ", container=T22group1)
+  font(Lbl2) <- list(family="sans", size=11)
+
   Hlp22_btn1 <- gbutton("?", expand=FALSE, handler = function(h, ...){
                               txt <- paste("The idea is to use the fit of the descending tail of the VB to \n",
                                        "get rid from noise and obtain a better estimate the VBtop.\n",
@@ -878,16 +924,16 @@ XPSVBTop <- function() {
 
 #  edit_btn2 <- gbutton("Edit Fit Parameters", spacing=1, handler = Edit.FitParam, container = T22Frame3 )
 
-  Fit22_btn1 <- gbutton("Fit", expand=FALSE, spacing=1, handler = do.Fit, container = T22Frame3 )
+  Fit22_btn1 <- gbutton("Fit", expand=FALSE, spacing=1, handler = MakeFit, container = T22Frame3 )
 
   Reset22_btn1 <- gbutton("Reset Fit", spacing=1, handler = function(h, ...){
-                              reset.fit <<- TRUE
-                              do.Fit()
                               point.coords <<- list(x=NULL,y=NULL)
+                              reset.fit <<- TRUE
+                              MakeFit()
                               svalue(sb) <- "Estimated position of VB top : "
                           }, container = T22Frame3 )
 
-  VBTop22_btn1 <- gbutton("Estimate VB Top", spacing=1, handler = do.VBTop, container = T22Frame3 )
+  VBTop22_btn1 <- gbutton("Estimate VB Top", spacing=1, handler = CalcVBTop, container = T22Frame3 )
 
 #  undo_btn2 <- gbutton("Save Analysis in a Separate File", spacing=1, handler = function(h,...){
 #                              tmp <- new("XPSSample",
@@ -907,6 +953,8 @@ XPSVBTop <- function() {
 
   Reset22_btn2<- gbutton("Reset All", spacing=1, handler = function(h, ...){
                               ResetVars()
+                              enabled(OK_btn1) <- TRUE
+                              enabled(OK_btn2) <- FALSE
                               replot()
                            }, container = T22Frame3 )
 
@@ -917,7 +965,10 @@ XPSVBTop <- function() {
 
   T23Frame1 <- gframe(text = " Options ", horizontal=FALSE, container = T2group4)
   T23group1 <- ggroup( horizontal=TRUE, container = T23Frame1)
-  glabel("Left Mouse Butt. to Set Sigmoid Max, Flex Point, Min   ", container=T23group1)
+
+  Lbl3 <- glabel("Left Mouse Butt. to Set Sigmoid Max, Flex Point, Min   ", container=T23group1)
+  font(Lbl3) <- list(family="sans", size=11)
+
   Hlp23_btn1 <- gbutton("?", expand=FALSE, handler = function(h, ...){
                               txt <- paste("Selecting this option, a Hill Sigmoid is utilized to fit the descending tail of the VB\n",
                                        "Three points are needed to define the Sigmoid: the Sigmoid maximum M (max of the\n",
@@ -935,17 +986,19 @@ XPSVBTop <- function() {
                            }, container = T23group1 )
 
   add23_btn1 <- gbutton("Add Hill Sigmoid", handler = add.FitFunct, container = T23Frame1)
-  Fit23_btn1 <- gbutton("Fit", expand=FALSE, handler = do.Fit, container = T23Frame1 )
+  Fit23_btn1 <- gbutton("Fit", expand=FALSE, handler = MakeFit, container = T23Frame1 )
   Reset23_btn1 <- gbutton("Reset Fit", expand=FALSE, handler = function(h, ...){
-                              reset.fit <<- TRUE
-                              do.Fit()
                               point.coords <<- list(x=NULL,y=NULL)
+                              reset.fit <<- TRUE
+                              MakeFit()
                               svalue(sb) <- "Estimated position of VB top : "
                            }, container = T23Frame1 )
 
-  VBTop23_btn1 <- gbutton("Estimate VB Top", expand=FALSE, handler = do.VBTop, container = T23Frame1 )
+  VBTop23_btn1 <- gbutton("Estimate VB Top", expand=FALSE, handler = CalcVBTop, container = T23Frame1 )
   Reset23_btn2 <- gbutton("Reset All", expand=FALSE, handler = function(h, ...){
                               ResetVars()
+                              enabled(OK_btn1) <- TRUE
+                              enabled(OK_btn2) <- FALSE
                               replot()
                            }, container = T23Frame1 )
 
@@ -955,21 +1008,35 @@ XPSVBTop <- function() {
   ButtGroup <- ggroup(expand = FALSE, horizontal = TRUE, spacing = 3, container = MainGroup)
 
   gbutton("           SAVE           ", handler = function(h, ...){
-                  activeSpecIndx <- coreline[1]
+                  if (VBtEstim == FALSE && length(Object[[coreline]]@Fit) > 0){  #VB fit done but VBtop estimation not
+                      answ <- gconfirm(msg="VBtop estimation not performed. Would you proceed?", title="WARNING", icon="warning")
+                      if (answ == FALSE) return()
+                  }
+                  LL <- length(Object)
+                  Object[[LL+1]] <<- Object[[coreline]]
+                  Object@names[LL+1] <<- "VBt"
                   assign(Object_name, Object, envir = .GlobalEnv)
-                  assign("activeSpectIndx", activeSpecIndx, envir = .GlobalEnv)
-                  assign("activeSpectName", coreline[2], envir = .GlobalEnv)
+                  assign("activeSpectIndx", (LL+1), envir = .GlobalEnv)
+                  assign("activeSpectName", "VBt", envir = .GlobalEnv)
                   replot()
                   XPSSaveRetrieveBkp("save")
               }, container = ButtGroup)
 
   gbutton("        SAVE & EXIT        ", handler=function(h,...){
+                  if (VBtEstim == FALSE && length(Object[[coreline]]@Fit) > 0){  #VB fit done but VBtop estimation not
+                      answ <- gconfirm(msg="VBtop estimation not performed. Would you proceed?", title="WARNING", icon="warning")
+                      if (answ == FALSE) return()
+                  }
 #-----            stopping mouse handler
                   setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
                   eventEnv$onMouseMove <<- NULL
                   eventEnv <<- NULL
-
-                  activeSpecIndx <- coreline
+                  LL <- length(Object)
+                  activeSpecIndx <- LL+1
+                  Object[[LL+1]] <<- Object[[coreline]]
+                  Object[[LL+1]]@Symbol <<- "VBt"
+                  Object@names[LL+1] <<- "VBt"
+                  Object[[coreline]] <<- XPSremove(Object[[coreline]],"all")   #remove fit stored in the original coreline
                   assign(Object_name, Object, envir = .GlobalEnv)
                   assign("activeSpectIndx", activeSpecIndx, envir = .GlobalEnv)
                   assign("activeSpectName", coreline, envir = .GlobalEnv)

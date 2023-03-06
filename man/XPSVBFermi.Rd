@@ -2,19 +2,18 @@
 % Please edit documentation in R/XPSVBFermiGUI.r
 \name{XPSVBFermi}
 \alias{XPSVBFermi}
-\title{GUI to estimate the position of the Valence Band Top}
+\title{XPSVBFermi}
 \usage{
 XPSVBFermi()
 }
 \description{
-Interactive GUI to add BaseLines and Fitting components to
-the region of the VB proximal to the Fermi Edge needed
-for the estimation of the VB-Top position
+XPSVBFermi function to estimate the position of the Valence Band Top
+  Interactive GUI to add BaseLines and Fitting components to
+  the region of the VB proximal to the Fermi Edge needed
+  for the estimation of the VB-Top position
 }
 \examples{
-
 \dontrun{
-XPSVBFermi()
+ XPSVBFermi()
 }
-
 }

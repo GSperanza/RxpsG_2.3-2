@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{XPSfitAlgorithms}
 \alias{XPSfitAlgorithms}
-\title{XPSfitAlgorithms function contains all the definition of the fit functions,
-the definition of fit parameters, and the initialization of the parameter slots.}
+\title{XPSfitAlgorithms}
 \usage{
 XPSfitAlgorithms()
 }
@@ -11,13 +10,12 @@ XPSfitAlgorithms()
 Returns the selected fit algorithm.
 }
 \description{
-XPSfitAlgorithms function contains all the definition of the fit functions,
-the definition of fit parameters, and the initialization of the parameter slots.
+XPSfitAlgorithms groups all the definitions of the fit functions,
+  the definition of fit parameters, and the initialization of the parameter
+  slots of objects of class 'XPSCoreLine'.
 }
 \examples{
-
 \dontrun{
 XPSfitAlgorithms()
 }
-
 }

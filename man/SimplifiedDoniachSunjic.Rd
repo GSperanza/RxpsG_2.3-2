@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{SimplifiedDoniachSunjic}
 \alias{SimplifiedDoniachSunjic}
-\title{SimplifiedDoniachSunjic function
-see http://www.casaxps.com/help_manual/line_shapes.htm}
+\title{SimplifiedDoniachSunjic function}
 \usage{
 SimplifiedDoniachSunjic(x, h, mu, sigma, asym)
 }
@@ -19,6 +18,5 @@ SimplifiedDoniachSunjic(x, h, mu, sigma, asym)
 \item{asym}{function asymmetry value}
 }
 \description{
-SimplifiedDoniachSunjic function
 see http://www.casaxps.com/help_manual/line_shapes.htm
 }

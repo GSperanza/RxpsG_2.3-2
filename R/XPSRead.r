@@ -28,12 +28,12 @@
 #'SampData2 <- XPSread("SampData2.vms")
 #'}
 #'
-#'@export
 #'
 
 XPSread <- function( file=NULL, Genplot=TRUE, ... )
 
 {
+ cat("\n FNAME", file)
 	if ( is.null(file) ) file <- file.choose()
 
 # check extension
@@ -43,16 +43,16 @@ XPSread <- function( file=NULL, Genplot=TRUE, ... )
    WorkingDir<-getwd()
 
 #check filename extension to call relative reading function
-	  fext <- unlist(strsplit(FName, "\\."))[2]
-	  filewext <- unlist(strsplit(FName, "\\."))[1]
+	  nameFile <- unlist(strsplit(FName, "\\."))[1]
+	  extension <- unlist(strsplit(FName, "\\."))[2]
+	  f.idx <- as.numeric(grep(pattern=extension, x=c("pxt", "PXT", "vms", "VMS")))
 
-	  f.idx <- grep(fext, c("pxt", "PXT", "vms", "VMS"))
-   if (length(f.idx)==0) { #any extension different from pxt or vms => old scienta file
+   if (is.na(f.idx) || length(f.idx)==0) { #any extension different from pxt or vms => old scienta file
 	      object <- XPSRead.Oldscienta(file, ...)
    } else if ( f.idx == 1 || f.idx == 2 ) {  # pxt or PXT  extension
 	     	object <- read.scienta(file, ...)
 	     	if (Genplot) {       #Genplot==TRUE => .pxt+RPL option chosen. RPL folder contains old Genplot analysis information
-	        		rplFile <- paste(filewext,".RPL", sep="")
+	        		rplFile <- paste(nameFile,".RPL", sep="")
         			checkfile <- list.files(dirName, pattern=rplFile, ignore.case=TRUE, recursive=TRUE, full.names=TRUE)
         			if (length(checkfile)) {
 		           		object <- readGenplot(object, file=checkfile, ...)

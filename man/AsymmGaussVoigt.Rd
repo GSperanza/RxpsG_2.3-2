@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{AsymmGaussVoigt}
 \alias{AsymmGaussVoigt}
-\title{AsymmGaussVoigt Asymmetric Gaussian-Voigt function see CasaXPS}
+\title{Gaussian-Voigt}
 \usage{
 AsymmGaussVoigt(x, h, mu, sigma, lg, asym, gv)
 }
@@ -22,5 +22,5 @@ AsymmGaussVoigt(x, h, mu, sigma, lg, asym, gv)
 \item{gv}{mix Gauss-Voigt}
 }
 \description{
-AsymmGaussVoigt Asymmetric Gaussian-Voigt function see CasaXPS
+Gaussian-Voigt symmetric Gaussian-Voigt function see CasaXPS
 }

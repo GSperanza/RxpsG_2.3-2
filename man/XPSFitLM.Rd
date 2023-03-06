@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSFitLM.r
 \name{XPSFitLM}
 \alias{XPSFitLM}
-\title{Perform the fit of a Core Line}
+\title{XPSFitLM}
 \usage{
 XPSFitLM(Object, plt = TRUE, verbose = TRUE, ...)
 }
@@ -16,22 +16,21 @@ XPSFitLM(Object, plt = TRUE, verbose = TRUE, ...)
 \item{\dots}{further parameters to the fitting function}
 }
 \value{
-The Object slot \code{FitLM} will be filled with the result of the
-calculation. All the values of the components will be update and the result
-will be displyed.
+XPSFitLM returns the slot Object@Fit filled with the result of the
+  calculation. All the fitting parameters and Y values of all the fit components
+  will be updated
 }
 \description{
-Calculate the fit of a XPSCoreLine object. The \code{XPSFitLM} performs the
-fit and stop. This function is the main function for performing the fit. The
-\code{XPSfit} is the main function which calls the \code{XPSFitLM} and
-displays the result.
+XPSFitLM function to perform the fit of a Core Line
+  Calculate the fit of a XPSCoreLine object. The \code{XPSFitLM} performs the
+  fit and stop. This function is the main function for performing the fit. The
+  \code{XPSfit} is the main function which calls the \code{XPSFitLM} and
+  displays the result.
 }
 \examples{
-
 \dontrun{
-showListParam(c(1271, 285, 1.4), 3, c("h", "mu", "sigma" ) )
+ XPSFitLM(SampData[["C1s"]], plt=TRUE, verbose=TRUE ) 
 }
-
 }
 \seealso{
 \link{nlsLM}

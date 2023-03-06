@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSOverlayEngine.r
 \name{XPSovEngine}
 \alias{XPSovEngine}
-\title{XPSOverlay Engine is the software powering the XPSOverlayGUI.}
+\title{XPSovEngine}
 \usage{
 XPSovEngine(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim)
 }
@@ -23,5 +23,6 @@ XPSovEngine(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim)
 Return c(Xlim, Ylim) eventually modified
 }
 \description{
-XPSOverlay Engine is the software powering the XPSOverlayGUI.
+XPSOverlay Engine is a macro called by XPSOverlayGUI
+   which uses lattice to plot data following the graphical options
 }

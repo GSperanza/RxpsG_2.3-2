@@ -2,20 +2,18 @@
 # to avoid the frequent non-convergence problems arising when constraints are set on a given XPS CoreLine
 # Giorgio August 2014
 
-#'function to perform the Lev. Marq. peak fitting
-#'
-#'This is a modified version of the nlsLM() function
-#'to avoid the frequent non-convergence problems arising
-#'when multiple constraints are set on a given XPS CoreLine
-#'
-#'@param form   expresson containing the fitting function to be evaluated
-#'@param data   the XPSCoreline to be fitted
-#'@param start  the starting estimates for the fitting function
-#'@param wts    optional numeric vector of weights. If present weighted least squares is performed
-#'@param Niter  max iteration allowed
-#'@param upper  upper,lower bounds for the estimates
-#'
-#'@export
+#' @title nlsModel
+#' @description nlsModel function to perform the Lev. Marq. peak fitting
+#'   This is a modified version of the nlsLM() function
+#'   to avoid the frequent non-convergence problems arising
+#'   when multiple constraints are set on a given XPS CoreLine
+#' @param form   expresson containing the fitting function to be evaluated
+#' @param data   the XPSCoreline to be fitted
+#' @param start  the starting estimates for the fitting function
+#' @param wts    optional numeric vector of weights. If present weighted least squares is performed
+#' @param Niter  max iteration allowed
+#' @param upper  upper,lower bounds for the estimates
+#' @export
 #'
 
 

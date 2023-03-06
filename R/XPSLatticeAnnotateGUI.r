@@ -1,18 +1,16 @@
 #Function to annotate Lattice plots
 
-#'Adds text to a plot produced using the Lattice package
-#'This function is called by (\code{XPSOverlay}) and (\code{XPSCustomPlot})
-#'
-#'@param Xlim the limits of the X axis
-#'@param Ylim the limits of the Y axis
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSLattAnnotate(Xlim, Ylim)
-#'}
-#'
-#'@export
+#' @title XPSLattAnnotate
+#' @description XPSLattAnnotate function adds text to a plot produced
+#'   using the Lattice package
+#'   This function is called by (\code{XPSOverlay}) and (\code{XPSCustomPlot})
+#' @param Xlim the limits of the X axis
+#' @param Ylim the limits of the Y axis
+#' @examples
+#' \dontrun{
+#'  	XPSLattAnnotate(Xlim, Ylim)
+#' }
+#' @export
 #'
 
 XPSLattAnnotate <- function(Xlim,Ylim){

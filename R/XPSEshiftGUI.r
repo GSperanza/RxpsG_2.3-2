@@ -1,17 +1,15 @@
-#'XPSEShift function
-#'
-#'Function to alligne the energy scale through a reference peak
-#'As reference peaks C1s from hydrocarbons at BE=285eV or Au4f 7/2 at BE=84eV
-#'are generally chosen.
-#'No parameters are passed to this function
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSEshift()
-#'}
-#' 
-#'@export
+# XPSEshift function to apply energy shifts to spectra to correct for charging effects
+
+#' @title XPSEShift
+#' @description XPSEshift function correct the energy scale of spectra
+#'   affected by charging effects. Generally C1s from hydrocarbons at BE=285eV
+#'   or Au4f 7/2 at BE=84eV  are chosen as reference peaks. Charges spectra are 
+#'   shifted forcing the reference spectra to fall at their correct BE position.
+#' @examples
+#'  \dontrun{
+#' 	XPSEshift()
+#' }
+#' @export
 #'
 
 XPSEshift <- function(){
@@ -100,7 +98,7 @@ XPSEshift <- function(){
                                      gmessage(msg="WARNING: no coreline selected, zoom stopped", title = "WARNING",icon = "warning" )
                                      return()
                                   }
-                                  pos <- locator(n=2, type="p", pch=3, col="red", lwd=1.5) #first the two conrners are drawn
+                                  pos <- locator(n=2, type="p", pch=3, col="blue", lwd=1.5) #first the two conrners are drawn
                                   if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
                                      pos$x <- c(max(pos$x), min(pos$x))
                                      pos$y <- c(min(pos$y), max(pos$y))

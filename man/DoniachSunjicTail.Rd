@@ -2,9 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{DoniachSunjicTail}
 \alias{DoniachSunjicTail}
-\title{DoniachSunjic function
-Version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
-Corrected for an exponential decay (tail) on the low BE side}
+\title{DoniachSunjic function}
 \usage{
 DoniachSunjicTail(x, h, mu, sigmaDS, asym, tail)
 }
@@ -22,7 +20,6 @@ DoniachSunjicTail(x, h, mu, sigmaDS, asym, tail)
 \item{tail}{amplitude of the spectral tail on the low BE (high KE) side}
 }
 \description{
-DoniachSunjic function
 Version of the Doniach-Sunjic function (see Wertheim PRB 25(3), 1987, (1982))
-Corrected for an exponential decay (tail) on the low BE side
+  Corrected for an exponential decay (tail) on the low BE side
 }

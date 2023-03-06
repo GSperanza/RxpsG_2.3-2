@@ -2,8 +2,7 @@
 % Please edit documentation in R/XPSFitAlgorithms.r
 \name{AsymmGauss}
 \alias{AsymmGauss}
-\title{AsymmGauss function
-Tail modified Gauss by an exponential function}
+\title{AsymmGauss function}
 \usage{
 AsymmGauss(x, h, mu, sigma, asym)
 }
@@ -19,6 +18,5 @@ AsymmGauss(x, h, mu, sigma, asym)
 \item{asym}{function asymmetry value}
 }
 \description{
-AsymmGauss function
 Tail modified Gauss by an exponential function
 }

@@ -2,18 +2,21 @@
 % Please edit documentation in R/XPSPreferencesGUI.r
 \name{XPSPreferences}
 \alias{XPSPreferences}
-\title{To select a dimensions of the graphic window depending on the dimensions of the screen used}
+\title{XPSPreferences}
 \usage{
 XPSPreferences()
 }
 \description{
-To select a dimensions of the graphic window depending on the dimensions of the screen used
-No parameters are passed to this function
+XPSPreferences function allows selection of preferences as
+  - plot colors, the default set of line patterns and set of symbols
+  - the character style used in RxpsG outputs
+  - the XPS excitatio source (Al, Mg)
+  - the default working directory
+  - the default operating system
+Preferences are stored in the XPSSettings.ini file saved in the ...Library/RxpsG/extdata.
 }
 \examples{
-
 \dontrun{
-XPSPreferences()
+	XPSPreferences()
 }
-
 }

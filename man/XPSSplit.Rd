@@ -2,20 +2,18 @@
 % Please edit documentation in R/XPSSplitGUI.r
 \name{XPSSplit}
 \alias{XPSSplit}
-\title{To select split multiple acquisitions performed with the ScientaGammadata instrument}
+\title{XPSSplit}
 \usage{
 XPSSplit()
 }
 \description{
-Acquisitions on multiple samples may be included in a single .PXT file
-This function allows splitting spectra corresponding to each sample in 
-individual files.
-No parameters are passed to this function
+XPSSplit to select split multiple acquisitions performed
+  Acquisitions on multiple samples may be included in a single .PXT file
+  This function allows splitting spectra corresponding to each sample in
+  individual files.
 }
 \examples{
-
 \dontrun{
-XPSSplit()
+	XPSSplit()
 }
-
 }

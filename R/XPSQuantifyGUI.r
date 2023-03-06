@@ -3,109 +3,199 @@
 #for the computation of the atomic concentrations.
 #XPSquantify and XPScalc used only by XPSMoveComponent.
 
-#'XPSQuant() performs the elemental quantification for a selected XPS-Sample
-#'
-#'Provides a userfriendly interface with the list of Corelines of the selected XPS-Sample
-#'Each Coreline can be count/omit from the elemental quantification.
-#'If peak fitting is present also each of the fitting component can be count/omit from the
-#'elemental quantification. 
-#'Finally also relative RSF of the coreline or individual fitting components can be modified.
-#'No parametrs are passed to this function.
-#'
-#'@examples
-#'
-#'\dontrun{
-#'	XPSQuant()
-#'}
-#'
-#'@export
+#' @title XPSQuant
+#' @description XPSQuant() performs the elemental quantification for a selected XPS-Sample
+#'   Provides a userfriendly interface with the list of Corelines of the selected XPS-Sample
+#'   Each Coreline can be count/omit from the elemental quantification.
+#'   If peak fitting is present also each of the fitting component can be count/omit from the
+#'   elemental quantification.
+#'   Finally also relative RSF of the coreline or individual fitting components can be modified.
+#' @examples
+#' \dontrun{
+#' 	XPSQuant()
+#' }
+#' @export
 #'
 
 XPSQuant <- function(){
 
 #Extract PE from each slot @Info of the XPSSample spectra
-   RetrivePE <- function(CL){  #Retrieve the PE value from the CL coreline information slot
-      info <- CL@Info[1]   #retrieve info containing PE value
-      xxx <- strsplit(info, "Pass energy")  #extract PE value
-      PE <- strsplit(xxx[[1]][2], "Iris") #PE value
-      PE <- gsub(" ", "", PE[[1]][1], fixed=TRUE) #drop white spaces in string PE
-      PE <- as.integer(PE)
-      return(PE)
+   RetrivePE <- function(CL=NULL){  #Retrieve the PE value from the CL coreline information slot
+      PEnergy <- NULL
+      if(is.null(CL)){
+         LL <- length(XPSSample)
+         for(ii in 1:LL){
+             info <- XPSSample[[ii]]@Info[1]   #retrieve info containing PE value
+             xxx <- unlist(strsplit(info, "Pass energy"))[2]  #extract PE value
+             PEnergy[ii] <- as.integer(gsub("\\D","", xxx)) # extract numeric characters from xxx = PE value
+             if(is.na(PEnergy[ii])){
+                txt <- paste("CoreLine ", XPSSample[[ii]]@Symbol, ": \nPass Energy unknown! Please provide the Pass Energy value", sep="")
+                PEwin <- gwindow("INPUT CORE-LINE PASS ENERGY", parent=c(50, 10), visible=FALSE) #
+                PEgroup1 <- ggroup(horizontal=FALSE, container=PEwin)
+                PElabel <- glabel(txt, container=PEgroup1)
+                font(PElabel) <- list(family="sans", size=12)
+                CL.PE <- gedit("", initial.msg="CoreLine Pass Energy ", container=PEgroup1)
+                gseparator(container=PEgroup1)
+                PEgroup2 <- ggroup(horizontal=TRUE, container=PEgroup1)
+                gbutton("OK", container=PEgroup2, handler=function(...){   #input spectrum name
+                        PEnergy[ii] <<- as.integer(svalue(CL.PE))
+                        XPSSample[[ii]]@Info[1] <<- paste(XPSSample[[ii]]@Info, " Pass energy ", PEnergy[ii], sep="")
+                        dispose(PEwin)
+                })
+                gbutton("Cancel", container=PEgroup2, handler=function(...) dispose(PEwin))
+                visible(PEwin) <- TRUE
+                PEwin$set_modal(TRUE)
+            }
+         }
+      } else {
+         info <- CL@Info[1]   #retrieve info containing PE value
+         xxx <- unlist(strsplit(info, "Pass energy"))[2]  #extract PE value
+         PEnergy <- as.integer(gsub("\\D","", xxx)) # extract numeric characters from xxx = PE value
+      }
+      return(PEnergy)
+   }
+
+   CorrectPE <- function(CheckedCL, CK.PassE, SurPE, CLinePE){
+
+      idx <- which(CK.PassE == SurPE)   #select all the corelines with PE==160. It is supposed that survey cannot be used for quantification. Only CL extracted from survey can be used
+      LL <- length(idx)
+      for (ii in 1:LL){
+          jj <- CheckedCL[idx[ii]]
+          info <- XPSSample[[jj]]@Info[1]   #retrieve info containing PE value
+          xxx <- strsplit(info, "Pass energy")  #extract PE value
+          PE <- strsplit(xxx[[1]][2], "Iris") #PE value
+          info <- paste(xxx[[1]][1],"Pass energy ", CLinePE, "   Iris", PE[[1]][2], sep="")
+          XPSSample[[jj]]@Info[1] <<- info
+          assign(activeFName, XPSSample, envir=.GlobalEnv)
+      }
    }
 
 
    CalcNormCoeff <- function(CheckedCL, CK.PassE, SurIdx){
-# For elements extracted froms urvey or acquired at different Pass Energies, collection efficiency is different
+# CheckedCL = CoreLines selected for quantification
+# CK.PassE = PE of CheckedCL
+# SurIdx = index of the survey
+# It is supposed that a coreline was extracted from the survey
+# For elements extracted from survey at high PE the photoelectron collection efficiency
+# is different from that of the corelines with low PE (higher energy resolution)
 # Spectra acquired at different PE need a normalization coefficient
-# Let us consider C1s extracted from survey(PE=160eV) and C1s coreline (PE=20eV)
-# PE leads to markedly different signal intensities.
+# Let us consider C1s extracted from survey(PE=160eV in KratosXPS) and C1s coreline (PE=20eV)
+# Different PE leads to markedly different signal intensities.
 # Let A1 = area of C1s at PE=160,  A2 = area of C1s at PE=20
-# It has discovered that a simple normalization for the PE: A1/160 ~ A2/20   does not work
-# Here a highres-Coreline (lower PE) is compared with the same element in the survey
-# and a proportion coeff. is computed
-# This proportion coeff. is used to normalize for the different PE.
+# It has discovered that a simple normalization for the PE: A1/160, A2/20   does not work
+# In htis function a high resolution-Coreline (lower PE) is compared with the same spectrum 
+# from the survey and a proportion coeff. is computed
+# This proportion coeff. is used to normalize Corelines acquired at different PE.
 
 #variables
-      PEmin <- NULL
+      PassCL <- NULL
       BaseLine <- NULL
       X <- list()
       Y <- list()
+      Area1 <- Area2 <- Area3 <- NULL
 #------
-      PEmin <- min(CK.PassE)
-      idx <- which(CK.PassE == PEmin) #select all the corelines acquired at lower PE
-      CLminPE <- CheckedCL[idx]  #CLminPE contains CL indexes which could be in sparse order
-      LL <- length(CLminPE)
+
+      CLinePE <- min(CK.PassE)
+      txt <- paste("Please Confirm if the Pass Energy of the High-Resolution Core Lines is ", as.character(CLinePE), sep="")
+      answ <- gconfirm(txt, title="CORE LINE PASS ENERGY", icon="info")
+      if (answ == FALSE){
+          winCL <- gwindow("CORE LINE PASS ENERGY", visible=FALSE)
+          size(winCL) <- c(250, 150)
+          groupCL <- ggroup(horizontal=FALSE, container=winCL)
+          labPE <- glabel(text="Please input the Pass Energy of the Core-Lines", container=groupCL)
+          PassE.CL <- gedit(initial.msg = "PE ?", handler=function(h, ...){
+                                CLinePE <<- as.integer(svalue(PassE.CL))
+                             }, container=groupCL)
+          gbutton("    OK     ", handler=function(h, ...){
+                                dispose(winCL)
+                             }, container=groupCL)
+          visible(winCL) <- TRUE
+          winCL$set_modal(TRUE)  #nothing can be done while running this macro
+      }
+      
+      idx <- which(CK.PassE == CLinePE) #select all the corelines acquired at lower PE
+      CL.PE <- CheckedCL[idx]  #CL.PE contains CL indexes which could be in sparse order
+      LL <- length(CL.PE)
       MaxI <- NULL
+
+#Now find the coreline with max intensity and compare this coreline
+#with the same in the survey to compute the normalization factor
       for(ii in 1:LL){ #Among the selected corelines finds the one with max intensity
-          MaxI[ii] <- max(XPSSample[[CLminPE[ii]]]@.Data[[2]])  #find the coreline with max intensity
+          MaxI[ii] <- max(XPSSample[[CL.PE[ii]]]@.Data[[2]])  #find the coreline with max intensity
       }
       idx <- which(MaxI == max(MaxI))  #index of the coreline with max intensity
-      idx <- CLminPE[idx]   #index of the CL acquired with min PE and having max intensity
+      idx <- CL.PE[idx]   #index of the CL with max internsity and acquired with min PE
+
+      if(XPSSample[[SurIdx]]@units[1] != XPSSample[[idx]]@units[1]){
+         gmessage(msg="WARNING: Wide Spectrum and Core-Lines energy scale units are different. Check please!", title="WARNING", icon="warning")
+         NormCoeff <<- -1
+         return()
+      }
+      CLName <- XPSSample[[idx]]@Symbol
       X[[1]] <- unlist(XPSSample[[idx]]@RegionToFit$x) #resume the abscissa
-      Y[[1]] <- unlist(XPSSample[[idx]]@RegionToFit$y-XPSSample[[idx]]@Baseline$y) #resume the spectrum-BaseLine
+      Y[[1]] <- unlist(XPSSample[[idx]]@RegionToFit$y)
+      LL <- length(X[[1]])
+      DY <- (Y[[1]][LL] - Y[[1]][1])/(LL-1)   #energy step
+      for (ii in 1:LL){
+          BaseLine[ii] <- Y[[1]][1]+(ii-1)*DY #this is the linear baseline
+      }
+#      matplot(matrix(c(X[[1]], X[[1]]), ncol=2), matrix(c(Y[[1]], BaseLine), ncol=2), type="l", lty=1, col=c("black","red"))
+      Y[[1]] <- Y[[1]]-BaseLine
       E_stp <- abs(X[[1]][2]-X[[1]][1])
       Area1 <- sum(Y[[1]])*E_stp    #Area of high resolution coreline
-      xlim <- range(X[[1]])  #X range of the selected CL
-      xlim <- sort(xlim, decreasing=FALSE)
-      xlim[1] <- xlim[1]-2   #extend the CL X-range for higher PE (maybe PE=160eV)
-      xlim[2] <- xlim[2]+2   #extend the CL X-range for higher PE
-      if (XPSSample[[idx]]@Flags[1]==TRUE) {xlim <- c(xlim[2], xlim[1])} #Binding energy scale
-      idx1 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], xlim[1])
-      idx2 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], xlim[2])
 
-      X[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[1]][idx1:idx2])  #X coord of coreline extracted from survey
-      Y[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[2]][idx1:idx2])  #Y coord of coreline extracted from survey
-      ylim <- range(Y[[2]]) #Y range of the selected CL
+      Xlim <- range(X[[1]])  #X range of the selected CL
+      Xlim <- sort(Xlim, decreasing=FALSE)
+      Xlim[1] <- Xlim[1]-2   #extend the CL X-range for higher PE (maybe PE=160eV)
+      Xlim[2] <- Xlim[2]+2   #extend the CL X-range for higher PE
+      if (XPSSample[[idx]]@Flags[1]==TRUE) {Xlim <- c(Xlim[2], Xlim[1])} #Binding energy scale
+      idx1 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[1])
+      idx2 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[2])
+      X[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[1]][idx1:idx2])  #X values of coreline extracted from survey
+      Y[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[2]][idx1:idx2])  #Y values of coreline extracted from survey
+      Ylim <- range(sapply(Y, sapply, range))
       LL <- length(X[[2]])
 
+      BaseLine <- NULL
       DY <- (Y[[2]][LL] - Y[[2]][1])/(LL-1)   #energy step
       for (ii in 1:LL){
           BaseLine[ii] <- Y[[2]][1]+(ii-1)*DY #this is the linear baseline
       }
-      Y[[2]] <- Y[[2]]-BaseLine               #BKG subtraction
+#      matplot(x=matrix(c(X[[2]], X[[2]]), ncol=2), y=matrix(c(Y[[2]], BaseLine), ncol=2), type="l", lty=1, col=c("black","red"))
+
+      Y[[2]] <- Y[[2]]-BaseLine
       E_stp <- abs(X[[2]][2]-X[[2]][1])
       Area2 <- sum(Y[[2]])*E_stp              #Area of the coreline extracted from survey
-      NormCoeff <- Area2/Area1
+
+      NormCoeff <<- Area2/Area1
       X[[3]] <- X[[2]]
       Y[[3]] <- Y[[2]]/NormCoeff
-      cat("\n => Normalization coefficient: ", NormCoeff)
+      Area3 <- sum(Y[[3]])*E_stp
+      cat("\n => Normalization coefficient: ", round(NormCoeff, 3))
 #----- Graphics
+      if (XPSSample[[SurIdx]]@Flags[[1]]){        #Binding energy set
+          Xlim <- sort(Xlim, decreasing=TRUE)
+      } else {
+          Xlim <- sort(Xlim, decreasing=FALSE)
+      }
       XLabel <- XPSSample[[SurIdx]]@units[1]
       YLabel <- XPSSample[[SurIdx]]@units[2]
       LL <- max(sapply(X, length))
-      X <- sapply(X, function(x) {length(x)<-LL   #insert NAs where the length of X[] < LL
+      X <- sapply(X, function(x) {length(x)<-LL   #insert NAs if the length of X[] < LL
                                   return(x)})
-      Y <- sapply(Y, function(x) {length(x)<-LL   #insert NAs where the length of Y[] < LL
+      Y <- sapply(Y, function(x) {length(x)<-LL   #insert NAs if the length of Y[] < LL
                                   return(x)})
       X <- matrix(unname(unlist(X)), ncol=3)      #transform list in matrix
       Y <- matrix(unname(unlist(Y)), ncol=3)
-      matplot(x=X, y=Y, type="l", lty=1, col=c("black","green","red"),  xlab=XLabel, ylab=YLabel)
-      txt <- c("High res. CL", "Extracted CL ", "Normalized CLe")
-      legend(x=min(xlim), y=max(ylim)/1.2, legend=txt, text.col=c("black","green","red"))
-      gmessage(msg="Black and Red spectra should have similar intensities", title="Compare HighRes and Normalized Spectra", icon="warning")
+      txt <- paste("Normalization coeff. computed on ", CLName, sep="")
+      matplot(x=X, y=Y, xlim=Xlim, type="l", lty=1, lw=1, col=c("black","green","red"), main=txt, xlab=XLabel, ylab=YLabel)
+      txt <- c("High res. CL", "Extracted CL ", "Normalized CL")
+      legend(x=Xlim[1], y=Ylim[2]/1.02, legend=txt, text.col=c("black","green","red"))
+      gmessage(msg="Check the graph: Black and Red spectra should have similar spectral areas", title="Compare HighRes and Normalized Spectra", icon="warning")
       SurPE <- RetrivePE(XPSSample[[SurIdx]]) # Retrieve used for the survey
+
       idx <- which(CK.PassE == SurPE)
-      idx <- CheckedCL[idx] #retrieve the index of the selected corelines having PE=160.
+      idx <- CheckedCL[idx] #retrieve the index of the selected corelines having PE=SurPE.
       for(ii in idx){
           XPSSample[[ii]]@.Data[[2]] <<- XPSSample[[ii]]@.Data[[2]]/NormCoeff
           XPSSample[[ii]]@RegionToFit$y <<- XPSSample[[ii]]@RegionToFit$y/NormCoeff
@@ -118,6 +208,7 @@ XPSQuant <- function(){
              XPSSample[[ii]]@Fit$y <<- XPSSample[[ii]]@Fit$y/NormCoeff
           }
       }
+      CorrectPE(CheckedCL, CK.PassE, SurPE, CLinePE)
       return()
 }
 
@@ -131,8 +222,8 @@ XPSQuant <- function(){
          LL <- length(CoreLineComp[[ii]])
          if (LL > maxFitComp) { maxFitComp <- LL }
       }
-      sumCoreLine <- rep(0,N_CL)
-      sumAreaComp <- rep(0,N_CL)
+      AreaCL <- rep(0,N_CL)
+      NormAreaCL <- rep(0,N_CL)
       sumComp <- matrix(0,nrow=N_CL,ncol=maxFitComp)  #define a zero matrix
       AreaComp <- matrix(0,nrow=N_CL,ncol=maxFitComp)
       maxNchar <- 0
@@ -140,20 +231,20 @@ XPSQuant <- function(){
       QTabTxt <<- ""
 
       for(ii in 1:N_CL){
-         sumCoreLine[ii] <- 0
+         AreaCL[ii] <- 0
          indx <- CoreLineIndx[ii]
          if (svalue(CoreLineCK[[ii]])=="TRUE") {   #if a coreline is selected
             N_comp <- length(CoreLineComp[[ii]])   #this is the number of fit components
             RSF <- XPSSample[[indx]]@RSF               #Sensitivity factor of the coreline
             E_stp <- abs(XPSSample[[indx]]@.Data[[1]][2]-XPSSample[[indx]]@.Data[[1]][1]) #energy step
             if (RSF != 0) {  #Sum is made only on components with RSF != 0 (Fit on Auger or VB not considered)
-               sumCoreLine[ii] <- sum(XPSSample[[indx]]@RegionToFit$y-XPSSample[[indx]]@Baseline$y)*E_stp      #Integral undeer coreline spectrum
-               sumAreaComp[ii] <- sumCoreLine[ii]/RSF  #Coreline contribution corrected for the relative RSF
+               AreaCL[ii] <- sum(XPSSample[[indx]]@RegionToFit$y-XPSSample[[indx]]@Baseline$y)*E_stp      #Integral undeer coreline spectrum
+               NormAreaCL[ii] <- AreaCL[ii]/RSF  #Coreline contribution corrected for the relative RSF
             } else {
-               sumCoreLine[ii] <- sum(XPSSample[[indx]]@RegionToFit$y-XPSSample[[indx]]@Baseline$y)*E_stp #if RSF not defined the integral under the coreline is considered
-               sumAreaComp[ii] <- sumCoreLine[ii]
+               AreaCL[ii] <- sum(XPSSample[[indx]]@RegionToFit$y-XPSSample[[indx]]@Baseline$y)*E_stp #if RSF not defined the integral under the coreline is considered
+               NormAreaCL[ii] <- AreaCL[ii]
             }
-            txt <- as.character(round(sumCoreLine[ii], 2))
+            txt <- as.character(round(AreaCL[ii], 2))
 
             if (hasComponents(XPSSample[[indx]])) {   #is fit present on the coreline?
                for(jj in 1:N_comp){    #ii runs on CoreLines, jj runs on coreline fit components
@@ -171,15 +262,15 @@ XPSQuant <- function(){
                   if (Nch > maxNchar) { maxNchar <- Nch } #calculate the max number of characters of numbers describing component areas
                }
                if (RSF != 0) {  #summation only on components with RSF !=0 (no fit on Auger o VB
-                   sumAreaComp[ii] <- sum(AreaComp[ii,])
-                   sumCoreLine[ii] <- sum(sumComp[ii, ])
+                   NormAreaCL[ii] <- sum(AreaComp[ii,])
+                   AreaCL[ii] <- sum(sumComp[ii, ])
                }
             }
          }
       }
 
-      AreaTot <- sum(sumAreaComp)
-      sumTot <- sum(sumCoreLine)
+      AreaTot <- sum(NormAreaCL)
+      sumTot <- sum(AreaCL)
       txt <- as.character(round(sumTot, 2))  #print original integral area witout RSF corrections
       maxNchar <- max(c(10,nchar(txt)+2))
 
@@ -213,7 +304,7 @@ XPSQuant <- function(){
           if (svalue(CoreLineCK[[ii]])=="TRUE") {
               #PEAK data
               Component <- names(CoreLineComp[ii])
-              Area <- sprintf("%1.2f", sumCoreLine[ii])  #round number to 2 decimals and trasform in string
+              Area <- sprintf("%1.2f", AreaCL[ii])  #round number to 2 decimals and trasform in string
               RSF <- sprintf("%1.3f",XPSSample[[indx]]@RSF)
               Mpos <- NULL
               Mpos <- findMaxPos(XPSSample[[indx]]@RegionToFit)    #Mpos[1]==position of spectrum max,    Mpos[2]==spectrum max value
@@ -221,7 +312,7 @@ XPSQuant <- function(){
               if (RSF=="0.000") { #RSF not defined (es. Auger, VB spectra...) : cannot make correction for RSF
                  Conc <- sprintf("%1.2f",0)
               } else {
-                 Conc <- sprintf("%1.2f",100*sumAreaComp[ii]/AreaTot)
+                 Conc <- sprintf("%1.2f",100*NormAreaCL[ii]/AreaTot)
               }
  		           txt <- c(Component, Area, " ", RSF, BE, Conc )   #total concentration relative to the coreline: FWHM e BE not print
               cell <- printCell("tableRow", txt, CellB=" ", lgth, "center")
@@ -258,7 +349,8 @@ XPSQuant <- function(){
        Font <- get("XPSSettings", envir=.GlobalEnv)[[1]][1]
        FStyle <- get("XPSSettings", envir=.GlobalEnv)[[1]][2]
        FSize <- get("XPSSettings", envir=.GlobalEnv)[[1]][3]
-       svalue(QTable) <<- capture.output(cat("\n", QTabTxt))
+#       svalue(QTable) <<- capture.output(cat("\n", QTabTxt))
+       insert(QTable, paste(QTabTxt, collapse=""))
        font(QTable) <- list(weight="light", family=Font, style=FStyle, size=FSize)
        cat("\n", TabTxt)
    }
@@ -350,9 +442,9 @@ XPSQuant <- function(){
 #----MakeNb makes the notebook: a coreline for each notebook page
    MakeNb <- function(){
       kk <- 1
-      CoreLineCK <- list()     #define a list of Gwidget
-      ComponentCK <- list()
-      RSFCK <- list()
+#      CoreLineCK <- list()     #define a list of Gwidget
+#      ComponentCK <- list()
+#      RSFCK <- list()
       for(ii in 1:NCoreLines){
           Qgroup[[ii]] <<- ggroup(label=CoreLineNames[ii], horizontal=TRUE, container=Qnb)
           Qlayout[[ii]] <<- glayout(homogeneous=FALSE, spacing=3, container=Qgroup[[ii]])
@@ -407,7 +499,6 @@ XPSQuant <- function(){
                                                                                        return(x)
                                                                                      })
                                           CheckedCL <- as.integer(CheckedCL[1,])
-                                          
                                           #Control on the Pass Energies
                                           CK.PassE <- PassE[CheckedCL] #extracts PE valued corresponding to the elements selected for quantification
                                           idx <- unname(which(CK.PassE != CK.PassE[1])) #are the selected elements acquired at different PE?
@@ -418,10 +509,9 @@ XPSQuant <- function(){
                                               is.NC <- FALSE}    #NormCoeff not saved in ...RegionToFit@NormCoeff
                                           }
                                           if (length(idx) > 0 && is.NC == FALSE) {  #selected elements are acquired at different PE and NormCoeff not computed
-                                             answ <- gconfirm(" Found spectra acquired at different Pass Energies.\n Do you want to quantify spectra extracted from survey?",
+                                             answ <- gconfirm(" Found spectra acquired at different Pass Energies. \n Do you want to quantify spectra EXTRACTED FROM SURVEY ?",
                                                                title="NORMALIZATION COEFFICIENT", icon="warning")
                                              if (answ == TRUE){
-
                                                  #Control how many Survey spectra in XPSSample
                                                  SurIdx <<- grep("Survey", SpectList) #indexes of the names components == "Survey"
                                                  if (length(SurIdx) == 0) {
@@ -447,7 +537,10 @@ XPSQuant <- function(){
                                                      winCL$set_modal(TRUE)  #nothing can be done while running this macro
                                                  }
                                                  cat("\n => Compute the normalization coefficient")
-                                                 NormCoeff <<- CalcNormCoeff(CheckedCL, CK.PassE, SurIdx)
+                                                 CalcNormCoeff(CheckedCL, CK.PassE, SurIdx)
+                                                 if(NormCoeff == -1){  #Found wide spectrum and corelines acquired using different energy units.
+                                                    return()
+                                                 } 
                                              } else {
                                                  gmessage("Spectra acquired at different PE cannot be used for quantification", title="QUANTIFICATION NOT ALLOWED", icon="warning")
                                                  return()
@@ -489,7 +582,7 @@ XPSQuant <- function(){
       XPSSampleList <<- XPSFNameList()                     #list of all XPSSamples
       XPSSampleIdx <<- grep(activeFName,XPSSampleList)
       SpectList <<- XPSSpectList(activeFName)          #list of all CoreLines of the active XPSSample
-      PassE <<- sapply(XPSSample, RetrivePE) # Retrieve list of CoreLine Pass Energies
+      PassE <<- RetrivePE() # Retrieve list of CoreLine Pass Energies
       NormCoeff <<- 1
 
       CoreLineNames <<- ""
@@ -549,7 +642,7 @@ XPSQuant <- function(){
    XPSSampleList <- XPSFNameList()                     #list of all XPSSamples
    XPSSampleIdx <- grep(activeFName,XPSSampleList)
    SpectList <- XPSSpectList(activeFName)              #list of all the corelines of the active XPSSample
-   PassE <- sapply(XPSSample, RetrivePE)               # Retrieve list of CoreLine Pass Energies
+   PassE <- RetrivePE()                                # Retrieve list of CoreLine Pass Energies
    names(PassE) <- SpectList
    NormCoeff <<- 1
 
@@ -602,6 +695,7 @@ XPSQuant <- function(){
 #===== GUI =====
 
    Qwin <- gwindow(" QUANTIFICATION FUNCTION ", visible=FALSE)
+   size(Qwin) <- c(280, 530)
    QmainGroup <- ggroup(horizontal=FALSE, container=Qwin)
 
    Qgrp0 <- ggroup(horizontal= TRUE, spacing=2, container=QmainGroup)

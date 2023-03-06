@@ -2,22 +2,24 @@
 % Please edit documentation in R/XPSExtractGUI.r
 \name{XPSExtract}
 \alias{XPSExtract}
-\title{Extract a portion of spectrum from a XPS survey}
+\title{XPSExtract extract a portion of spectrum from a XPS survey}
 \usage{
 XPSExtract()
 }
 \value{
-returns the \code{object} with a coreline added.
+XPSExtract returns the extracted spectrum, and the original 
+  XPSSample will show an additional coreline
 }
 \description{
-Extract a portion (abscissa) from a XPS survey in a XPSSample. It use a GUI
-to interact with the x-axis and to get the \code{Symbol} of the new
-XPSCoreLine. XPSExtract() does not need any parameter.
+XPSExtract function extracts spectral features from
+  a XPS survey in a XPSSample. Mouse is used to identify the portion
+  of the spectrum to extract. The user is asked to assign a name
+  (i.e. Cl2p, Li1s, Br3d...) to the extracted spectrum representing
+  a Core-Line associated to an element. Coherently with the
+  name, a RSF will be automatically assigned to that spectrum.
 }
 \examples{
-
 \dontrun{
-XPSextractGUI()
+ XPSextractGUI()
 }
-
 }
