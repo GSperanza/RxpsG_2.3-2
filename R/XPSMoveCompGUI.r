@@ -278,14 +278,12 @@ XPSMoveComp <- function(){
   }
 
   ComponentMenu <- function(){
-cat("\n MoveC 111", UpdateCompMenu, O.Sys, ComponentList)
        FComp <<- 1
        delete(MCFrame3,MCGroup3)
        MCGroup3 <<- ggroup(spacing=3, horizontal=FALSE, container=MCFrame3)
        FitComplyt <<- glayout(spacing=5, container=MCGroup3)
        if (length(ComponentList) > 1){    #gradio works with at least 2 items
            FitComp <<- gradio(ComponentList, selected=1, handler = function(h,...){
-cat("\n MoveC 222", UpdateCompMenu,ShowMsg, O.Sys, ComponentList)
                                FComp <<- svalue(FitComp)
                                cat("\n selected component:", FComp)
                                FComp <<- as.numeric(unlist(strsplit(FComp, split="C")))   #index selected component
@@ -368,8 +366,6 @@ cat("\n MoveC 222", UpdateCompMenu,ShowMsg, O.Sys, ComponentList)
   }
 
   LoadCoreLine<-function(){
-cat("\n MoveC 333", UpdateCompMenu, ShowMsg, O.Sys, ComponentList)
-
       Xlimits <<- range(Object@RegionToFit$x)
       Ylimits <<- range(Object@RegionToFit$y)
       Object@Boundaries$x <<- Xlimits
@@ -808,6 +804,7 @@ cat("\n MoveC 333", UpdateCompMenu, ShowMsg, O.Sys, ComponentList)
 
 #--- Interactive mouse control ---
      if (O.Sys == "windows"){
+         ComponentMenu()
          devset <- function(){ #returns the ID of the current active graphic device
                    if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
                 }

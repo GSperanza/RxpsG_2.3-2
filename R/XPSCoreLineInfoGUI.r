@@ -206,13 +206,13 @@ XPSFitParamInfo <- function() {
                           SpectInfo4 <<- glabel(text=txt, container=InfoGroup3)
 
                           if (length(FName[[Indx]]@Components) == 0){  #no information if Baseline not defined
-                             InfoTable[] <- ""
-                             ShowParam[] <- ""
+                             InfoTable[] <<- ""
+                             ShowParam[] <<- ""
                              message <- paste("No Fit found for", activeSpectName, sep=" ")
                              gmessage(msg=message, title = "CORE LINE INFO",  icon = "warning")
                           } else {
-                             InfoTable[] <- SetDataFrame()
-                             ShowParam[] <- ""
+                             InfoTable[] <<- SetDataFrame()
+                             insert(ShowParam, "  ")
                           }
                        }, container=Infoframe2)
 
@@ -241,8 +241,8 @@ XPSFitParamInfo <- function() {
       gmessage(msg=txt, title = "CORE LINE INFO",  icon = "warning")
    }
 
-   InfoTable <- gtable(items=fitParam, container=InfoGroup4)
-   size(InfoTable) <- c(600,250)
+   InfoTable <- gtable(items=fitParam, container=InfoGroup4)       
+   size(InfoTable) <- c(600,200)
 
    SpectInfo6 <- glabel(text="Component Line Shape: ", container=InfoGroup4)
 
@@ -266,7 +266,7 @@ XPSFitParamInfo <- function() {
                           VarNames <- rownames(FName[[Indx]]@Components[[CompIndx]]@param)
                           VarNames <- encodeString(VarNames, width=13, justify="right")
                           options(stringsAsFactors=FALSE) #Without this option the class(fitParam$VarNames)== FACTOR e non CHARACTER
-                          fitParam <- c(fitParam, paste("    Parameter", "        Start", "          Min", "          Max\n\n", sep=""))
+                          fitParam <- c(fitParam, paste("    Parameter", "        Start", "          Min", "          Max\n", sep=""))
                           LL <- length(FP[[1]])
                           for (ii in 1:LL){
                                fitParam <- c(fitParam, paste(encodeString(VarNames[ii], width=13, justify="right"),

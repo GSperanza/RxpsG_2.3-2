@@ -1,15 +1,17 @@
 #Function to perform quantifications on XPS spectra
-#The GUI allows the selection of corelines and indivisual spectral components
+#allowing selection of corelines and fit components
 #for the computation of the atomic concentrations.
 #XPSquantify and XPScalc used only by XPSMoveComponent.
 
 #' @title XPSQuant
-#' @description XPSQuant() performs the elemental quantification for a selected XPS-Sample
-#'   Provides a userfriendly interface with the list of Corelines of the selected XPS-Sample
+#' @description XPSQuant() performs the elemental quantification 
+#'   for a selected XPS-Sample. Provides a userfriendly interface 
+#'   with the list of Corelines of the selected XPS-Sample
 #'   Each Coreline can be count/omit from the elemental quantification.
-#'   If peak fitting is present also each of the fitting component can be count/omit from the
-#'   elemental quantification.
-#'   Finally also relative RSF of the coreline or individual fitting components can be modified.
+#'   If peak fitting is present also each of the fitting component 
+#'   can be count/omit from the elemental quantification.
+#'   Finally also relative RSF of the coreline or individual fitting 
+#'   components can be modified.
 #' @examples
 #' \dontrun{
 #' 	XPSQuant()

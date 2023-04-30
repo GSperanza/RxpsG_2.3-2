@@ -18,51 +18,50 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 
 #---  SetPltArgs sets the Plot_Arg list following selections in OverlayGUI
    SetPltArgs <- function(LType,SType , palette, FitStyle) {
-
         if (PlotParameters$OverlayMode=="Multi-Panel") {
             palette <- rep("black", 20)
         }
         Ylength <- lapply(Y, sapply, length)
         idx <- 1
-        cx<<-list()
-        levx<<-list()
+        cx <<- list()
+        levx <<- list()
         for (ii in seq_along(Ylength) ) {               #corro sulle CoreLines dei vari XPSSamples
-             tmp1<-NULL
-             tmp2<-NULL
-             Cex<-Plot_Args$cex
+             tmp1 <- NULL
+             tmp2 <- NULL
+             Cex <- Plot_Args$cex
              for ( jj in seq_along(Ylength[[ii]]) ) {    #jj corre sulle componenti Corelines
                    if (attr(Ylength[[ii]][jj], "names") == "MAIN"     #holds when just the spectrum is plotted
                        || attr(Ylength[[ii]][jj], "names") =="RTF"){  #holds when spectrum + Baseline or fit are plotted
-                       Plot_Args$col[idx]<<-palette[ii]
-                       Plot_Args$lty[idx]<<-LType[ii]
-                       Plot_Args$pch[idx]<<-SType[ii]
-                       Plot_Args$cex[idx]<<-Plot_Args$cex
+                       Plot_Args$col[idx] <<- palette[ii]
+                       Plot_Args$lty[idx] <<- LType[ii]
+                       Plot_Args$pch[idx] <<- SType[ii]
+                       Plot_Args$cex[idx] <<- Plot_Args$cex
                    }
                    if (attr(Ylength[[ii]][jj], "names") == "BASE"){
-                       Plot_Args$col[idx]<<-FitStyle$Col[1]
-                       Plot_Args$lty[idx]<<-"dashed"
-                       Plot_Args$pch[idx]<<-3 #"Cross"
-                       Plot_Args$cex[idx]<<-0.3*Plot_Args$cex
+                       Plot_Args$col[idx] <<- FitStyle$Col[1]
+                       Plot_Args$lty[idx] <<- "dashed"
+                       Plot_Args$pch[idx] <<- 3 #"Cross"
+                       Plot_Args$cex[idx] <<- 0.3*Plot_Args$cex
                    }
                    if (attr(Ylength[[ii]][jj], "names") == "COMPONENTS" ){
-                       Plot_Args$col[idx]<<-FitStyle$Col[2]
-                       Plot_Args$lty[idx]<<-FitStyle$Lty[1]
-                       Plot_Args$pch[idx]<<-8 #"Star"  2 #"VoidTriangleUp"
-                       Plot_Args$cex[idx]<<-0.4*Plot_Args$cex
+                       Plot_Args$col[idx] <<- FitStyle$Col[2]
+                       Plot_Args$lty[idx] <<- FitStyle$Lty[1]
+                       Plot_Args$pch[idx] <<- 8 #"Star"  2 #"VoidTriangleUp"
+                       Plot_Args$cex[idx] <<- 0.4*Plot_Args$cex
                    }
                    if (attr(Ylength[[ii]][jj], "names") == "FIT" ){
-                       Plot_Args$col[idx]<<-FitStyle$Col[3]
-                       Plot_Args$lty[idx]<<-"solid"
-                       Plot_Args$pch[idx]<<-8 #"Star" 2 #"VoidTriangleUp"
-                       Plot_Args$cex[idx]<<-Plot_Args$cex
+                       Plot_Args$col[idx] <<- FitStyle$Col[3]
+                       Plot_Args$lty[idx] <<- "solid"
+                       Plot_Args$pch[idx] <<- 8 #"Star" 2 #"VoidTriangleUp"
+                       Plot_Args$cex[idx] <<- Plot_Args$cex
                    }
-                   tmp1<-c(tmp1, rep(ii, times=as.integer(Ylength[[ii]][jj])))   #indice associato ai vari XPSSample
-                   tmp2<-c(tmp2, rep(idx, times=as.integer(Ylength[[ii]][jj])))  #indice associato alle componenti della CoreLine (baseline o componenti del fit)
-                   idx<-idx+1
+                   tmp1 <- c(tmp1, rep(ii, times=as.integer(Ylength[[ii]][jj])))   #indice associato ai vari XPSSample
+                   tmp2 <- c(tmp2, rep(idx, times=as.integer(Ylength[[ii]][jj])))  #indice associato alle componenti della CoreLine (baseline o componenti del fit)
+                   idx <- idx+1
              }
-             levx[[ii]]<<-tmp1 #required to distinguish multiple panels
-             cx[[ii]]<<-tmp2   #required to distinguish different curves
-             Xlimits[[ii]]<<-rev(range(X[[ii]]))  #costruisco una lista di xlim invertiti
+             levx[[ii]] <<- tmp1 #required to distinguish multiple panels
+             cx[[ii]] <<- tmp2   #required to distinguish different curves
+             Xlimits[[ii]] <<- rev(range(X[[ii]]))  #costruisco una lista di xlim invertiti
   	     }
     }
 
@@ -492,7 +491,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
        CX <- Plot_Args$cex
        if(Plot_Args$type !="l" && Plot_Args$type != "p" && Plot_Args$type != "b") { return() } #if style not defined return!
 
-       if (length(PlotParameters$Colors)==1) { # B/W Lines
+       if (length(PlotParameters$Colors) == 1) { # B/W Lines
           if (Plot_Args$type=="l"){ #lines
              Cloud_Args<-list(lty=LType,cex=CX,lwd=LW,type="l")    #Plot_Args$lty = "solid", "dashed", "dotted" ....
           } else if(Plot_Args$type=="p"){ #symbols
@@ -503,11 +502,11 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
           Cloud_Args$col <- Plot_Args$col <- rep("black", LL)
        } else if (length(PlotParameters$Colors) > 1) {   # Rainbow Lines
           if (Plot_Args$type=="l"){ # lines
-             Cloud_Args<-list(lty="solid",cex=CX,lwd=LW,type="l")
+             Cloud_Args<-list(lty=LType,cex=CX,lwd=LW,type="l")
           } else if(Plot_Args$type=="p"){  #symbols
-             Cloud_Args<-list(pch=1,cex=CX,lwd=LW,type="p")  #pch=1  voidcircle
+             Cloud_Args<-list(pch=SType,cex=CX,lwd=LW,type="p")  #pch=1  voidcircle
           } else if(Plot_Args$type=="b"){  # lines & symbols
-             Cloud_Args<-list(lty="solid", pch=1,cex=CX,lwd=LW,type="b")
+             Cloud_Args<-list(lty=LType, pch=SType,cex=CX,lwd=LW,type="b")
           }
           Cloud_Args$col <- Plot_Args$col <- PlotParameters$Colors
        }

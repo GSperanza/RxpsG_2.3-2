@@ -41,7 +41,6 @@
 
 XPSPreferences <- function() {
 
-
    MatchSymbol <- function(Sym,SymIndx,ii){
             switch(Sym,
                   "VoidCircle" = {SymIndx[ii] <- 1},
@@ -103,6 +102,7 @@ XPSPreferences <- function() {
    GraphParam <- data.frame(Colors=Colors, LType=LType, Symbols=Symbols)
    FitParam <- data.frame(BaseLineColor=BaseLineColor, ComponentColor=ComponentColor, FitColor=FitColor)
 
+
 #---GUI                       BaseLineColor ComponentColor  FitColor
    mainwin <- gwindow("PREFERENCES", visible=FALSE)
    size(mainwin) <- c(350,490)
@@ -112,22 +112,21 @@ XPSPreferences <- function() {
    group1 <- ggroup(horizontal=FALSE, container=group0)
    frameDim <- gframe(text=" WINDOW DIMENSIONS ", horizontal=FALSE, spacing=5, container=group1)
    LabBox <- ggroup(spacing=1, horizontal=TRUE, container=frameDim)
-   WSvalue <- glabel("Graphical Window size: ", container=LabBox)
-   WinObj1 <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
+   txt <- paste("Graphic Window size : ", WinSize, sep="")
+   WSvalue <- glabel(text=txt, container=frameDim)
+   WinObj1 <- gslider(from = 3, to = 15, by = 1, value = as.numeric(WinSize), horizontal=TRUE, handler=function(h,...){
                        WinSize <- svalue(WinObj1)
                        svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
                  }, container=frameDim)
 
    frameDev <- gframe("SELECT THE OPERATING SYSTEM FOR GRAPHICS", spacing=5, container=group1)
-   GrDevice <- gradio(OSList, horizontal=FALSE, selected=-1, handler=function(h,...){
+   GrDevice <- gradio(OSList, horizontal=FALSE, selected=1, handler=function(h,...){
                       OS <- svalue(GrDevice)
                       if (OS=="Windows") {Gdev <- "x11(xpos=600, ypos=5, title=' ')"} #top right position
-                      if (OS=="MacOS-X") {Gdev <- "quartz(title=' ')"} #quartz() doesn't allow to set the opening position
+                      if (OS=="MacOS") {Gdev <- "quartz(xpos=600, ypos=5, title=' ')"} #quartz() doesn't allow to set the opening position
                       if (OS=="Linux") {Gdev <- "x11(type='cairo', xpos=600, ypos=5, title=' ')"}
                  }, container = frameDev) # function(h,...){ }
-
-
 
    idx <- grep(FontPref$Font, fontPreferences$font)
    group2 <- ggroup(horizontal=TRUE, container=group0)
@@ -186,7 +185,6 @@ XPSPreferences <- function() {
                           return()
                        }
                     }, container = group0)
-
 
    group3 <- ggroup(horizontal=FALSE, container=maingroup)
    frameGStyle <- gframe(text="PLOT GRAPHIC STYLE", horizontal=FALSE, spacing=10, container=group3)

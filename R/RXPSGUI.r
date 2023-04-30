@@ -189,6 +189,7 @@ CtrlSurname <- function(FName){
 #---Controls on XPSSample
             FName <- XPSpkgCtrl(FName) #controls the "package" attributes "package" if it is  the old Rxps version
             FName@Sample <- PathFile   #save the file location
+#------------
             XPSComponent <- unlist(strsplit(names(FName)[1], "\\."))   #Skip the "number." at beginning CoreLine name
             assign("activeSpectIndx", 1, envir=.GlobalEnv)  #save the CoreLine index as active index in .Global env
             assign("activeSpectName", XPSComponent[2], envir=.GlobalEnv)  #save the CoreLine name as active name in the .Global env
@@ -218,8 +219,8 @@ CtrlSurname <- function(FName){
             FName <- XPSread(file=PathFile,Genplot=FALSE)
             FName@Sample <- DirName                          #agrees the real path with that saved in the file which could be copied from another place
             assign(activeFName, FName, envir=.GlobalEnv)     #save FName class XPSSample 
+#---Controls on XPSSample
             FName <- CtrlSurname(FName)
-
             FName <- XPSpkgCtrl(FName) #control that the "package" attributes of FName : it should'nt be Rxps  (Canteri)
 #------------
             FName@Sample <- PathFile   #save the file location
@@ -253,7 +254,6 @@ CtrlSurname <- function(FName){
             FName <- get(activeFName,envir=.GlobalEnv)
 #---Controls on XPSSample
             FName <- CtrlSurname(FName)
-
             FName <- XPSpkgCtrl(FName) #control on the package attributes
 #------------
             FName@Sample <- PathFile   #save the file location
@@ -290,7 +290,7 @@ CtrlSurname <- function(FName){
                LL <- length(FNameList)
                for(ii in 1:LL){                       #Update the FileName of the XPSSample changing the extension to .RData
                    FName <- get(FNameList[ii],envir=.GlobalEnv)  #load XPSSample data in FName
-#                   FName <- XPSpkgCtrl(FName)         #controls the attribute "package" of FName and set it to ".GlobalEnv"
+                   FName <- XPSpkgCtrl(FName)         #controls the attribute "package" of FName and set it to ".GlobalEnv"
                    FName@Sample <- paste(DirName, "/", FNameList[ii], sep="") #forces the @Sample to be equal to ActualDir+activeFName
                    if (activeFName != FNameList[1]){  #It happen that the XPSSample==FNameList[1] still contains the original name XXX.vms or XXX.pxt instead of XXX.RData
                       badFName <- FNameList[ii]
@@ -320,8 +320,9 @@ CtrlSurname <- function(FName){
                FName@Sample <- CheckName                #Save the new FileName in the XPSSample
                assign(activeFName, FName, envir=.GlobalEnv)         #save FName data  (class XPSSample)
             }
-
+#---Controls on XPSSample
             FName <- CtrlSurname(FName)
+            FName <- XPSpkgCtrl(FName) #controls the "package" attributes "package" if it is  the old Rxps version
 #---Assignments
             XPSComponent <- unlist(strsplit(names(FName)[1], "\\."))    #drop the "NUMBER." at beginninf of the coreline name
             assign("activeSpectIndx", 1, envir=.GlobalEnv)  #save the index corresponding to the active CoreLine in the .GlobalEnv.
@@ -363,7 +364,7 @@ CtrlSurname <- function(FName){
             setFileWin("UPDATE")
       }, container=groupMenu),
 
-      gaction("   Change Spectrum Label",handler=function(h,...){
+      gaction("   Change Spectrum Name",handler=function(h,...){
             XPSSpectNameChange()
             setFileWin("UPDATE")
       }, container=groupMenu),

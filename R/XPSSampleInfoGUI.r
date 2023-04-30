@@ -25,7 +25,7 @@ XPSSampleInfo <- function() {
          gmessage("ATTENTION NO CORELINES FOUND: please control your XPSSample datafile!" , title = "WARNING",  icon = "warning")
       }
       Data <- list()
-#read the XPS Sample information
+#the XPS Sample information
       Data[[1]] <- FName@Project
       Data[[2]] <- FName@Sample
       Data[[3]] <- paste(FName@Comments, collapse=" ")
@@ -38,6 +38,21 @@ XPSSampleInfo <- function() {
       VarNames <- c("Project", "Sample", "Comments", "User", "names", "  ")
       Data <- data.frame(INFO=cbind(VarNames,Data), stringsAsFactors=FALSE) #gdf() add a column to display the row names
       newData <- Data
+#the first Core-Line information
+      LL <- length(FName[[1]]@.Data[[1]])
+      Bnd1 <- FName[[1]]@.Data[[1]][1]
+      Bnd2 <- FName[[1]]@.Data[[1]][LL]
+      CLtxt <- NULL
+      CLtxt[1] <- paste("Core Line : ",slot(FName[[1]],"Symbol"),"\n", sep="")
+      CLtxt[2] <- paste("E-range   : ",round(Bnd1, 2)," - ", round(Bnd2, 2),"\n", sep="")
+      CLtxt[3] <- paste("N. data   : ",length(FName[[1]]@.Data[[1]]))
+      CLtxt[4] <- paste("E step    : ",round(abs(FName[[1]]@.Data[[1]][2] - FName[[1]]@.Data[[1]][1]), 2),"\n", sep="")
+      CLtxt[5] <- paste("baseline  : ",ifelse(hasBaseline(FName[[1]]),FName[[1]]@Baseline$type[1], "NONE"),"\n", sep="")
+      CLtxt[6] <- paste("fit       : ",ifelse(hasFit(FName[[1]]),"YES", "NO"),"\n", sep="")
+      CLtxt[7] <- paste("n. comp.  : ",ifelse(hasComponents(FName[[1]]),length(FName[[1]]@Components), "NONE"),"\n", sep="")
+      CLtxt[8] <- (" Info:  ")
+      CLtxt <- c(CLtxt, FName[[1]]@Info)
+      
 
 #--- GUI ---
       DFwin <- gwindow(title="XPS-SAMPLE INFO", visible=FALSE) #define the main window to display the gdf()
@@ -72,26 +87,10 @@ XPSSampleInfo <- function() {
                       svalue(CLinfo) <- txt
           }, container=DFgroup)
       } else {                       #if there is just 1 coreline in the XPSSample then use gcheckboxgroup()
-          SelectCL <- gcheckboxgroup(CLineList, checked=FALSE, handler= function(h, ...){
-                      LL <- length(FName[[idx]]@.Data[[1]])
-                      Bnd1 <- FName[[1]]@.Data[[1]][1]
-                      Bnd2 <- FName[[1]]@.Data[[1]][LL]
-                      txt <- NULL
-                      txt[1] <- paste("Core Line : ",slot(FName[[1]],"Symbol"),"\n", sep="")
-                      txt[2] <- paste("E-range   : ",round(Bnd1, 2)," - ", round(Bnd2, 2),"\n", sep="")
-                      txt[3] <- paste("N. data   : ",length(FName[[1]]@.Data[[1]]))
-                      txt[4] <- paste("E step    : ",round(abs(FName[[1]]@.Data[[1]][2] - FName[[1]]@.Data[[1]][1]), 2),"\n", sep="")
-                      txt[5] <- paste("baseline  : ",ifelse(hasBaseline(FName[[1]]),FName[[idx]]@Baseline$type[1], "NONE"),"\n", sep="")
-                      txt[6] <- paste("fit       : ",ifelse(hasFit(FName[[1]]),"YES", "NO"),"\n", sep="")
-                      txt[7] <- paste("n. comp.  : ",ifelse(hasComponents(FName[[1]]),length(FName[[1]]@Components), "NONE"),"\n", sep="")
-                      txt[8] <- (" Info:\n")
-                      txt[7] <- (" Info:\n")
-                      info <<- FName[[1]]@Info
-                      svalue(CLinfo) <- c(txt,info)
-          }, container=DFgroup)
+          SelectCL <- gcheckboxgroup(CLineList, checked=TRUE, container=DFgroup)
       }
 
-      CLinfo <- gtext(container=DFgroup)
+      CLinfo <- gtext(text=CLtxt, wrap=FALSE, container=DFgroup)
       size(CLinfo) <- c(600,280)
 
       DFlayout <- glayout(homogeneous=FALSE, spacing=5, container=DFgroup)

@@ -88,6 +88,7 @@ XPSImport.Ascii <- function() {
               CLnames <- names(XPSSample)
               XPSSample[[LL]] <<- NewCL
               names(XPSSample) <<- c(CLnames, as.character(svalue(CLname)))
+              assign("activeFName", activeFName, envir=.GlobalEnv)  #Set the activeSpectName to the last name of imported data
               plot(XPSSample)
        }
 
@@ -267,7 +268,6 @@ XPSImport.Ascii <- function() {
                              cat("\n ===> Standard Deviation Error Added to Last Saved Data" )
                              cat("\n")
                          }
-#                         enabled(addErr_btn) <- TRUE
                          enabled(save_btn) <- TRUE
                          enabled(AddToXPSSamp) <- TRUE
                          enabled(exit_btn) <- TRUE

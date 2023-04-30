@@ -32,9 +32,18 @@ XPSConstraints <- function(){
                  FName[[SpectIndx]] <<- FixCtrl(FName[[SpectIndx]])  #controls that no other links present for ComponentToLink otherwise errors are generated
               }
            },
-           "link" = {
+           "link" = {                             
+              FuncName2 <- FName[[SpectIndx]]@Components[[Nc2]]@funcName
               LL <- length(Nc1)
               for (ii in 1:LL){  #if a link on 'paramter' is aleady present, erase the old link to set the newone
+                  #now control we are linking parameters of same kind of fit-function
+                  FuncName1 <- FName[[idx]]@Components[[Nc1[ii]]]@funcName
+                  if(grepl(FuncName2, FuncName1) == FALSE){
+                      txt <- paste("Component ", Nc1[ii]," = ",FuncName1, "    Component ", Nc2," = ", FuncName2,"\n",
+                                   "Linking a parameter among different fit functon is not allowed!", sep="")
+                      gmessage(msg=txt, title="ERROR", icon="error")
+                      return()
+                  }
                   LnkdVar <- paste(parameter, Nc1[ii], sep="")
                   if (length(FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link) > 0){
                      if (LnkdVar == FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link[[1]]$variable){
@@ -96,6 +105,7 @@ XPSConstraints <- function(){
            Saved <<- FALSE
    }
 
+   checkFitFunctName <- function(){ }
 
 #---------- SetLinks ----------
 
@@ -814,7 +824,7 @@ XPSConstraints <- function(){
 
       gbutton(" SAVE ", handler=function(h,...){
                           if(length(SigmaCtrl$CompLnkd) > 0 && Saved == FALSE) { #there are links on sigma still not controlled
-                             SetLinks()                        #first all the links have to be set then they can be controlled and set!!!
+                             SetLinks()                          #first all the links have to be set then they can be controlled and set!!!
                           }
                           SpectName <<- names(FName)[SpectIndx]  #name of the active CoreLine
                           assign(activeFName, FName, envir=.GlobalEnv)

@@ -178,7 +178,7 @@ FindNearest <- function(){
 
                  }, container = ZMframe1)
 
-   ZMobj2 <- gbutton("      RESET      ", handler=function(h,...){
+   ZMobj2 <- gbutton("   RESET PLOT    ", handler=function(h,...){
                     XYrange <<- ResetXYrange
                     ReDraw()
                  }, container = ZMframe1)
@@ -218,12 +218,12 @@ FindNearest <- function(){
                      gmessage(msg="LEFT click to move marker's position; RIGHT to exit and zoom" , title = "WARNING",  icon = "warning")
                      pos <- c(1,1) # only to enter in  the loop
                      while (length(pos) > 0) {  #pos != NULL => mouse right button not pressed
-                         pos <- locator(n=1, type="p", pch=3, cex=1.5, lwd=1.8, col="red")
+                         pos <- locator(n=1, type="n")
                          if (length(pos) > 0) { #right mouse button not pressed
                             ReDraw() #refresh graph  to cancel previous cursor markers
-                            points(pos, type="p", pch=3, cex=1.5, lwd=1.8, col="red")
+                            points(pos, type="p", pch=3, cex=2, lwd=1.8, col="red")
                             pos <- round(x=c(pos$x, pos$y), digits=2)
-                            txt <- paste("X: ", as.character(pos[1]), ", Y: ", as.character(pos[2]), sep="")
+                            txt <- paste("X: ", as.character(pos[1]), ",   Y: ", as.character(pos[2]), sep="")
                             svalue(ZMobj4) <- txt
                             tcl("update", "idletasks")  #force writing cursor position in the glabel
                          }
@@ -231,6 +231,7 @@ FindNearest <- function(){
                  }, container = ZMframe3)
 
    ZMobj4 <- glabel("Cursor position: ", container = ZMframe3)
+   font(ZMobj4) <- list(family = "helvetica", size="11")
 
 
    ZMobj6 <- gbutton("      CLOSE      ", handler=function(h,...){

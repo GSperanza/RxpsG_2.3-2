@@ -419,7 +419,7 @@ XPSCustomPlot <- function(){
                Plot_Args$main <<- list(label <<- SpectName,cex=1.4)
                Plot_Args$xlab <<- list(label=FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
                Plot_Args$ylab <<- list(label=FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
-               Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), x=list(log=FALSE), y=list(log=FALSE))
+               Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), relation="free", x=list(log=FALSE), y=list(log=FALSE))
                Plot_Args$xscale.components <<- xscale.components.subticks
                Plot_Args$yscale.components <<- yscale.components.subticks
                Plot_Args$col <<- "black"
@@ -534,7 +534,7 @@ XPSCustomPlot <- function(){
                      background="transparent",
                      xlab=list(label=NULL, rot=0, cex=1.2),
                      ylab=list(label=NULL, rot=90, cex=1.2),
-                     scales=list(cex=1, tck=c(1,0), alternating=c(1), x=list(log=FALSE), y=list(log=FALSE)),
+                     scales=list(cex=1, tck=c(1,0), alternating=c(1), relation="same", x=list(log=FALSE), y=list(log=FALSE)),
                      xscale.components = xscale.components.subticks,
                      yscale.components = yscale.components.subticks,
                      main=list(label=NULL,cex=1.4),
@@ -636,140 +636,137 @@ XPSCustomPlot <- function(){
                              CtrlPlot() }, container=T1frame6)
 
       layoutAxis[2,2] <- T1frame7 <- gframe("SCALE", spacing=5, container=layoutAxis)
-      T1obj7 <- gcombobox(c("Standard", "Log10 X", "Log10 Y", "Log10 X,Y", "X E10", "Y E10", "XY E10", "X ^10", "Y ^10"), selected=1, editable=FALSE, handler= function(h,...){
+      T1obj7 <- gcombobox(c("Standard", "Xpower", "Ypower", "Log10 X", "Log10 Y", "Ln X", "Ln Y", "X E10", "Y E10", "X ^10", "Y ^10"), selected=1, editable=FALSE, handler= function(h,...){
                              idx <- svalue(T1obj7,index=TRUE)
                              Xlim <- sort(range(SampData[,1]))
                              Ylim <- sort(range(SampData[,2]))
                              Xlabel <<- FName[[SpectIndx]]@units[1]
                              Ylabel <<- FName[[SpectIndx]]@units[2]
-                             if (idx == 1) {
-                                Plot_Args$xlab$label <<- Xlabel
-                                Plot_Args$ylab$label <<- Ylabel
-                                Plot_Args$scales$x <<- list(log=FALSE)
-                                Plot_Args$xscale.components <<- xscale.components.subticks
-                                Plot_Args$scales$y <<- list(log=FALSE)
-                                Plot_Args$yscale.components <<- yscale.components.subticks
-                             } else if (idx == 2) {  #X-log10 scale
-                                if (svalue(RevAxis) == TRUE){
-                                    gmessage("X-axis inverted. Please uncheck Reverse_Xaxis", title="Xaxis Reversed", icon="warning")
-                                    return()
-                                }
-                                Xlim <- sort(range(SampData[,1]))
-                                if (Xlim[1] < 0) {
-                                    gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
-                                    return()
-                                }
-                                Plot_Args$xlab$label <<- paste("Log.",Xlabel, sep="")
-                                Plot_Args$scales$y <<- list(log=FALSE)
-                                Plot_Args$yscale.components <<- yscale.components.subticks
-                                Plot_Args$scales$x <<- list(log = 10)
-                                Plot_Args$xscale.components <<- xscale.components.log10ticks
-                             } else if (idx == 3) {  #Y-log10 scale
-                                Ylim <- sort(range(SampData[,2]))
-                                if (Ylim[1] < 0) {
-                                    gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
-                                    return()
-                                }
-                                Plot_Args$ylab$label <<- paste("Log.",Ylabel, sep="")
-                                Plot_Args$scales$x <<- list(log=FALSE)
-                                Plot_Args$xscale.components <<- xscale.components.subticks
-                                Plot_Args$scales$y <<- list(log = 10)
-                                Plot_Args$yscale.components <<- yscale.components.log10ticks
-                             } else if (idx == 4) {  #XY-log10 scale
-                                if (svalue(RevAxis) == TRUE){
-                                    gmessage("X-axis inverted. Please uncheck Reverse_Xaxis", title="Xaxis Reversed", icon="warning")
-                                    return()
-                                }
-                                Xlim <- sort(range(SampData[,1]))
-                                Ylim <- sort(range(SampData[,2]))
-                                if (Xlim[1] < 0 || Ylim[1] < 0) {
-                                    gmessage("Cannot plot negatige X, Y values !", title="WRONG X, Y VALUES", icon="warning")
-                                    return()
-                                }
-                                Plot_Args$xlab$label <<- paste("Log.",Xlabel, sep="")
-                                Plot_Args$ylab$label <<- paste("Log.",Ylabel, sep="")
-                                Plot_Args$scales$x <<- list(log = 10)
-                                Plot_Args$xscale.components <<- xscale.components.log10ticks
-                                Plot_Args$scales$y <<- list(log = 10)
-                                Plot_Args$yscale.components <<- yscale.components.log10ticks
-                             } else if (idx == 5) { # X E10
-                                Plot_Args$xlab$label <<- Xlabel
-                                Plot_Args$ylab$label <<- Ylabel
-                                Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- FALSE
-                                x_at <- pretty(SampData[,1]) #position of Xscale ticks
-                                x_labels <- formatC(x_at, digits = 1, format = "E") #tick labels in exponential format
-                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
-                             } else if (idx == 6) { # Y E10
-                                Plot_Args$xlab$label <<- Xlabel
-                                Plot_Args$ylab$label <<- Ylabel
-                                Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- FALSE
-                                y_at <- pretty(SampData[,2]) #position of Yscale ticks
-                                y_labels <- formatC(y_at, digits = 1, format = "E") #tick labels in exponential format
-                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
-                             } else if (idx == 7) { # XY E10
-                                Plot_Args$xlab$label <<- Xlabel
-                                Plot_Args$ylab$label <<- Ylabel
-                                Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- FALSE
-                                x_at <- pretty(SampData[,1]) #position of Xscale ticks
-                                x_labels <- formatC(x_at, digits = 1, format = "E") #tick labels in exponential format
-                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
-                                y_at <- pretty(SampData[,2]) #position of Yscale ticks
-                                y_labels <- formatC(y_at, digits = 1, format = "E") #tick labels in exponential format
-                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
-                             } else if (idx == 8){ #Y ^10
-                                Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- FALSE
-                                x_labels <- NULL
-                                x_at <- NULL
-                                x_tk <- 0
-                                Xmin <- min(SampData[,1])
-                                Xmax <- max(SampData[,1])
-                                Nmax <- floor(log10(abs(Xmax))) #number of digits composing integer(Ymax)
-                                Nmin <- floor(log10(abs(Xmin))) #number of digits composing integer(Ymin)
-                                Xmin <- round(Xmin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
-                                Xmax <- round(Xmax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
-                                Step <- 10^Nmax/2
-                                if (2*(Xmax-Xmin)/10^Nmax > 5) {Step <- 10^Nmax}
-                                while(x_tk < Xmax){
-                                     x_tk <- x_tk + Step
-                                     x_at <- c(x_at, x_tk)
-                                     x_labels <- c(x_labels, as.character(x_tk/10^Nmax))
-                                }
-                                Plot_Args$ylab$label <<- Ylabel
-                                x_labels <- formatC(x_labels, digits = 1, format = "f") #tick labels in exponential format
-                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
-                                Plot_Args$xlab$label
-                                Xlabel <<- unlist(strsplit(Xlabel, "]"))[1]
-                                Plot_Args$xlab$label <<- paste(Xlabel, "*10^", Nmax, "]", sep="")
-
-                             } else if (idx == 9){ #Y ^10
-                                Plot_Args$scales$x$log <<- FALSE
-                                Plot_Args$scales$y$log <<- FALSE
-                                y_labels <- NULL
-                                y_at <- NULL
-                                y_tk <- 0
-                                Ymin <- min(SampData[,2])
-                                Ymax <- max(SampData[,2])
-                                Nmax <- floor(log10(abs(Ymax))) #number of digits composing integer(Ymax)
-                                Nmin <- floor(log10(abs(Ymin))) #number of digits composing integer(Ymin)
-                                Ymin <- round(Ymin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
-                                Ymax <- round(Ymax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
-                                Step <- 10^Nmax/2
-                                if (2*(Ymax-Ymin)/10^Nmax > 5) {Step <- 10^Nmax}
-                                while(y_tk < Ymax){
-                                     y_tk <- y_tk + Step
-                                     y_at <- c(y_at, y_tk)
-                                     y_labels <- c(y_labels, as.character(y_tk/10^Nmax))
-                                }
-                                Plot_Args$xlab$label <<- Xlabel
-                                y_labels <- formatC(y_labels, digits = 1, format = "f") #tick labels in exponential format
-                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
-                                Ylabel <<- unlist(strsplit(Ylabel, "]"))[1]
-                                Plot_Args$ylab$label <<- paste(Ylabel, "*10^", Nmax, "]", sep="")
+                             if (idx == 1) {   #Standard
+                                 Plot_Args$xlab$label <<- Xlabel
+                                 Plot_Args$ylab$label <<- Ylabel
+                                 Plot_Args$scales$x <<- list(log=FALSE)
+                                 Plot_Args$xscale.components <<- xscale.components.subticks
+                                 Plot_Args$scales$y <<- list(log=FALSE)
+                                 Plot_Args$yscale.components <<- yscale.components.subticks
+                             } else if (idx == 2) {  # X power scale
+                                Plot_Args$scales$x$log <<- 10
+                                Plot_Args$xscale.components <<- xscale.components.logpower
+                             } else if (idx == 3) {  # Y power scale
+                                Plot_Args$scales$y$log <<- 10
+                                Plot_Args$yscale.components <<- xscale.components.logpower
+                             } else if (idx == 4) {  #Log10 X
+                                 if (svalue(RevAxis) == TRUE){
+                                     gmessage("X-axis inverted. Please uncheck Reverse_Xaxis", title="Xaxis Reversed", icon="warning")
+                                     return()
+                                 }
+                                 Xlim <- sort(range(SampData[,1]))
+                                 if (Xlim[1] < 0) {
+                                     gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
+                                     return()
+                                 }
+                                 Plot_Args$xlab$label <<- paste("Log.",Xlabel, sep="")
+                                 Plot_Args$scales$x <<- list(log = 10)
+                                 Plot_Args$xscale.components <<- xscale.components.log10ticks
+                             } else if (idx == 5) {  #Log10 Y
+                                 Ylim <- sort(range(SampData[,2]))
+                                 if (Ylim[1] < 0) {
+                                     gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
+                                     return()
+                                 }
+                                 Plot_Args$ylab$label <<- paste("Log.",Ylabel, sep="")
+                                 Plot_Args$scales$y <<- list(log = 10)
+                                 Plot_Args$yscale.components <<- yscale.components.log10ticks
+                             } else if (idx == 6) {  #Ln X
+                                 Xlim <- sort(range(SampData[,1]))
+                                 if (Xlim[1] < 0) {
+                                     gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
+                                     return()
+                                 }
+                                 Plot_Args$xlab$label <<- paste("Ln.",Xlabel, sep="")
+                                 Plot_Args$scales$x <<- list(log = "e")
+                                 Plot_Args$xscale.components <<- xscale.components.subticks
+                             } else if (idx == 7) {  #Ln Y"
+                                 Ylim <- sort(range(SampData[,2]))
+                                 if (Ylim[1] < 0) {
+                                     gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
+                                     return()
+                                 }
+                                 Plot_Args$ylab$label <<- paste("Ln.",Ylabel, sep="")
+                                 Plot_Args$scales$y <<- list(log = "e")
+                                 Plot_Args$yscale.components <<- yscale.components.subticks
+                             } else if (idx == 8){ #X E+n
+                                 Xlim <- sort(range(SampData[,1]))
+                                 x_at <- NULL
+                                 x_labels <- NULL
+                                 xscl <- NULL
+                                 xscl <- xscale.components.default(
+                                                  lim=Xlim, packet.number = 0,
+                                                  packet.list = NULL, right = TRUE
+                                         )
+                                 x_at <- xscl$bottom$labels$at
+                                 x_labels <- formatC(x_at, digits = 1, format = "e")
+                                 Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                             } else if (idx == 9){ #Y E+n
+                                 Ylim <- sort(range(SampData[,2]))
+                                 y_at <- NULL
+                                 y_labels <- NULL
+                                 yscl <- NULL
+                                 yscl <- yscale.components.default(
+                                                  lim=Ylim, packet.number = 0,
+                                                  packet.list = NULL, right = TRUE
+                                         )
+                                 y_at <- yscl$left$labels$at
+                                 y_labels <- formatC(y_at, digits = 1, format = "e")
+                                 Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
+                             } else if (idx == 10){ #X ^10"
+                                 Xlim <- sort(range(SampData[,1]))
+                                 x_at <- NULL
+                                 x_labels <- NULL
+                                 xscl <- NULL
+                                 xscl <- xscale.components.default(
+                                                  lim=Xlim, packet.number = 0,
+                                                  packet.list = NULL, right = TRUE
+                                         )
+                                 x_at <- xscl$bottom$labels$at
+                                 eT <- floor(log10(abs(x_at)))# at == 0 case is dealt with below
+                                 mT <- x_at / 10 ^ eT
+                                 ss <- lapply(seq(along = x_at),
+                                              function(jj) {
+                                                     if (x_at[jj] == 0){
+                                                         quote(0)
+                                                     } else {
+                                                         substitute(A %*% 10 ^ E, list(A = mT[jj], E = eT[jj]))
+                                                     }
+                                              })
+                                 xscl$left$labels$labels <- do.call("expression", ss)
+                                 x_labels <- xscl$left$labels$labels
+                                 Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                             } else if (idx == 11){ #Y ^10
+                                 Ylim <- sort(range(SampData[,2]))
+                                 y_at <- NULL
+                                 y_labels <- NULL
+                                 yscl <- NULL
+                                 yscl <- yscale.components.default(
+                                                  lim=Ylim, packet.number = 0,
+                                                  packet.list = NULL, right = TRUE
+                                         )
+                                 y_at <- yscl$left$labels$at
+                                 eT <- floor(log10(abs(y_at)))# at == 0 case is dealt with below
+                                 mT <- y_at / 10 ^ eT
+                                 ss <- lapply(seq(along = y_at),
+                                                  function(jj) {
+                                                       if (y_at[jj] == 0){
+                                                           quote(0)
+                                                       } else {
+                                                           substitute(A %*% 10 ^ E, list(A = mT[jj], E = eT[jj]))
+                                                       }
+                                                  })
+                                 yscl$left$labels$labels <- do.call("expression", ss)
+                                 y_labels <- yscl$left$labels$labels
+                                 Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
                              }
+                             
                              CtrlPlot() }, container=T1frame7)
 
       layoutAxis[2,3] <- FrameAxLabOrient <- gframe("AXIS LABEL ORIENTATION", spacing=5, container=layoutAxis)

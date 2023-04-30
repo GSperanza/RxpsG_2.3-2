@@ -68,21 +68,21 @@ XPSLattAnnotate <- function(Xlim,Ylim){
                             RecPlot <<- recordPlot()   #save the figure before annotation to make UNDO if needed
                             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
                             pos <- list(x=NULL, y=NULL)
-                            pos <- grid.locator(unit = "points")
+                            pos <- grid.locator(unit = "points")    
                             X1 <- min(Xlim)
                             if (FName[[SpectIndx]]@Flags[1]) X1 <- max(Xlim)   #Binding Energy Set
                             RangeX <- abs(Xlim[2]-Xlim[1])
                             Y1 <- min(Ylim)
                             RangeY <- Ylim[2]-Ylim[1]
-
-                            width <- max(convertX(unit(Xlim, "native"), "points", TRUE))
-                            height <- max(convertY(unit(Ylim, "native"), "points", TRUE))
+                            PosX <- max(convertX(unit(Xlim, "native"), "points", TRUE))
+                            PosY <- max(convertY(unit(Ylim, "native"), "points", TRUE))
+                            panel.identify(x=PosX, y=PosY, label=AnnotateText)
                             if (FName[[SpectIndx]]@Flags[1]){
-                               TextPosition$x <<- X1-as.numeric(pos$x)*RangeX/width+RangeX/35  #Binding Energy Set
+                               TextPosition$x <<- X1-as.numeric(pos$x)*RangeX/PosX+RangeX/35  #Binding Energy Set
                             } else {
-                               TextPosition$x <<- X1+as.numeric(pos$x)*RangeX/width-RangeX/35  #Kinetic energy scale
+                               TextPosition$x <<- X1+as.numeric(pos$x)*RangeX/PosX-RangeX/35  #Kinetic energy scale
                             }
-                            TextPosition$y <<- Y1+as.numeric(pos$y)*RangeY/height+RangeY/50
+                            TextPosition$y <<- Y1+as.numeric(pos$y)*RangeY/PosY+RangeY/50
                             if (length(TextPosition)==0)  {
                                return()   
                             }

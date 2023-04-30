@@ -42,35 +42,6 @@ XPSAnalysis <- function() {
             }
        }
        return()
-   }
-
-
-  my.coords <- function(buttons, x, y) { #converts the normalized device coords in user coords
-      xx <- grconvertX(x, from="ndc", to="user")
-      yy <- grconvertY(y, from="ndc", to="user")
-
-      Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
-      Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
-      Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
-
-      if (xx < Xlim1 ) {xx <- Xlim1}
-      if (xx > Xlim2 ) {xx <- Xlim2}
-      if (yy < Ylim1 ) {yy <- Ylim1}
-      if (yy > Ylim2 ) {yy <- Ylim2}
-      coords <<- c(xx, yy)
-      if (buttons == 0) { LBmousedown() }  #left mouse button clicked
-      if (buttons == 2) { RBmousedown() }  #right mouse button clicked
-      return()
-  }
-
-  keydown <- function(key) {  #blocks the mouseHandler
-     if (key == "q") {
-        EXIT <<- TRUE
-        eventEnv <<- NULL
-        setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-        return(-1)
-     }
   }
 
   LBmousedown <- function() {   #Set marker position for Baseline and Fit Component
@@ -81,7 +52,7 @@ XPSAnalysis <- function() {
              gmessage("Press RESET BASELINE to modify the spline", title="WARNING", icon="warning")
              return()
          } else {
-             gmessage("Please click the right button to define spline-points", title="WARNING", icon="warning")
+             gmessage("Left mouse button to define spline-points, Right button to exit", title="WARNING", icon="warning")
              return()
          }
      }
@@ -138,15 +109,17 @@ XPSAnalysis <- function() {
              idx <<- findXIndex(Object[[coreline]]@.Data[1], Xlimits[2])
              point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][idx]
          }
-         if (tabMain == 2 && tabComp == 1 && O.Sys=="linux") { # add FitComp in linux
-             point.coords$x <<- c(point.coords$x, xx)
-             point.coords$y <<- c(point.coords$y, yy)
-         } else if (tabMain == 2 && tabComp == 1 && O.Sys=="windows"){
+         if (tabMain == 2 && tabComp == 1) { # add FitComp 
              point.coords$x <<- xx
              point.coords$y <<- yy
+             point.index <<- 1
+             add.component()
          }
          if (tabMain == 2 && tabComp == 2) { # Components/Move Notebook page
-             do.move()
+             point.coords$x <<- xx
+             point.coords$y <<- yy
+             point.index <<- 1
+             move.Comp()
          }
      }
      Marker$Points <<- point.coords
@@ -244,7 +217,7 @@ XPSAnalysis <- function() {
              }
              points(point.coords, col=2, cex=1, lwd=2, pch=1)
          }
-         svalue(sb) <- sprintf(paste("x =",round(point.coords$x[1],2), " y =",round(point.coords$y[2],2), sep=" "))
+         svalue(stat.Bar) <- sprintf(paste("x =",round(point.coords$x[1],2), " y =",round(point.coords$y[2],2), sep=" "))
      }
   }
 
@@ -301,11 +274,9 @@ XPSAnalysis <- function() {
                                compIndx <- unlist(strsplit(compIndx, split="C"))   #index of the chosen component
                                compIndx <<- as.integer(compIndx[2])
                                replot()
-                               if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                   gmessage("\nSelect BaseLine edges. Right button to stop slection", title="WARNING", icon="warning")
-                                   tcl("update", "idletasks") #closes the gmessage window
-                                   GetCurPos(single=FALSE)
-                               }                               
+                               gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
+                               tcl("update", "idletasks") #closes the gmessage window
+                               GetCurPos(single=FALSE)
                             }, container = T2Frame3)
              add(T2Frame3, FitComp)
          }
@@ -373,10 +344,10 @@ XPSAnalysis <- function() {
          } else {
              LL <- length(point.coords$x)
              for(ii in 1:LL){
-#               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.type),
-#                                                 peakPosition = list(x = point.coords$x[point.index], y = point.coords$y[point.index]))
-               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.type),
-                                                 peakPosition = list(x = point.coords$x[ii], y = point.coords$y[ii]))
+               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
+                                                 peakPosition = list(x = point.coords$x[point.index], y = point.coords$y[point.index]))
+#               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
+#                                                 peakPosition = list(x = point.coords$x[ii], y = point.coords$y[ii]))
 ##  to update fit remove Component@Fit and make the sum of Component@ycoor including the newone
 	                tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
 	                CompNames <<- names(Object[[coreline]]@Components)
@@ -386,12 +357,15 @@ XPSAnalysis <- function() {
                                        compIndx <- unlist(strsplit(compIndx, split="C"))   #indice della componente scelta class numeric
                                        compIndx <<- as.integer(compIndx[2])
                                        replot()
+                                       gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
+                                       tcl("update", "idletasks") #closes the gmessage window
+                                       GetCurPos(single=FALSE)
                                     }, container = T2Frame3)
                 add(T2Frame3, FitComp)
 	               Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
            		   replot()
              }
-        		   point.coords <<- list(x=NULL,y=NULL)
+#        		   point.coords <<- list(x=NULL,y=NULL)
      	   }
      }
   }
@@ -409,42 +383,45 @@ XPSAnalysis <- function() {
   		         delGroup <- ggroup(horizontal=FALSE, container=delWin)
   		         glabel("Select the fit component to delete", container=delGroup)
   		         gseparator(container=delGroup)
-             compId <- gcombobox(c(CompNames,"All"), selected=1, container = delGroup)
+                         compId <- gcombobox(c(CompNames,"All"), selected=1, container = delGroup)
   		         buttonGroup <- ggroup(horizontal=TRUE, container=delGroup)
              gbutton("OK", handler=function(...){
                   if (svalue(compId) != "All"){
-                      indx<-as.numeric(svalue(compId, index=TRUE))
-		            		      Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=indx )
-		     		             CompNames<<-names(slot(Object[[coreline]],"Components"))
-		     		             if (length(Object[[coreline]]@Components) > 0 ) {
+                      indx <- as.numeric(svalue(compId, index=TRUE))
+      		      Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=indx )
+	              CompNames <<- names(slot(Object[[coreline]],"Components"))
+	              if (length(Object[[coreline]]@Components) > 0 ) {
                           #plot update:
-	                         tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
-	                         Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
+                          tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
+                          Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
                       }
-		                } else {
-		    		              Object[[coreline]] <<- XPSremove(Object[[coreline]], "components")
-                      CompNames <<- ""
+                  } else {
+                          Object[[coreline]] <<- XPSremove(Object[[coreline]], "components")
+                          CompNames <<- ""
                   }
                   delete(T2Frame3,FitComp)
-                  FitComp<<-gcombobox(CompNames, selected=-1, handler=function(h, ...){  #Update component selection in MOVE COMP panel
+                  FitComp <<- gcombobox(CompNames, selected=-1, handler=function(h, ...){  #Update component selection in MOVE COMP panel
                                       compIndx <- svalue(FitComp)
                                       compIndx <- unlist(strsplit(compIndx, split="C"))    #index of the selected component
                                       compIndx <<- as.integer(compIndx[2])
                                       replot()
+                                      gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
+                                      tcl("update", "idletasks") #closes the gmessage window
+                                      GetCurPos(single=FALSE)
                                    }, container = T2Frame3)
 
- 			              svalue(plotFit) <<- "normal"
+ 			        svalue(plotFit) <<- "normal"
 		                point.coords <<- list(x=NULL,y=NULL)
-			               replot()
+			        replot()
 		                dispose(delWin)
 		           }, container=buttonGroup)
-		           gbutton("Cancel", handler=function(...) dispose(delWin), container=buttonGroup)
-		           visible(delWin) <- TRUE
+                 gbutton("EXIT", handler=function(...) dispose(delWin), container=buttonGroup)
+                 visible(delWin) <- TRUE
          }
      }
   }
 
-  do.move <- function(...) {
+  move.Comp <- function(...) {
      compIndx <- svalue(FitComp)
      compIndx <- unlist(strsplit(compIndx, split="C"))   #index selected component
      compIndx <- as.integer(compIndx[2])
@@ -504,24 +481,20 @@ XPSAnalysis <- function() {
 
   BLgroup <- list()
   BLvalue <- list()
-  WinSize <- as.numeric(XPSSettings$General[4])
-  hscale <- hscale <- as.numeric(WinSize)
-  WinScale  <- NULL
 
   eventEnv <- NULL
   O.Sys <- unname(tolower(Sys.info()["sysname"]))
   WinPointers <- NULL
+  WinSize <- XPSSettings$General[4]
   plot(Object)
 
 
 #----- ANALYSIS GUI -----------------------------
   ## Start
   MainWindow <- gwindow("XPS Analysis GUI", parent=c(50,10), visible = FALSE)
-
   addHandlerDestroy(MainWindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
-#-----                         stopping mouse handler
-                               setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                               eventEnv <<- NULL
+                               XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
+                               assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(Object[[activeSpectIndx]])         #replot the CoreLine
                            })
 
@@ -547,6 +520,7 @@ XPSAnalysis <- function() {
 
 #----- Notebook -----------------------------
   nbMain <- gnotebook(expand = FALSE, container = Pgroup1)
+
   size(nbMain) <- c(410,330)  #this are the minimal dimensions of the notebook to visualize all the widgets
 
 #----- TAB1: Baseline -----
@@ -556,11 +530,19 @@ XPSAnalysis <- function() {
 
   BaselineLyt <- glayout(spacing=1, container=T1Frame1)
   BaselineType <- gcheckboxgroup(items=BaseLines, selected=-1, spacing=1, horizontal = TRUE, handler = function(h, ...){
-                                   BType <<- setdiff(svalue(BaselineType), BType)
-                                   svalue(BaselineType) <- BType
+                                   #now make gcheckboxGroup to work as a RadioButton
+                                   Sel <- svalue(BaselineType)
+                                   if (length(Sel) == 2) { #2 clicks made on the checkboxgroup
+                                      Sel <- Sel[-which(Sel == BType)]  #recognize previous selectionand eliminate
+                                      svalue(BaselineType) <- Sel       #update gcheckboxgroup with only the last selection
+                                   } else {
+                                      gmessage("\nSelect BaseLine edges. Right button to stop slection", title="WARNING", icon="warning")
+                                      tcl("update", "idletasks")     #closes the gmessage window
+                                   }
+                                   BType <<- svalue(BaselineType)    #save the last selection
                                    if (coreline == 0) {
                                        gmessage("Please select the Core-Line to analyze!", title="WARNING", icon="warning")
-                                       svalue(BaselineType) <- ""
+                                       svalue(BaselineType) <- -1
                                        return()
                                    }
                                    if (BType=="") {
@@ -604,8 +586,8 @@ XPSAnalysis <- function() {
                                                  Marker <<- list(Points=point.coords, col=3, cex=1.15, lwd=2, pch=16)
                                                  delete(T1Frame1, T1group2)
                                                  T1group2 <<- ggroup(horizontal=FALSE, spacing=1, container = T1Frame1)
-                                                 glabel("Select the spline points DX mouse button", container=T1group2)
-                                                 cat("\n Select the spline points DX mouse button")
+                                                 glabel("Left button select spline points - Right button EXIT", container=T1group2)
+                                                 cat("\n Left button select spline points - Right button EXIT")
                                                  BLbutt <- gbutton("Make Spline Baseline", handler = function(h, ...) {
                                                  #--- Interactive mouse control ---
                                                         if (length(splinePoints$x) <= 2) {
@@ -710,11 +692,7 @@ XPSAnalysis <- function() {
                                    )  #end switch
                                    Make.Baseline()
                                    replot()
-                                   if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                       gmessage("\nSelect BaseLine edges. Right button to stop slection", title="WARNING", icon="warning")
-                                       tcl("update", "idletasks") #closes the gmessage window
-                                       GetCurPos(single=FALSE) 
-                                   }
+                                   GetCurPos(single=FALSE)
                    },container = T1Frame1)
   for(ii in 1:10) {
       tkpack.forget(BaselineType$widgets[[ii]]$button)  # unparent widgets (uses library call)
@@ -752,17 +730,9 @@ XPSAnalysis <- function() {
 
   ZRbutton<-gbutton("SET ZOOM REGION", handler = function(h, ...){
                    point.coords <<- list(x=NULL, y=NULL)   #point.coords contain the X, Y data ranges
-                   if (O.Sys == "windows") {
-                       row1<-" => Right Clicks to define the 2 ZOOM REGION CORNERS (opposite in diagonal)"
-                       row2<-"\n => Right click near corners to adjust Zoom Region Dimensions"
-                       row3<-"\n => When Zoom Region OK, press MAKE ZOOM"
-                       msg <- paste(row1, row2, row3, sep="")
-                       gmessage( msg, title="WARNING", icon="warning")
-                   } else if (O.Sys == "linux"){
-                       msg <- paste("Left click near the blue corners to adjust the zoom area", 
-                                    "\n right click to stop and select zoo area", sep="")
-                       gmessage(msg, title="WARNING", icon="warning")
-                   }
+                   msg <- paste("Left click near the blue corners to adjust the zoom area",
+                                "\n right click to stop and select zoo area", sep="")
+                   gmessage(msg, title="WARNING", icon="warning")
                    svalue(BaselineType) <- 1
                    BType <<- "linear"  #otherwise conflict between mouseRGT-selected points for zooming and for splinePoints
                    point.index <<- 3
@@ -796,7 +766,7 @@ XPSAnalysis <- function() {
                    enabled(MZbutton)<-TRUE
                    enabled(ZObutton)<-TRUE
                    replot()
-                   if (O.Sys == "linux"){ GetCurPos(single=FALSE) }
+                   GetCurPos(single=FALSE)
                 }, container = T1Frame4)
 
   MZbutton<-gbutton("  MAKE ZOOM  ", handler = function(h, ...){
@@ -871,28 +841,21 @@ XPSAnalysis <- function() {
 
 #----- Add/Delete component subtab
   T2Frame1 <- gframe(text = " Component LineShape ", spacing=1, container = T2group2)
-  fit.type <- gcombobox(FitFunct, selected = -1, handler = function(h, ...){
-                               svalue(sb) <- sprintf("Selected component type %s", svalue(h$obj))
-                               if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                   txt <- paste("1) Select the fit function. \n",
-                                           "2) Select all the positions with left mouse button. \n",
+  fit.Funct <- gcombobox(FitFunct, selected = -1, handler = function(h, ...){
+                               svalue(stat.Bar) <- sprintf("Selected component type %s", svalue(h$obj))
+                               txt <- paste("1) Select the fit function. \n",
+                                           "2) Press 'Add' button to add the fit components. \n",
+                                           "2) Left mouse button to enter the Fit component position \n",
                                            "3) Stop entering positions with rigth mouse button. \n",
-                                           "4) Press 'Add' button to add the fit components. \n",
                                            "5) Change fit function and restart from point (2).", sep="")
-                                   gmessage(msg=txt, title=" WARNING                                   ", icon="warning")
-                                   tcl("update", "idletasks") #closes the gmessage window
-                                   GetCurPos(single=FALSE)
-                               }
+                               gmessage(msg=txt, title=" WARNING                                   ", icon="warning")
+                               tcl("update", "idletasks") #closes the gmessage window
                           }, container = T2Frame1)
-  T2Frame2 <- gframe(text = " Set Fit Components ", container = T2group2, horizontal=FALSE)
+
+  T2Frame2 <- gframe(text = " Set Fit Components ", horizontal=FALSE, container = T2group2)
+  glabel(" Press 'Add' to add Fit Components", container=T2Frame2)
   add_btn <- gbutton("Add", handler = function(h, ...){
-                               if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                   add.component()
-                                   gmessage("\nSelect a new Fit Function if needed.", title="WARNING", icon="warning")
-                                   tcl("update", "idletasks") #closes the gmessage window
-                               } else {
-                                   add.component()
-                               }
+                                GetCurPos(single=FALSE)
                           }, container = T2Frame2)
 
   del_btn <- gbutton("Delete", container = T2Frame2, expand=FALSE, handler = del.component )
@@ -903,13 +866,11 @@ XPSAnalysis <- function() {
   FitComp <- gcombobox(CompNames, selected=-1, handler=function(h, ...){   #CompNames
                                compIndx <- svalue(FitComp)
                                compIndx <- unlist(strsplit(compIndx, split="C"))   #index of the selected component (numeric)
-                               compIndx <<- as.integer(compIndx[2])
+                               compIndx <<- as.integer(compIndx)
                                replot()
-                               if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                   gmessage("\nSelect the Fit Component to move. \nRight button to stop slection", title="WARNING", icon="warning")
-                                   tcl("update", "idletasks") #closes the gmessage window
-                                   GetCurPos(single=TRUE)
-                               }
+                               gmessage("\nSelect the Fit Component to move. \nRight button to stop slection", title="WARNING", icon="warning")
+                               tcl("update", "idletasks") #closes the gmessage window
+                               GetCurPos(single=FALSE)
                            }, container = T2Frame3)
 
   T2Frame4 <- gframe(text = " Display ", container = T2group3, horizontal=TRUE)
@@ -921,16 +882,6 @@ XPSAnalysis <- function() {
   plotFit <- gradio(items=c("normal", "residual"), selected=1, spacing=1, container = T2Frame5, expand = TRUE, horizontal = TRUE, handler = replot)
 
 
-#----- Graphic window dimensions -----
-  WSgroup <- ggroup(horizontal=TRUE, spacing=2, container=Pgroup1)
-  glabel("Graphic Window size: ", container=WSgroup)
-  WSvalue <- glabel(text=as.character(hscale), container=WSgroup)
-  WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = hscale, horizontal=TRUE, handler=function(h,...){
-                        WinSize <- svalue(WSize)
-                        svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
-                        replot()
-         }, container=Pgroup1)
 
 #----- SAVE&CLOSE buttons -----
   Buttlyt <- glayout(spacing=3, container=Pgroup1)
@@ -970,10 +921,6 @@ XPSAnalysis <- function() {
               }, container = Buttlyt)
 
   Buttlyt[2,1] <- gbutton("             SAVE & EXIT              ", handler=function(h,...){
-#-----            stopping mouse handler
-                  setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                  eventEnv <<- NULL
-
                   dispose(MainWindow)
                   coreline <- svalue(Core.Lines)
                   coreline <- unlist(strsplit(coreline, "\\."))
@@ -984,17 +931,13 @@ XPSAnalysis <- function() {
               }, container = Buttlyt)
 
   Buttlyt[2,2] <- gbutton("                 EXIT                 ", handler=function(h,...){
-#-----            stopping mouse handler
-                  setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                  eventEnv <<- NULL
-
-                  plot(Object[[activeSpectIndx]])  #plot selected XPSSample with all the corelines
+                  plot(Object[[activeSpectIndx]])   #plot selected XPSSample with all the corelines
                   dispose(MainWindow)
                   XPSSaveRetrieveBkp("save")
                   return()
               }, container = Buttlyt)
 
-  sb <- gstatusbar("status", container = MainWindow)
+  stat.Bar <- gstatusbar("status", container = MainWindow)
 
 
 #----- Change tab handler -----
@@ -1005,7 +948,7 @@ XPSAnalysis <- function() {
         coreline <- as.numeric(coreline[1])               #this is the coreline index
   	     if ( nbPage > 1 ) { point.coords <<- list(x = NULL, y = NULL) }
         svalue(plotFit) <- "normal"
-        svalue(sb) <- sprintf("On page %s", h$page.no)
+        svalue(stat.Bar) <- sprintf("On page %s", h$page.no)
         if (coreline > 0 && length(Object[[coreline]]@RegionToFit) > 0 ) {
             enabled(T2group1) <- TRUE
         }   #baseline already defined enable component selection
@@ -1019,17 +962,8 @@ XPSAnalysis <- function() {
   visible(MainWindow) <- TRUE
   svalue(nbComponents) <- 1
   svalue(nbMain) <- 1
-  tkevent.generate(MainWindow$widget, "<Expose>", when="now") #forces the MainWindow to be exposed
+#  tkevent.generate(MainWindow$widget, "<Expose>", when="now") #forces the MainWindow to be exposed
   tcl("update", "idletasks") #Complete the idle tasks
 #  MainWindow$set_modal(TRUE)
-
-  if (O.Sys == "windows"){
-      devset <- function(){ #returns the ID of the current active graphic device
-         if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
-      }
-      setGraphicsEventHandlers(prompt="Waiting for mouse clicks", which = dev.cur())
-      eventEnv <<- getGraphicsEvent(onMouseDown = my.coords, onKeybd = keydown)
-  }
-
 
 }

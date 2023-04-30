@@ -67,7 +67,10 @@ XPSCnvDcnv <- function(x, y, deco=FALSE){
       if ( deco == TRUE ){
            LLx <- length(x)
            LLy <- length(y)
-           y <- c(y, rep(0, (LLx-LLy)))
+           #now create two vectors x, y of same length
+           if(LLx > LLy) { y <- c(y, rep(0, (LLx-LLy))) }
+           if(LLy > LLx) { x <- c(x, rep(0, (LLy-LLx))) }
+           
            dcnv <- ( (eps + fft(x)) / (eps + fft(y)) )
            dcnv <- Re(fft(dcnv, inverse = TRUE))/LLx
            return(dcnv)

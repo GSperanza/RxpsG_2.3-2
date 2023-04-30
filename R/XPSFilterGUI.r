@@ -22,7 +22,7 @@ XPSFilter <- function() {
 
    PlotData <- function() {
       XXX <- cbind(unlist(Object@.Data[1]))
-      YYY <- cbind(unlist(Object@.Data[2]),Filtrato)
+      YYY <- cbind(unlist(Object@.Data[2]),Filtered)
       if (BkgSubtr) {
          YYY <- cbind(YYY, BackGnd)
       }
@@ -55,20 +55,20 @@ XPSFilter <- function() {
 
    alignSpect <- function(){            #levels the filtered spectrum to the original one
        LL <- length(Object@.Data[[2]])  #modifying the bacground intensity
-       dH <- Object@.Data[[2]][1] - Filtrato[1]
-       Filtrato <<- Filtrato + dH    #the filtered spectrum is overlapped to the original data
+       dH <- Object@.Data[[2]][1] - Filtered[1]
+       Filtered <<- Filtered + dH    #the filtered spectrum is overlapped to the original data
        Err <- 10    #initialize the error
-       OldErr <- sum((Object@.Data[[2]][1:10]-Filtrato[1:10])^2) +    #sum of square differences
-                 sum((Object@.Data[[2]][(LL-10):LL]-Filtrato[(LL-10):LL])^2)
+       OldErr <- sum((Object@.Data[[2]][1:10]-Filtered[1:10])^2) +    #sum of square differences
+                 sum((Object@.Data[[2]][(LL-10):LL]-Filtered[(LL-10):LL])^2)
        dH <- dH/10
-       Filtrato <<- Filtrato+dH
-       Err <- sum((Object@.Data[[2]][1:10]-Filtrato[1:10])^2) +
-              sum((Object@.Data[[2]][(LL-10):LL]-Filtrato[(LL-10):LL])^2)
+       Filtered <<- Filtered+dH
+       Err <- sum((Object@.Data[[2]][1:10]-Filtered[1:10])^2) +
+              sum((Object@.Data[[2]][(LL-10):LL]-Filtered[(LL-10):LL])^2)
        dErr <- abs(OldErr-Err)
        while(dErr > 0.0001){
-             Filtrato <<- Filtrato+dH
-             Err <- sum((Object@.Data[[2]][1:10]-Filtrato[1:10])^2) +
-                    sum((Object@.Data[[2]][(LL-10):LL]-Filtrato[(LL-10):LL])^2)
+             Filtered <<- Filtered+dH
+             Err <- sum((Object@.Data[[2]][1:10]-Filtered[1:10])^2) +
+                    sum((Object@.Data[[2]][(LL-10):LL]-Filtered[(LL-10):LL])^2)
              if (Err > OldErr) dH <- -dH/2
              if (abs(dH) < 10^-4) {
                  break
@@ -80,12 +80,12 @@ XPSFilter <- function() {
 
    normalize <- function(data){
       FiltLgth <- 2*7+1
-      coefficenti <- sgolay(p=1, n=FiltLgth, m=0, ts=1) #7 coefficient for Sawitzky-Golay filtering
+      coeff <- sgolay(p=1, n=FiltLgth, m=0, ts=1) #7 coefficient for Sawitzky-Golay filtering
       data <- unlist(data)
       LL <- length(data)
       #compute averaged noise free value around the data minimum
       data <- c(rep(data[1],FiltLgth), data, rep(data[LL],FiltLgth)) #FiltLgth Padding at edges
-      FFF <- filter(filt=coefficenti, x=data) #Savitzky-Golay filtering
+      FFF <- filter(filt=coeff, x=data) #Savitzky-Golay filtering
       data <- data[(FiltLgth+1):(LL+FiltLgth)]
       Min <- min(FFF)
       Max <- max(FFF)
@@ -103,35 +103,37 @@ XPSFilter <- function() {
       SaveAmpli <<- FALSE         #do not preserve ampliture range of original data
       data <- normalize(data)
       data <- data*(max(Object@.Data[[2]]) - min(Object@.Data[[2]]))+ min(Object@.Data[[2]])
-
       FF1 <- data[1:NN]
       FF2 <- data[(LL-NN):LL]
-      YY1 <- unlist(Object@.Data[[2]][1:NN])
-      YY2 <- unlist(Object@.Data[[2]][(LL-NN):LL])
+      avg  <- mean(data)/2
+      #if edges of spectra are highly unleveled skip last refinement
+      if(mean(FF1) < avg && mean(FF2) < avg){
+         YY1 <- unlist(Object@.Data[[2]][1:NN])
+         YY2 <- unlist(Object@.Data[[2]][(LL-NN):LL])
 
-      if (BkgSubtr) {
-          YY1 <- unlist((Object@.Data[[2]]-BackGnd)[1:NN])
-          YY2 <- unlist((Object@.Data[[2]]-BackGnd)[(LL-NN):LL])
-      }
-
-      treshold <- sum((YY1-mean(YY1))^2)/NN
-      Scarto <- sum(YY1-FF1)^2 + sum(YY2-FF2)^2
-      SS <- Scarto+1  #just to enter in the while loop
-      dCC <- -0.05
-      CC <- 1
-
-      while (SS > treshold){
-         CC <- CC+dCC
-         oldSS <- SS
-         FF1 <- data[1:NN]*CC
-         FF2 <- data[(LL-20):LL]*CC
-         SS <- sum(YY1-FF1)^2 + sum(YY2-FF2)^2
-         if (abs(SS-oldSS) < 10^-4) {
-             break
+         if (BkgSubtr) {
+             YY1 <- unlist((Object@.Data[[2]]-BackGnd)[1:NN])
+             YY2 <- unlist((Object@.Data[[2]]-BackGnd)[(LL-NN):LL])
          }
-         if (SS > oldSS) dCC <- -dCC/2
+         treshold <- sum((YY1-mean(YY1))^2)/NN
+         Scarto <- sum(YY1-FF1)^2 + sum(YY2-FF2)^2
+         SS <- Scarto+1  #just to enter in the while loop
+         dCC <- -0.05
+         CC <- 1
+
+         while (SS > treshold){
+            CC <- CC+dCC
+            oldSS <- SS
+            FF1 <- data[1:NN]*CC
+            FF2 <- data[(LL-NN):LL]*CC
+            SS <- sum(YY1-FF1)^2 + sum(YY2-FF2)^2
+            if (abs(SS-oldSS) < 10^-4) {
+                break
+            }
+            if (SS > oldSS) dCC <- -dCC/2
+         }
+         data <- data*CC
       }
-      data <- data*CC
       return(data)
    }
 
@@ -140,7 +142,7 @@ XPSFilter <- function() {
 #amplitude filtered data does not correspond to that of original data: matching is needed
       LL <- length(Object@.Data[[2]])
       BkgSubtraction(Object@.Data[[2]])  #To Define just the background
-      coefficenti <- sgolay(p=1, n=(2*7+1), ts=1) #7 coefficient for Sawitzky-Golay filtering
+      coeff <- sgolay(p=1, n=(2*7+1), ts=1) #7 coefficient for Sawitzky-Golay filtering
 #Padding data at edges: adds a number of data corresponding to the N. coeff Sawitzki-Golay filter.
 #to avoid negative indexing when min(data( corresponds to 1 or LL
       BackGndO <- BackGnd
@@ -154,19 +156,19 @@ XPSFilter <- function() {
       indx <- which(XXX == Min)
       rng <- 10
       while ( (indx+rng)>LL || (indx-rng)<0) { rng <- rng-1 }
-      FFF <- filter(filt=coefficenti, x=XXX[(indx-rng):(indx+rng)]) #Savitzky-Golay filtering  BKG subtr original data
+      FFF <- filter(filt=coeff, x=XXX[(indx-rng):(indx+rng)]) #Savitzky-Golay filtering  BKG subtr original data
       Min <- min(FFF)
 
       Max <- max(XXX)      #maximum of BKG subtracted original data Object@.Data[[2]]
       indx <- which(XXX == Max)
       rng <- 10
       while ( (indx+rng)>LL || (indx-rng)<0) { rng <- rng-1 }
-      FFF <- filter(filt=coefficenti, x=XXX[(indx-rng):(indx+rng)]) #Savitzky-Golay filtering
+      FFF <- filter(filt=coeff, x=XXX[(indx-rng):(indx+rng)]) #Savitzky-Golay filtering
       Max <- max(FFF)
       AmpliFact <- Max-Min              #amplification factor
 
 #Do the same for filtered data
-      XXX <- BkgSubtraction(Filtrato)  #To Define just the background
+      XXX <- BkgSubtraction(Filtered)  #To Define just the background
       BackGndF <- BackGnd
       minF <- min(XXX)      #minimum of BKG subtracted filtered data
       indx <- which(XXX == minF)
@@ -195,13 +197,13 @@ XPSFilter <- function() {
       FiltInfo <<- paste("Savitzky Golay, Degree: ", svalue(F2FiltDeg), sep="")
       BkgSubtr <<- svalue(BkgSubtr2)
       FiltLgth <- as.numeric(svalue(F2FiltDeg))
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      LL <- length(DaFiltrare)
+      RawData <<- unlist(Object@.Data[[2]])
+      LL <- length(RawData)
       FiltLgth <- 2*FiltLgth+1
-      DaFiltrare <<- c(rep(DaFiltrare[1],FiltLgth), DaFiltrare, rep(DaFiltrare[LL],FiltLgth)) #FiltLgth Padding at edges
-      Filtrato <<- NULL
-      coefficenti <<- NULL
-      coefficenti <<- sgolay(p=1, n=FiltLgth, m=0, ts=1)
+      RawData <<- c(rep(RawData[1],FiltLgth), RawData, rep(RawData[LL],FiltLgth)) #FiltLgth Padding at edges
+      Filtered <<- NULL
+      coeff <<- NULL
+      coeff <<- sgolay(p=1, n=FiltLgth, m=0, ts=1)
       #Be careful: sgolay provides a matrix of coeff. and you can get the smoothed value y[k] as y[k] = F[i,] * x[(k-i+1):(k+N-i)]
       #y[k] does not depend on i. The filtering must be symmetric with respect to the central value k
       #SG acts as a weighted sum of values of n data preceding the k point and n following data. In tital 2n+1 values = filter length
@@ -224,11 +226,11 @@ XPSFilter <- function() {
       #Same result is obtained using y=filter(F[1, ], a=1, x=Data)  where a=1 eliminates the autoregressive iteration requiring the whole F matrix
 
       if (BkgSubtr) {
-         DaFiltrare <<- BkgSubtraction(DaFiltrare)
+         RawData <<- BkgSubtraction(RawData)
       }
-      Filtrato <<- filter(filt=coefficenti, x=DaFiltrare) #Savitzky-Golay filtering
-      Filtrato <<- Filtrato[(FiltLgth+1) : (FiltLgth+LL)]
-      coefficenti <<- coefficenti[1, ] #select just the 1st row of SG coeff.
+      Filtered <<- filter(filt=coeff, x=RawData) #Savitzky-Golay filtering
+      Filtered <<- Filtered[(FiltLgth+1) : (FiltLgth+LL)]
+      coeff <<- coeff[1, ] #select just the 1st row of SG coeff.
       PlotData()
       return()
    }                                 
@@ -239,46 +241,63 @@ XPSFilter <- function() {
       BkgSubtr <<- svalue(BkgSubtr3)
       FilterType <- svalue(F3FiltType)
       FiltLgth <- as.numeric(svalue(F3FiltDeg))    #Filter length
-      coefficenti <<- NULL
-      Filtrato <<- NULL
+      coeff <<- NULL
+      Filtered <<- NULL
       BackGnd <<- NULL
       #preprocessing
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      LL <- length(DaFiltrare)
-      if (BkgSubtr) { DaFiltrare <<- BkgSubtraction(DaFiltrare) }
+      RawData <<- unlist(Object@.Data[[2]])
+      LL <- length(RawData)
+      if (BkgSubtr) { RawData <<- BkgSubtraction(RawData) }
       #now filtering
       if (FilterType=="AutoRegressive"){
 #--- Autoregressive filter
          SaveAmpli <<- TRUE
-         DaFiltrare <<- normalize(DaFiltrare)         
-         DaFiltrare <<- c(rep(DaFiltrare[1],2*FiltLgth), DaFiltrare, rep(DaFiltrare[LL],2*FiltLgth)) #2*FiltLgth Padding at edges
-         coefficenti <<- rep(1/(2*FiltLgth+1),(2*FiltLgth+1))
-         Filtrato <<- stats::filter(x=DaFiltrare, filter=coefficenti,  sides=2, method="convolution", circular=FALSE)  #voglio usare FILTER pacchetto STATS non pacchetto SIGNAL
-         Filtrato <<- Filtrato[(2*FiltLgth+1) : (LL+2*FiltLgth)]
+         RawData <<- c(rep(RawData[1],2*FiltLgth), RawData, rep(RawData[LL],2*FiltLgth)) #FiltLgth Padding at edges
+         Ndta <- length(RawData)
+         Filtered <<- array(data=0, dim=Ndta)
+         #define the AR coefficents
+         if(FiltLgth == 1){
+            coeff <<- 1
+         } else if(FiltLgth == 2){
+            coeff <<- c(1, 0.25)
+         } else if(FiltLgth > 2){
+            P <- FiltLgth-1
+            for(ii in P:0){
+                coeff[(P-ii+1)] <<- 1/P*sinpi(0.5*ii/P)
+            }
+         }
+         #now apply the AR filter
+         for(ii in (FiltLgth+1):Ndta){
+             sum <- 0
+             for(jj in 2:FiltLgth){
+                 sum <- sum + coeff[jj]*Filtered[(ii-jj+1)]
+             }
+             Filtered[ii] <<- sum + coeff[1]*RawData[ii]
+         }
+         Filtered <<- Filtered[(2*FiltLgth+1) : (LL+2*FiltLgth)]
          #now set correct amplitude of filtered data
-         Filtrato <<- resize(Filtrato)   #match the amplitude of Filtered with the original data
+         Filtered <<- resize(Filtered)   #match the amplitude of Filtered with the original data
       } else if (FilterType=="MovingAverage") {
 #--- Moving average filter
-         coefficenti <<- rep(1/(2*FiltLgth+1),(2*FiltLgth+1))  #1/FiltLgth because of the average
-         DaFiltrare <<- c(rep(DaFiltrare[1],FiltLgth), DaFiltrare, rep(DaFiltrare[LL],FiltLgth)) #FiltLgth Padding at edges
+         coeff <<- rep(1/(2*FiltLgth+1),(2*FiltLgth+1))  #1/FiltLgth because of the average
+         RawData <<- c(rep(RawData[1],FiltLgth), RawData, rep(RawData[LL],FiltLgth)) #FiltLgth Padding at edges
          for(ii in 1:LL){
-             Filtrato[ii] <<- mean(DaFiltrare[ii:(ii+2*FiltLgth)]) #Forward filtering
+             Filtered[ii] <<- mean(RawData[ii:(ii+2*FiltLgth)]) #Forward filtering
          }
       }
-      if (BkgSubtr) { Filtrato <<- Filtrato + BackGnd }
-#      PlotData()
-#      return()
-#recover AutoRegressive filter distoritions on signal amplitude
-      if (FilterType=="AutoRegressive"){
-         Filtrato <<- BkgSubtraction(Filtrato)
-         Filtrato <<- normalize(Filtrato)
-         Filtrato <<- Filtrato-0.5*(mean(Filtrato[1:5]) + mean(Filtrato[(LL-5):LL])) #shift the Filtrato edges at zero
-         tmp <- BkgSubtraction(Object@.Data[[2]])
+      if (BkgSubtr) { Filtered <<- Filtered + BackGnd }
+#recover AutoRegressive filter distortions on signal amplitude
+      if (svalue(MatchEdges3)){
+         Filtered <<- BkgSubtraction(Filtered)
+         Filtered <<- normalize(Filtered)
+
+         Filtered <<- Filtered-0.5*(mean(Filtered[1:5]) + mean(Filtered[(LL-5):LL])) #shift the Filtered edges at zero
+         BackGnd <- BkgSubtraction(Object@.Data[[2]])
          SaveAmpli <<- TRUE
-         tmp <- normalize(tmp)
-         A1 <- SigAmpli[2]-SigAmpli[1]
-         Filtrato <<- Filtrato*A1         #Adapt filtered signal on the bckgnd subtracted original signal
-         Filtrato <<- Filtrato + BackGnd  #add the background of the original data
+         normalize(Object@.Data[[2]]-BackGnd)
+         A1 <- SigAmpli[2]-SigAmpli[1]    #with SaveAmpli=TRUE normalize() returns also SigAmpli=c(min, max)
+         Filtered <<- Filtered*A1         #Adapt filtered signal on the bckgnd subtracted original signal
+         Filtered <<- Filtered + BackGnd  #add the background of the original data
       }
       PlotData()
       return()
@@ -289,28 +308,28 @@ XPSFilter <- function() {
       BkgSubtr <<- svalue(BkgSubtr3)
       FilterType <- svalue(F3FiltType)
       FO <- as.numeric(svalue(F3FiltDeg))
-      coefficenti <<- NULL
-      Filtrato <<- NULL
+      coeff <<- NULL
+      Filtered <<- NULL
       BackGnd <<- NULL
       #preprocessing
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      LL <- length(DaFiltrare)
-      if (BkgSubtr) { DaFiltrare <<- BkgSubtraction(DaFiltrare) }
+      RawData <<- unlist(Object@.Data[[2]])
+      LL <- length(RawData)
+      if (BkgSubtr) { RawData <<- BkgSubtraction(RawData) }
       SaveAmpli <<- TRUE
-      DaFiltrare <<- normalize(DaFiltrare)
+      RawData <<- normalize(RawData)
       #now filtering
       tmp1 <- NULL
       tmp2 <- NULL
       FFO <- FO/(15+1)  #input degree of moving average filter [0.1 : 0.99]
-      coefficenti <<- c(FFO, 1-FFO)
-      LL <- length(DaFiltrare)
-      tmp1[1] <- DaFiltrare[1]
-      tmp2[LL] <- DaFiltrare[LL]
+      coeff <<- c(FFO, 1-FFO)
+      LL <- length(RawData)
+      tmp1[1] <- RawData[1]
+      tmp2[LL] <- RawData[LL]
       for(ii in 2:LL){
-          tmp1[ii]=FFO*tmp1[ii-1] + (1-FFO)*DaFiltrare[ii];              #forward filtering
-          tmp2[LL-ii+1]=FFO*tmp2[LL-ii+2]+(1-FFO)*DaFiltrare[LL-ii+1];   #backward filtering
+          tmp1[ii]=FFO*tmp1[ii-1] + (1-FFO)*RawData[ii];              #forward filtering
+          tmp2[LL-ii+1]=FFO*tmp2[LL-ii+2]+(1-FFO)*RawData[LL-ii+1];   #backward filtering
       }
-      Filtrato <<- (tmp1+tmp2)/2
+      Filtered <<- (tmp1+tmp2)/2
    }
    
 
@@ -335,36 +354,36 @@ XPSFilter <- function() {
       FiltInfo <<- paste("FFT filter, Degree: ", svalue(F4FiltDeg), sep="")
       BkgSubtr <<- svalue(BkgSubtr4)
       FiltLgth <- as.numeric(svalue(F4FiltDeg))
-      DaFiltrare <<- NULL
-      Filtrato <<- NULL
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      LL <- length(DaFiltrare)
+      RawData <<- NULL
+      Filtered <<- NULL
+      RawData <<- unlist(Object@.Data[[2]])
+      LL <- length(RawData)
       if (floor(LL/2) < ceiling(LL/2)){ #if LL is ODD
-          DaFiltrare[LL+1] <<- DaFiltrare[LL]   #then DaFiltrare has a LL+1 even number of data
+          RawData[LL+1] <<- RawData[LL]   #then RawData has a LL+1 even number of data
       }
       #preprocessing
-      if (BkgSubtr) DaFiltrare <- BkgSubtraction(DaFiltrare) #background subtraction to avoid FFT spourious oscillations
+      if (BkgSubtr) RawData <- BkgSubtraction(RawData) #background subtraction to avoid FFT spourious oscillations
       #now filtering
       NPad <- 20 #for FFT filter zero padding must be independent on the filrer order
       if( 20 > LL/2) NPad <- floor(LL/2)
-      DaFiltrare <<- c(rep(DaFiltrare[1],NPad), DaFiltrare, rep(DaFiltrare[LL],NPad)) #NPad Padding at edges
-      LL_DF <- length(DaFiltrare)     #LL_DF is even
+      RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #NPad Padding at edges
+      LL_DF <- length(RawData)     #LL_DF is even
 
-      stopF <- 0.5*(15-FiltLgth+1)/15   #for rejection noise=1 the cutoff freq=0.5=Nyquist Freq., for rejection=15 cutoff freq=1/15*0.5 = 0.0333
-      dF <- 0.5/(LL_DF*0.5)             #FFT is composed by LL_DF/2 points; from 1+LL_DF/2 to LL_DF the FFT is specular to the first half
-      freq <- seq(from=0, to=0.5, by=dF)  #frequency axis from 0 to 0.5 step dF same length of DaFiltrare
+      stopF <- 0.5* FiltLgth/15   #for rejection noise=1 the cutoff freq=0.5=Nyquist Freq., for rejection=15 cutoff freq=1/15*0.5 = 0.0333
+      dF <- 0.5/(LL_DF*0.5)               #FFT is composed by LL_DF/2 points; from 1+LL_DF/2 to LL_DF the FFT is specular to the first half
+      freq <- seq(from=0, to=0.5, by=dF)  #frequency axis from 0 to 0.5 step dF same length of RawData
       idx <- length(which(freq <= stopF)) #idx is the array index corresponding to frequency <= stopF
-      fftTransf <- fft(DaFiltrare)/LL_DF  #FFT must be devided by its length as indicated in the FFT R-documentation
+      fftTransf <- fft(RawData)/LL_DF  #FFT must be devided by its length as indicated in the FFT R-documentation
 #      Hann <- HannWin(idx, (LL_DF-idx))
-      fftRej <- fftTransf[(idx+1):(LL_DF-idx)] #also fftRej has an even number of data
+      fftRej <- fftTransf[1:idx] #also fftRej has an even number of data
       LLr <- length(fftRej)/2
       fftTransf[(idx+1):(LL_DF-idx)] <- 0+0i   #low filtering: force to zero frequencies > stopF in the first and second  half of the FFT
 #     we want to characterize the rejected part of the signal corresponding to the
 #     FFT coeff of the rejected frequencies
-      coefficenti <<- Mod(fftRej[1:LLr]) #consider only the first half the second half is specular
-      coefficenti <<- coefficenti/sum(coefficenti)
-      Filtrato <<- Re(fft(fftTransf, inverse = TRUE))
-      Filtrato <<- Filtrato[(NPad+1) : (NPad+LL)]
+      coeff <<- Mod(fftRej[1:LLr]) #consider only the first half the second half is specular
+      coeff <<- coeff/sum(coeff)
+      Filtered <<- Re(fft(fftTransf, inverse = TRUE))
+      Filtered <<- Filtered[(NPad+1) : (NPad+LL)]
       PlotData()
       return()
    }
@@ -374,19 +393,19 @@ XPSFilter <- function() {
       import::from(wavelets, mra, dwt) #cannot use import::here because rootSolve not listed in DESCRIPTION
 #      mra <- wavelets::mra
 #      dwt <- wavelets::dwt
-      DaFiltrare <<- NULL
-      Filtrato <<- NULL
-      coefficenti <<- NULL
+      RawData <<- NULL
+      Filtered <<- NULL
+      coeff <<- NULL
       WTnum <- 2*as.numeric(svalue(F5WTnum))   #This defines the N. Daubechies wavelets of the transform
       NPad <- 4*as.numeric(svalue(F5WTnum))      #This defines the N.ZeroPadding data
       RejLev <- as.numeric(svalue(F5WTLevel))  #this defines the level of noise rejection
 #     preprocessing
-      DaFiltrare <<- (Object@.Data[[2]])
-      if (BkgSubtr) DaFiltrare <<- BkgSubtraction(DaFiltrare)
+      RawData <<- (Object@.Data[[2]])
+      if (BkgSubtr) RawData <<- BkgSubtraction(RawData)
       FiltAmpli <<- TRUE
-#      DaFiltrare <<- normalize(DaFiltrare)
-      LL <- length(DaFiltrare)
-      DaFiltrare <<- c(rep(DaFiltrare[1],NPad), DaFiltrare, rep(DaFiltrare[LL],NPad)) #NPad Padding at edges
+#      RawData <<- normalize(RawData)
+      LL <- length(RawData)
+      RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #NPad Padding at edges
       #now filtering
       WTfilt <- paste("d", WTnum, sep="")  #d2 means Daubechies length=2,  d8 means Daubechies length=8
 #      maximum level according to the length(x) and selected filter degree WTnum
@@ -396,29 +415,29 @@ XPSFilter <- function() {
       if (RejLev > maxLevels){
          gmessage("Attention: Nlevel must be < 1/2 * Filter Order", title="BAD DEGREE OF NOISE REJECTION", icon="error")
       }
-      Response <- mra(DaFiltrare, filter = WTfilt, n.levels = maxLevels,
+      Response <- mra(RawData, filter = WTfilt, n.levels = maxLevels,
                       method = "modwt", boundary="periodic", fast=TRUE)
       Response <- sapply(c(Response@D[RejLev], Response@S[RejLev]), cbind)
-      Filtrato <<- rowSums(Response)
-      Filtrato <<- Filtrato[(NPad+1):(LL+NPad)] #eliminates head and tail padded values
+      Filtered <<- rowSums(Response)
+      Filtered <<- Filtered[(NPad+1):(LL+NPad)] #eliminates head and tail padded values
 
-      LL <- length(DaFiltrare)
-      while(log2(LL) < 10){  #increase the length of DaFiltrare till to allow dwt - Nlevels=10
-          DaFiltrare <<- c(rep(DaFiltrare[1],NPad), DaFiltrare, rep(DaFiltrare[LL],NPad)) #NPad Padding at edges
-          LL <- length(DaFiltrare)
+      LL <- length(RawData)
+      while(log2(LL) < 10){  #increase the length of RawData till to allow dwt - Nlevels=10
+          RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #NPad Padding at edges
+          LL <- length(RawData)
       }
-      Response <- dwt(DaFiltrare, filter = WTfilt, n.levels = maxLevels, boundary="periodic", fast=TRUE)
+      Response <- dwt(RawData, filter = WTfilt, n.levels = maxLevels, boundary="periodic", fast=TRUE)
       ff <- 10-RejLev+1
-      coefficenti <<- Response@V[[ff]]/sum(Response@V[[ff]]) #the higher the level selected for Response@V the higher the detail degree
+      coeff <<- Response@V[[ff]]/sum(Response@V[[ff]]) #the higher the level selected for Response@V the higher the detail degree
       PlotData()
       return()
    }
 
    FirFilt <- function() {
       FiltInfo <<- paste("FIR filter, ", svalue(F6FiltOrder), ", Degree: ", CutOFF, sep="")
-      coefficenti <<- NULL
-      DaFiltrare <<- NULL
-      Filtrato <<- NULL
+      coeff <<- NULL
+      RawData <<- NULL
+      Filtered <<- NULL
       BkgSubtr <<- svalue(BkgSubtr6)
       FiltLgth <- as.numeric(svalue(F6FiltOrder))
       NPad <- 2*FiltLgth
@@ -429,52 +448,52 @@ XPSFilter <- function() {
       CutOFF <<- (20.001-CutOFF)/20    #here cut-off were freq/Nyquist
       BackGnd <<- NULL
       #preprocessing
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      LL <- length(DaFiltrare)
+      RawData <<- unlist(Object@.Data[[2]])
+      LL <- length(RawData)
 #function filtfilt zeropadds the ends of the array introducing distortions if the signal
 #intensity is different form zero leading to a discontinuity. FIR filter needs background subtraction
-      if (BkgSubtr) DaFiltrare <<- BkgSubtraction(DaFiltrare)
+      if (BkgSubtr) RawData <<- BkgSubtraction(RawData)
       #now filtering
-      DaFiltrare <<- c(rep(DaFiltrare[1],NPad), DaFiltrare, rep(DaFiltrare[LL],NPad)) #N,coeff = 2*FiltLgth = NPad padding at edges
-      coefficenti <<- fir1(n=FiltLgth, w=CutOFF, type = "low", window = hamming(FiltLgth+1), scale = TRUE)
-      Filtrato <<- filtfilt(filt=coefficenti, x=DaFiltrare)
-      Filtrato <<- Filtrato[(NPad+1):(NPad+LL)]          #eliminates initial and end padded values
-      if (BkgSubtr) Filtrato <<- Filtrato + BackGnd  #after filtering add background
+      RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #N,coeff = 2*FiltLgth = NPad padding at edges
+      coeff <<- fir1(n=FiltLgth, w=CutOFF, type = "low", window = hamming(FiltLgth+1), scale = TRUE)
+      Filtered <<- filtfilt(filt=coeff, x=RawData)
+      Filtered <<- Filtered[(NPad+1):(NPad+LL)]          #eliminates initial and end padded values
+      if (BkgSubtr) Filtered <<- Filtered + BackGnd  #after filtering add background
 
 #recover filter distoritions on signal amplitude
-      Filtrato <<- BkgSubtraction(Filtrato)
-      Filtrato <<- normalize(Filtrato)
-      Filtrato <<- Filtrato-0.5*(mean(Filtrato[1:5]) + mean(Filtrato[(LL-5):LL])) #shift the Filtrato edges at zero
+      Filtered <<- BkgSubtraction(Filtered)
+      Filtered <<- normalize(Filtered)
+      Filtered <<- Filtered-0.5*(mean(Filtered[1:5]) + mean(Filtered[(LL-5):LL])) #shift the Filtered edges at zero
       tmp <- BkgSubtraction(Object@.Data[[2]])
       SaveAmpli <<- TRUE
       tmp <- normalize(tmp)
       A1 <- SigAmpli[2]-SigAmpli[1]
-      Filtrato <<- Filtrato*A1         #Adapt filtered signal on the bckgnd subtracted original signal
-      Filtrato <<- Filtrato + BackGnd  #add the background of the original data
+      Filtered <<- Filtered*A1         #Adapt filtered signal on the bckgnd subtracted original signal
+      Filtered <<- Filtered + BackGnd  #add the background of the original data
       PlotData()
       return()
    }
 
    ButtFilt <- function() {
       FiltInfo <<- paste("Butterworth filter, ", svalue(F7FiltOrder), ", Degree: ", svalue(F7CutOFF), sep="")
-      coefficenti <<- NULL
-      DaFiltrare <<- NULL
-      Filtrato <<- NULL
+      coeff <<- NULL
+      RawData <<- NULL
+      Filtered <<- NULL
       BkgSubtr <<- svalue(BkgSubtr7)
       FiltLgth <- as.numeric(svalue(F7FiltOrder))
       NPad <- FiltLgth*CutOFF
       if (NPad < 30) NPad <- 30      #minimum number of padding elements
       CutOFF <<- (20.5-CutOFF)/20    #here cut-off were freq/Nyquist for example 40/500Hz (sampling freq = 1kHz) where 40Hz is adapted to the typical XPS noise
       #preprocessing
-      DaFiltrare <<- unlist(Object@.Data[[2]])
-      if (BkgSubtr) DaFiltrare <<- BkgSubtraction(DaFiltrare)
-      LL <- length(DaFiltrare)
-      DaFiltrare <<- c(rep(DaFiltrare[1],NPad), DaFiltrare, rep(DaFiltrare[LL],NPad)) #WTdeg Padding at edges
+      RawData <<- unlist(Object@.Data[[2]])
+      if (BkgSubtr) RawData <<- BkgSubtraction(RawData)
+      LL <- length(RawData)
+      RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #WTdeg Padding at edges
 
       #now filtering
-      coefficenti <<- butter(n=FiltLgth, W=CutOFF, type = "low", window = hamming(FiltLgth+1), scale = TRUE)
-      Filtrato <<- filtfilt(filt=coefficenti, x=DaFiltrare)
-      Filtrato <<- Filtrato[(NPad+1):(NPad+LL)]    #eliminates initial and end padded values
+      coeff <<- butter(n=FiltLgth, W=CutOFF, type = "low", window = hamming(FiltLgth+1), scale = TRUE)
+      Filtered <<- filtfilt(filt=coeff, x=RawData)
+      Filtered <<- Filtered[(NPad+1):(NPad+LL)]    #eliminates initial and end padded values
       #now set correct amplitude of filtered data
       PlotData()
       return()
@@ -540,9 +559,9 @@ XPSFilter <- function() {
    Object <- FName[[SpectIndx]]
    SpectList <- XPSSpectList(ActiveFName)
 
-   DaFiltrare <- NULL
-   Filtrato <- NULL
-   coefficenti <- NULL
+   RawData <- NULL
+   Filtered <- NULL
+   coeff <- NULL
    CutOFF <- NULL
    FiltResp <- NULL
    BackGnd <- NULL
@@ -631,12 +650,12 @@ XPSFilter <- function() {
                  }, container = F2group3)
 
    F2Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti, Fs=1)
+                     FiltResp <- freqz(filt=coeff, Fs=1)
                      plot(FiltResp)
                  }, container = F2group3)
 
 # --- Tab2 ---
-   F3group1 <- ggroup(label=" AUTOREGRESSIVE : MOVING AVERAGE ", spacing=1, horizontal=FALSE, container=nb1)
+   F3group1 <- ggroup(label=" AutoRegressive : Moving Average ", spacing=1, horizontal=FALSE, container=nb1)
    enabled(F3group1) <- FALSE
    F3group2 <- ggroup(label="  ", horizontal=TRUE, container=F3group1)
    F3frame1 <- gframe(text=" Select Filter Type ", spacing=5, container=F3group2)
@@ -645,11 +664,12 @@ XPSFilter <- function() {
                  }, container = F3frame1)
 
    F3frame2 <- gframe(text="Degree of Noise Rejection", spacing=5, container=F3group2)
-   F3FiltDeg <- gcombobox(c(1:15), selected=-1, editable=FALSE, handler=function(h,...){
+   F3FiltDeg <- gcombobox(c(2:15), selected=-1, editable=FALSE, handler=function(h,...){
                      enabled(F3filter) <- TRUE
                  }, container = F3frame2)
 
    BkgSubtr3 <- gcheckbox("BKG Subtraction", checked=FALSE, container=F3group2)
+   MatchEdges3 <- gcheckbox("Match Edges", checked=FALSE, container=F3group2)
 
    F3group3 <- ggroup(label="  ",horizontal=TRUE, container=F3group1)
    F3filter <- gbutton(" FILTER ", handler=function(h,...){
@@ -658,9 +678,15 @@ XPSFilter <- function() {
                      enabled(SaveButt) <- TRUE
                      enabled(SaveTestButt) <- TRUE
                  }, container = F3group3)
-                 
+
    F3Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti, a=1, whole=FALSE, Fs=1)
+                     if(svalue(F3FiltType) == "AutoRegressive"){
+                        FiltLgth <- as.numeric(svalue(F3FiltDeg))                     
+                        FiltResp <- freqz(filt=coeff, a=1, region="half", Fs=1) #signal::impz(filt=1, a=coeff)
+                     } else {
+
+                        FiltResp <- freqz(filt=coeff, a=1, region="half", Fs=1)
+                     }
                      plot(FiltResp)
                  }, container = F3group3)
 
@@ -684,7 +710,7 @@ XPSFilter <- function() {
                  }, container = F4group3)
 
    F4Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti, a=1, whole=FALSE, Fs=1)
+                     FiltResp <- freqz(filt=coeff, a=1, whole=FALSE, Fs=1)
                      plot(FiltResp)
                  }, container = F4group3)
 
@@ -716,7 +742,7 @@ XPSFilter <- function() {
                  }, container = F5group2)
 
    F5Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti, a=1, whole=FALSE, Fs=1)  #this is the LOW-PASS filter frequency response
+                     FiltResp <- freqz(filt=coeff, a=1, region="half", Fs=1)  #this is the LOW-PASS filter frequency response
                      plot(FiltResp)                                            #these high frequencies are filtered-out from the spectrum
                  }, container = F5group2)
 
@@ -761,7 +787,7 @@ XPSFilter <- function() {
                  }, container = F6group3)
 
    F6Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti, a=1, n=512, whole=FALSE, Fs=1)
+                     FiltResp <- freqz(filt=coeff, a=1, n=512, region="half", Fs=1)
                      plot(FiltResp)
                  }, container = F6group3)
 
@@ -804,7 +830,7 @@ XPSFilter <- function() {
                  }, container = F7group3)
 
    F6Response <- gbutton(" FREQ. RESPONSE ", handler=function(h,...){
-                     FiltResp <- freqz(filt=coefficenti$b, a=coefficenti$a, n=512, whole=FALSE, Fs=1)
+                     FiltResp <- freqz(filt=coeff$b, a=coeff$a, n=512, region="half", Fs=1)
                      plot(FiltResp)
                  }, container = F7group3)
 
@@ -830,18 +856,18 @@ XPSFilter <- function() {
                         FName[[NCL+1]]@Info <<- Info
                     }
                     FName@names <<- c(CLNames,Symbol)
-                    FName[[NCL+1]]@.Data[[2]] <<- Filtrato
+                    FName[[NCL+1]]@.Data[[2]] <<- Filtered
                     if (length(FName[[SpectIndx]]@RegionToFit$y>0)){ #RegionToFit defined
                        rng <- range(FName[[SpectIndx]]@RegionToFit$x)
                        if (Object@Flags[1]==TRUE) {rng <- rev(rng)}    #Binding energy set
                        idx1 <- which(FName[[TestIdx]]@.Data[[1]] == rng[1])
                        idx2 <- which(FName[[TestIdx]]@.Data[[1]] == rng[2])
-                       FName[[TestIdx]]@RegionToFit$y <<- Filtrato[idx1:idx2]
+                       FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                     }
                     assign(ActiveFName, FName,envir=.GlobalEnv)   #save XPSSample with additional smoothed coreline
 #                    assign("activeSpectIndx", (NCL+1), envir=.GlobalEnv)      #set the activeSpectIndx be the smoothed core line
-                    DaFiltrare <<- NULL
-                    Filtrato <<- NULL
+                    RawData <<- NULL
+                    Filtered <<- NULL
                     BackGnd <<- NULL
                     plot(FName)
                     XPSSaveRetrieveBkp("save")
@@ -849,13 +875,13 @@ XPSFilter <- function() {
 
    SaveButt <- gbutton(" SAVE IN THE ORIGINAL CORE LINE", spacing=1, handler=function(h,...){  #Original data replaced by Filterd data
                     SpectIndx <- get("activeSpectIndx",.GlobalEnv)
-                    FName[[SpectIndx]]@.Data[[2]] <<- Filtrato
+                    FName[[SpectIndx]]@.Data[[2]] <<- Filtered
                     if (length(FName[[SpectIndx]]@RegionToFit$y>0)){ #RegionToFit defined
                        rng <- range(FName[[SpectIndx]]@RegionToFit$x)
                        if (Object@Flags[1]==TRUE) {rng <- rev(rng)}    #Binding energy set
                        idx1 <- which(FName[[TestIdx]]@.Data[[1]] == rng[1])
                        idx2 <- which(FName[[TestIdx]]@.Data[[1]] == rng[2])
-                       FName[[TestIdx]]@RegionToFit$y <<- Filtrato[idx1:idx2]
+                       FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                     }
                     Info <- FName[[SpectIndx]]@Info
 #                    xxx <- grep("Smoothing:", Info)     #is the Test Filtering already present?
@@ -908,26 +934,26 @@ XPSFilter <- function() {
                           FName[[TestIdx]]@Info <<- Info
                        }
                     }
-                    FName[[TestIdx]]@.Data[[2]] <<- Filtrato         #change the original data with the filtered data
+                    FName[[TestIdx]]@.Data[[2]] <<- Filtered         #change the original data with the filtered data
                     if (length(FName[[SpectIndx]]@RegionToFit$y>0)){ #RegionToFit defined
                        rng <- range(FName[[SpectIndx]]@RegionToFit$x)
                        if (Object@Flags[1]==TRUE) {rng <- rev(rng)}    #Binding energy set
                        idx1 <- which(FName[[TestIdx]]@.Data[[1]] == rng[1])
                        idx2 <- which(FName[[TestIdx]]@.Data[[1]] == rng[2])
-                       FName[[TestIdx]]@RegionToFit$y <<- Filtrato[idx1:idx2]
+                       FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                     }
                     assign(ActiveFName, FName,envir=.GlobalEnv)      #Save the modified XPSSample in the globalEnv
 #                    assign("activeSpectIndx", TestIdx, envir=.GlobalEnv)  #set the activeSpectIndx be the smoothed core line
-                    DaFiltrare <<- NULL
-                    Filtrato <<- NULL
+                    RawData <<- NULL
+                    Filtered <<- NULL
                     BackGnd <<- NULL
                     plot(FName)
                     XPSSaveRetrieveBkp("save")
                  }, container = FButtgroup1)
 
    gbutton(" RESET ", spacing=1, handler=function(h,...){
-                    DaFiltrare <<- NULL
-                    Filtrato <<- NULL
+                    RawData <<- NULL
+                    Filtered <<- NULL
                     BackGnd <<- NULL
                     plot(FName)
                  }, container = FButtgroup1)

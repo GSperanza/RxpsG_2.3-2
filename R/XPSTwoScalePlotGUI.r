@@ -231,12 +231,14 @@ XPSTwoScalePlot <- function(){
                                                        idx <- as.numeric(idx[1])
                                                        Xlim1 <<- range(FName1[[idx]]@.Data[[1]])
                                                        Ylim1 <<- range(FName1[[idx]]@.Data[[2]])
+                                                       Plot_Args$xlab$label <<- FName1[[idx]]@units[1] 
+                                                       Plot_Args$ylab$label <<- FName1[[idx]]@units[2]
                                                        df1 <<- data.frame(x=unlist(FName1[[idx]]@.Data[1]), y=unlist(FName1[[idx]]@.Data[2]))
                                     }, container=T1F_CoreLines1)
                                     enabled(T1_CoreLineCK1) <- TRUE
                                }, container=T1F_FName1)
 
-     layoutT1[1,2] <- T1F_CoreLines1 <- gframe(text="SELECT CORE LINE",  spacing=5, container=layoutT1)
+     layoutT1[1,2] <- T1F_CoreLines1 <- gframe(text="SELECT DATA_SET 1",  spacing=5, container=layoutT1)
      T1_CoreLineCK1 <- gcombobox("       ",selected=-1,  handler=NULL, container=T1F_CoreLines1)
 
 
@@ -252,12 +254,13 @@ XPSTwoScalePlot <- function(){
                                                        idx <- as.numeric(idx[1])
                                                        Xlim2 <<- range(FName2[[idx]]@.Data[[1]])
                                                        Ylim2 <<- range(FName2[[idx]]@.Data[[2]])
+                                                       Plot_Args$ylab.right$label <<- FName2[[idx]]@units[2]
                                                        df2 <<- data.frame(x=unlist(FName2[[idx]]@.Data[1]), y=unlist(FName2[[idx]]@.Data[2]))
                                    }, container=T1F_CoreLines2)
                                     enabled(T1_CoreLineCK2) <- TRUE
                                }, container=T1F_FName2)
 
-     layoutT1[2,2] <- T1F_CoreLines2 <- gframe(text="SELECT CORE LINE",  spacing=5, container=layoutT1)
+     layoutT1[2,2] <- T1F_CoreLines2 <- gframe(text="SELECT DATA_SET 2",  spacing=5, container=layoutT1)
      T1_CoreLineCK2 <- gcombobox("       ",selected=-1, handler=NULL, container=T1F_CoreLines2)
 
      layoutT1[3,1] <- T1F_ReverseX <- gframe("REVERSE X-axis", spacing=5, container=layoutT1)
@@ -381,7 +384,7 @@ XPSTwoScalePlot <- function(){
                              ResetPlot()
                              CtrlPlot()
                             }, container=T2group1)
-
+                                                                   
 
 # --- TAB3 ---
 # Axis Rendering options

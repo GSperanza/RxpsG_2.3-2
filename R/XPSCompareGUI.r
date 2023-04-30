@@ -8,7 +8,7 @@
 #'   This function is based on the (/code{Lattice}) Package.
 #' @examples
 #' \dontrun{
-#' 	XPSOverlay()
+#' 	XPSCompare()
 #' }
 #' @export
 #'
@@ -29,8 +29,10 @@ XPSCompare <- function(){
                N <- N.XS * N.CL
                FNamesCoreLines$Ampli <<- rep(1,N)
             }
+
             SelectedNames <- FNamesCoreLines
             SelectedNames$CoreLines <- svalue(T1CLineListCK)
+            
             LL <- length(SelectedNames$CoreLines)
             if (LL == 0) {
                 gmessage(msg="Please select The Core Lines to plot!", title="NO CORE-LINES SELECTED", icon="warning")
@@ -38,9 +40,12 @@ XPSCompare <- function(){
             }
             if (length(PanelTitles) == 0) {
                for (ii in 1:LL){
-                    PanelTitles <<- c(PanelTitles, SelectedNames$CoreLines[ii]) #List of Titles for the Multipanel
+                    PanelTitles <- c(PanelTitles, SelectedNames$CoreLines[ii]) #List of Titles for the Multipanel
                }
+            } else {
+               PanelTitles <- SelectedNames$CoreLines
             }
+            
             Plot_Args$PanelTitles <<- PanelTitles
             Limits <- XPScompEngine(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
    }
@@ -139,46 +144,56 @@ XPSCompare <- function(){
 
    SetLinesPoints <- function(){
          if ( svalue(T3_SetLines) == "OFF" && svalue(T3_SetSymbols) == "OFF") {
-            Plot_Args$type <<- " "  #both: line and symbols
+            Plot_Args$type <<- "l"  #cancel line and symbols and legends
             AutoKey_Args$lines <<- FALSE
             AutoKey_Args$points <<- FALSE
-            AutoKey_Args$col <<- "white"
-            PlotParameters$Colors <<- "white"
-            Plot_Args$par.settings$superpose.symbol$col <<- "white"
-            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+            AutoKey_Args$col <<- rep("white", 20)
+            PlotParameters$Colors <<- rep("white", 20)
+            Plot_Args$lty <<- LType
+            Plot_Args$par.settings$superpose.symbol$col <<- rep("white", 20)
+            Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+            Plot_Args$par.settings$superpose.line$col <<- rep("white", 20)
          }
 
          if ( svalue(T3_SetLines) == "ON" && svalue(T3_SetSymbols) == "OFF") {
-            Plot_Args$type <<- "l"
+            Plot_Args$type <<- "l"  # lines only
             AutoKey_Args$lines <<- TRUE
             AutoKey_Args$points <<- FALSE
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
             Plot_Args$lty <<- LType
             Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
-            Plot_Args$par.settings$superpose.line$lty <<- "solid"
+            Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+            if (svalue(T3F_SetLines) == "pattern") {
+                Plot_Args$par.settings$superpose.line$lty <<- LType
+            }
             if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
                PlotParameters$Colors <<- "black"
-               Plot_Args$par.settings$superpose.line$col <<- "black" #B/W plot
+               Plot_Args$par.settings$superpose.line$col <<- rep("black", 20) #B/W plot
                Plot_Args$par.settings$superpose.line$lty <<- LType
             }
          }
 
          if ( svalue(T3_SetLines) == "OFF" && svalue(T3_SetSymbols) == "ON") {
-            Plot_Args$type <<- "p"  #both: line and symbols
+            Plot_Args$type <<- "p"  # symbols only
             AutoKey_Args$lines <<- FALSE
             AutoKey_Args$points <<- TRUE
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
-            Plot_Args$pch <<- STypeIndx
+            Plot_Args$pch <<- rep(STypeIndx[1], 20)
+            Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
             Plot_Args$par.settings$superpose.symbol$col <<- Colors
-            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
-            if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+            if (svalue(T3F_SetSymbols) == "multi-symbols") {
+                Plot_Args$pch <<- STypeIndx
+                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+            }
+            if (svalue(T3_BW_Col) == "B/W") {
                PlotParameters$Colors <<- "black"
+               Plot_Args$pch <<- STypeIndx
+               Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-               Plot_Args$par.settings$superpose.symbol$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
             }
          }
 
@@ -189,19 +204,25 @@ XPSCompare <- function(){
             Plot_Args$lty <<- LType
             Plot_Args$pch <<- STypeIndx
             if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
                PlotParameters$Colors <<- "black"
                Plot_Args$par.settings$superpose.line$lty <<- LType
-               Plot_Args$par.settings$superpose.line$col <<- "black" #B/W plot
+               Plot_Args$par.settings$superpose.line$col <<- rep("black", 20) #B/W plot
                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-               Plot_Args$par.settings$superpose.symbol$col <<- "black"
+               Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
             } else {
                AutoKey_Args$col <<- Colors
                PlotParameters$Colors <<- Colors
-               Plot_Args$par.settings$superpose.line$lty <<- "solid"
                Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
-               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+               Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+               if (svalue(T3F_SetLines) == "pattern") {
+                   Plot_Args$par.settings$superpose.line$lty <<- LType
+               }
                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+               if (svalue(T3F_SetSymbols) == "multi-symbols") {
+                   Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+               }
             }
          }
          CtrlPlot()
@@ -291,18 +312,19 @@ XPSCompare <- function(){
             FNamesCoreLines <<- list(XPSSample=c(" ", " "),CoreLines=c(" "," "), Ampli=NULL)  #dummy lists to begin: NB each lcolumn contains 2 element otherwise error
             RefreshTab(FNamesCoreLines)   #update the table with the name of the selected FNames
             FNamesCoreLines <<- list(XPSSample=NULL,CoreLines=NULL,Ampli=NULL )   #dummy lists to begin: NB each lcolumn contains 2 element otherwise error
-            delete(layoutT2, layoutT2[1,2])
-            layoutT2[1,2] <<- objFunctAmpli <<- gcombobox(c("        "), selected=-1, editable=FALSE, handler=function(h,...){enabled(objFunctFact) <- TRUE}, container=layoutT2)
+            delete(XSGroup11, objXSamp)
+            objXSamp <<- gcombobox(c("        "), selected=-1, editable=FALSE, handler=function(h,...){enabled(objScaleFact) <- TRUE}, container=XSGroup11)
+            delete(CLGroup22, objCLine)
+            objCLine <<- gcombobox(c("        "), selected=-1, editable=FALSE, handler=function(h,...){enabled(objScaleFact) <- TRUE}, container=CLGroup22)
             SaveSelection <<- TRUE
-
             svalue(T1FNameListCK) <<- FALSE
             svalue(objFunctNorm) <<- FALSE
             svalue(objFunctAlign) <<- FALSE
             svalue(objFunctRev) <<- TRUE
             svalue(objFunctSwitch) <<- FALSE
-            svalue(objFunctAmpli) <<- -1
-            svalue(objFunctFact) <<- ""
-            enabled(objFunctFact) <<- FALSE
+            svalue(objCLine) <<- -1
+            svalue(objScaleFact) <<- ""
+            enabled(objScaleFact) <<- FALSE
             svalue(XOffsetobj) <<- 0
             svalue(YOffsetobj) <<- 0
             svalue(xx1) <<- ""
@@ -311,14 +333,13 @@ XPSCompare <- function(){
             svalue(yy2) <<- ""
             svalue(T3_BW_Col) <<- "B/W"
             svalue(T3_Grid) <<- "Grid OFF"
-            svalue(T3_SetLines) <<- 1
-            svalue(T3_SetSymbols) <<- 2
+            svalue(T3_SetLines) <<- "ON"
+            svalue(T3_SetSymbols) <<- "OFF"
             svalue(T3_LineType) <<- "patterns"
             svalue(T3_LinWidth) <<- 1
             svalue(T3_SymType) <<- "single-symbol"
             svalue(T3_SymSize) <<- 0.8
             svalue(T3_PanStripCol) <<- ""
-            svalue(T4_LBTR) <<- "LeftBottom"
             svalue(T4_XScale) <<- "Regular"
             svalue(T4_YScale) <<- "Regular"
             svalue(T4_TitSize) <<- 1.4
@@ -353,7 +374,8 @@ XPSCompare <- function(){
                                   xlab=list(label=NULL, rot=0, cex=1.2),
                                   ylab=list(label=NULL, rot=90, cex=1.2),
                                   zlab=NULL,
-                                  scales=list(cex=1, tck=c(1,0), alternating=c(1), relation="free",
+                                  PanelTitles=NULL,
+                                  scales=list(cex=1, tck=c(1,0), alternating=c(1), tick.number=NULL, relation="free",
                                               x=list(log=FALSE), y=list(log=FALSE), axs="i"),
                                   xscale.components = xscale.components.subticks,
                                   yscale.components = yscale.components.subticks,
@@ -376,6 +398,7 @@ XPSCompare <- function(){
                                   columns=1,   #leggends organized in a column
                                   list(corner=NULL,x=NULL,y=NULL)
                              )
+                             
             Xlim <<- NULL #reset Xlim
             Ylim <<- NULL #reset Ylim
             plot.new()
@@ -383,7 +406,7 @@ XPSCompare <- function(){
 
 
 #----- Variables -----
-   if (is.na(activeFName)){
+   if (exists("activeFName", envir=.GlobalEnv)==FALSE){
        gmessage("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -398,12 +421,14 @@ XPSCompare <- function(){
       FitComp1[ii] <- paste("C",ii, sep="")
    }
    FNameListTot <- as.array(XPSFNameList())     #List of all XPSSamples loaded in the workspace
-   LL=length(FNameListTot)
+   LL <- length(FNameListTot)
    jj <- 1
    FNamesCoreLines <- list(XPSSample=NULL, CoreLines=NULL, Ampli=NULL)
    NamesList <- list(XPSSample=NULL, CoreLines=NULL)
    CLlist <- list()
    SpectName <- ""
+   plotted <- FALSE
+
 
 #--- list of graphical variables
    PatternList <- NULL
@@ -449,19 +474,19 @@ XPSCompare <- function(){
    LegTxtSize <- c(0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,2.6,2.8,3)
    LegDist <- c(0,0.01,0.02,0.04,0.08,0.1,0.12,0.14,0.16,0.18,0.2)
    ColorList <- NULL
-   exit <- NULL
    Xlim <- NULL
    Ylim <- NULL
 
 #--- general options
    PlotParameters <- list()
-   PlotParameters$Aligne <- FALSE
+   PlotParameters$Align <- FALSE
    PlotParameters$RTFLtd <- FALSE #restrict plot to RTF region
-   PlotParameters$Normalize <- FALSE
+   PlotParameters$Normalize <- NULL
    PlotParameters$Reverse <- TRUE #reversed X axes for Bind. Energy
    PlotParameters$SwitchE <- FALSE
-   PlotParameters$XOffset <- 0
-   PlotParameters$YOffset <- 0
+   PlotParameters$XOffset <- list(CL=NA, Shift=0)
+   PlotParameters$YOffset <- list(CL=NA, Shift=0)
+   PlotParameters$ScaleFact <- list(XS=NA, CL=NA, ScFact=0)
    PlotParameters$CustomXY <- NULL
    PlotParameters$OverlayType <- "Compare.CoreLines" #Compare.Corelines  and  Multi-Panel are fixed options
    PlotParameters$OverlayMode <- "Multi-Panel"
@@ -473,7 +498,7 @@ XPSCompare <- function(){
    PlotParameters$LegLineWdh <- 1
    PlotParameters$LegTxtCol <- "RainBow"
    PlotParameters$LegTxtSize <- 1
-   PlotParameters$LegDist <- 0
+   PlotParameters$LegDist <- 0           
 
    DefaultPlotParameters <- PlotParameters
 
@@ -486,6 +511,7 @@ XPSCompare <- function(){
                     xlab=list(label=NULL, rot=0, cex=1.2),
                     ylab=list(label=NULL, rot=90, cex=1.2),
                     zlab=NULL,
+                    PanelTitles=NULL,
                     scales=list(cex=1, tck=c(1,0), alternating=c(1), tick.number=NULL, relation="free",
                                 x=list(log=FALSE), y=list(log=FALSE), axs="i"),
                     xscale.components = xscale.components.subticks,
@@ -536,7 +562,8 @@ XPSCompare <- function(){
      layoutT1[1,1] <- T1frameButtT1 <- gframe(text="PLOT", spacing=5, container=layoutT1)
      T1groupButtons <- ggroup(horizontal=FALSE, container = T1frameButtT1)
      gbutton("PLOT", handler=function(h,...){
-                            CtrlPlot() #plot selected XPS-SAmples
+                           CtrlPlot() #plot selected XPS-SAmples
+                           plotted <<- TRUE
                    }, container=T1groupButtons)
 
      gbutton("RESET PLOT", handler=function(h,...){
@@ -574,11 +601,14 @@ XPSCompare <- function(){
                                                   for (ii in 1:LL){
                                                       CLlist[[ii]] <<- XPSSpectList(FNamesCoreLines$XPSSample[ii])
                                                   }
-                                                  CheckCL()   #checks for corelines common to selected XPSSamples
+                                                  #checks for corelines common to selected XPSSamples
+                                                  CheckCL() # CheckCL() defines FNamesCoreLines$CoreLines
                                                   delete(T1frameCLine,T1CLineListCK)
                                                   T1CLineListCK <<- gcheckboxgroup(FNamesCoreLines$CoreLines, container=T1frameCLine) #refresh gcheckboxgroup for coreline selection
                                                   RefreshTab(FNamesCoreLines)   #update the table with the name of the selected FNames
-                                                  delete(T2CLgroup, CLPanel)
+                                                  delete(XSGroup11, objXSamp)
+                                                  objXSamp <<- gcombobox(c("   "), selected=-1, editable=FALSE, container=XSGroup11)
+                                                  delete(T2CLgroup, CLPanel) #clear CLPanel
                                                   CLPanel <<- gcombobox(FNamesCoreLines$CoreLines, selected = -1, editable = FALSE, container=T2CLgroup) #refresh combobox for custom XY scale
                            }, container=T1frameFName)
                            ResetPlot()
@@ -611,8 +641,23 @@ XPSCompare <- function(){
                                CtrlRepCL(LL)  #controls if same spectra are repeated in CLlist[[LL]]
                                CheckCL()   #check for corelines common to selected XPSSamples
                             }
+                            delete(XSGroup11, objXSamp)
+                            objXSamp <<- gcombobox(FNamesCoreLines$XPSSample, selected=-1, editable=FALSE, container=XSGroup11)
                             delete(T1frameCLine,T1CLineListCK)
-                            T1CLineListCK <<- gcheckboxgroup(FNamesCoreLines$CoreLines, container=T1frameCLine) #refresh gcheckboxgroup for coreline selection
+                            T1CLineListCK <<- gcheckboxgroup(FNamesCoreLines$CoreLines, handler=function(h, ...) {
+                                                        SelectedCL <- svalue(T1CLineListCK) #update objCLineobject
+                                                        delete(CLGroup22,objCLine)
+                                                        objCLine <<- gcombobox(SelectedCL, selected=-1, editable=FALSE, handler=function(h,...){
+                                                                                    PlotParameters$XOffset <- list(CL=NA, Offset=0)
+                                                                                    PlotParameters$YOffset <- list(CL=NA, Offset=0)
+                                                                                    PlotParameters$ScaleFact <- list(XS=NA, CL=NA, ScFact=0)
+                                                                                    enabled(objScaleFact) <- !is_empty(svalue(objXSamp)) #TRUE only if an XPSSample was selected
+                                                                                    enabled(XOffsetobj) <- TRUE
+                                                                                    enabled(YOffsetobj) <- TRUE
+                                                        }, container=CLGroup22)
+                                              }, container=T1frameCLine) #refresh gcheckboxgroup for coreline selection
+                            add(T1frameCLine, T1CLineListCK)
+
                             RefreshTab(FNamesCoreLines)   #update the table with the name of the selected FNames
                             delete(T2CLgroup, CLPanel)
                             CLPanel <<- gcombobox(FNamesCoreLines$CoreLines, selected = -1, editable = FALSE, container=T2CLgroup) #refresh combobox for custom XY scale
@@ -631,75 +676,114 @@ XPSCompare <- function(){
 
 # --- TAB2 ---
 
-###Funct1: NORMALIZE
 
    T2group1 <- ggroup(label="PLOT FUNCTIONS",horizontal=FALSE, container=nb)
 
    T2frame1 <- gframe(" FUNCTIONS ", horizontal=FALSE, spacing=5, container=T2group1)
-   T2group2 <- ggroup(horizontal=TRUE, container=T2frame1)
+#   layoutT2 <- glayout(homogeneous=FALSE, spacing=5, container=T2frame1)
 
-   objFunctNorm <- gcheckbox("Normalize",checked=FALSE, handler=function(h,...){
-                    PlotParameters$Normalize <<- svalue(objFunctNorm)
-                    FName <- get(FNamesCoreLines$XPSSample[1], envir=.GlobalEnv) #retrieve a generic XPSSample from the selected ones
-                    SpectName <- unlist(strsplit(FNamesCoreLines$CoreLines[1], "\\."))  #retrieve a generic coreline from the list of selected ones
-                    indx <- as.numeric(SpectName[1])
-                    Plot_Args$ylab$label <<- FName[[indx]]@units[2]   #retrieve the Y axis label
-                    if ( svalue(objFunctNorm)) {   #Normalize option TRUE
-                       Plot_Args$ylab$label <<- "Intensity [a.u.]"
-                    }
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-                 }, container=T2group2)
-
-###Funct2: Y-Aligne
-
-   objFunctAlign <- gcheckbox("Aligne bkg to 0",checked=FALSE, handler=function(h,...){
-                    PlotParameters$Aligne <<- svalue(objFunctAlign)
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-                 }, container=T2group2)
+   XSGroup1 <- ggroup(horizontal=TRUE, spacing=5, container=T2frame1)
+   glabel("XPSSamp.", container=XSGroup1)
+   XSGroup11 <- ggroup(horizontal=TRUE, spacing=5, container=XSGroup1)
+   objXSamp <- gcombobox(c("   "), selected=-1, editable=FALSE, handler=function(h,...){
+                    enabled(objScaleFact) <- TRUE
+                 }, container=XSGroup11)
 
 ###Funct3: Reverse X axis
-
    objFunctRev <- gcheckbox("Reverse X axis",checked=TRUE, handler=function(h,...){
                     PlotParameters$Reverse <<- svalue(objFunctRev)
                     CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-                 }, container=T2group2)
+                 }, container=XSGroup1)
 
 ###Funct4: Switch Binding to Kinetic Energy scale
-
-   objFunctSwitch <- gcheckbox("Switch BE/KE energy scale",checked=FALSE, handler=function(h,...){
+   objFunctSwitch <- gcheckbox("Switch BE to KE scale",checked=FALSE, handler=function(h,...){
                     PlotParameters$SwitchE <<- svalue(objFunctSwitch)
                     CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-                 }, container=T2group2)
+                 }, container=XSGroup1)
+
+
+   CLGroup2 <- ggroup(horizontal=TRUE, spacing=5, container=T2frame1)
+   glabel("Core-Line ", spacinig=3, container=CLGroup2)
+   CLGroup22 <- ggroup(horizontal=TRUE, spacing=5, container=CLGroup2)
+   objCLine <- gcombobox(c("   "), selected=-1, editable=FALSE, container=CLGroup22)
+
+###Funct1: Normalize
+   objFunctNorm <- gcheckbox("Normalize",checked=FALSE, handler=function(h,...){
+                    if ( svalue(objFunctNorm) == FALSE) { PlotParameters$Normalize <<- NULL }
+                    FName <- get(FNamesCoreLines$XPSSample[1], envir=.GlobalEnv) #retrieve a generic XPSSample from the selected ones
+                    Plot_Args$ylab$label <<- FName[[FNamesCoreLines$CoreLines[1]]]@units[2]   #retrieve the Y axis label
+                    SelectedCL <- svalue(T1CLineListCK)
+                    if ( svalue(objFunctNorm)) {   #Normalize option TRUE
+                         NormWin <- gwindow("NORMALIZATION", parent=c(10, 10), visible=FALSE)
+                         size(NormWin) <- c(350, 200)
+                         Normgroup <- ggroup(horizontal=FALSE, container=NormWin)
+                         glabel("Select the Core-Lines to Normalize", container=Normgroup)
+                         NormCL <- gcheckboxgroup(SelectedCL, checked=FALSE, horizontal=TRUE, handler=function(h,...){
+                                                  PlotParameters$Normalize <<- as.integer(svalue(NormCL, index=TRUE))
+                                                  if (length(PlotParameters$Normalize) == 0) { PlotParameters$Normalize <<- NULL } #all Core-Line de-selected
+                                               }, container=Normgroup)
+                         gbutton(" EXIT ", handler = function(h, ...){
+                                                  dispose(NormWin)
+                                                  CtrlPlot()
+                                               }, container=Normgroup)
+                         visible(NormWin) <- TRUE
+                         Plot_Args$ylab$label <<- "Intensity [a.u.]"
+                    }
+                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                 }, container=CLGroup2)
+   
+###Funct2: Y-Align
+   objFunctAlign <- gcheckbox("Align bkg to 0",checked=FALSE, handler=function(h,...){
+                    PlotParameters$Align <<- svalue(objFunctAlign)
+                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                 }, container=CLGroup2)
 
 ###Funct5: Amplify
-
-   layoutT2 <- glayout(homogeneous=FALSE, spacing=5, container=T2frame1)
-   layoutT2[1,1] <- glabel("XPSSamp.", container=layoutT2)
-   layoutT2[1,2] <- objFunctAmpli <- gcombobox(c("   "), selected=-1, editable=FALSE, handler=function(h,...){
-                    enabled(objFunctFact) <- TRUE
-                 }, container=layoutT2)
-
-   layoutT2[1,3] <- glabel("ScaleFact.", container=layoutT2)
-   layoutT2[1,4] <- objFunctFact <- gedit("", handler=function(h,...){
-                    indx <- as.numeric(svalue(objFunctAmpli, index=TRUE))
-                    FNamesCoreLines$Ampli[indx] <<- as.numeric(svalue(objFunctFact))
-                    CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-                 }, container=layoutT2)
-
+   CLGroup3 <- ggroup(horizontal=TRUE, spacing=5, container=T2frame1)
+   glabel("ScaleFact.", spacinig=3, container=CLGroup3)
+   objScaleFact <- gedit("", handler=function(h,...){
+                         XS <- as.numeric(svalue(objXSamp, index=TRUE))
+                         CL <- as.numeric(svalue(objCLine, index=TRUE))
+                         if (XS == 0 || CL == 0){
+                             gmessage("Please select the XPSSample and the Core-Line", title="WARNING", icon="warning")
+                             return()
+                         }
+                         indx <- as.numeric(svalue(objCLine, index=TRUE))
+                         PlotParameters$ScaleFact$XS <<- XS
+                         PlotParameters$ScaleFact$CL <<- CL
+                         PlotParameters$ScaleFact$ScFact <<- as.numeric(svalue(objScaleFact))
+                         CtrlPlot() ####PLOT FOLLOWING SELECTIONS
+                    }, container=CLGroup3)
+   tkconfigure(objScaleFact$widget, width=8)
 
 ###Funct6: X, Y offset
-   layoutT2[2,1] <- glabel("X-Offset", container=layoutT2)
-   layoutT2[2,2] <- XOffsetobj <- gedit("", initial.msg = "X_Off= ", container=layoutT2)
-   addHandlerChanged(XOffsetobj, handler=function(h,...){
-                        PlotParameters$XOffset <<- as.numeric(svalue(XOffsetobj))
+   glabel("X-Offset", spacinig=3, container=CLGroup3)
+   XOffsetobj <- gedit("", initial.msg = "X_Off= ", width=7, handler=function(h,...){
+                        PlotParameters$XOffset$CL <<- as.numeric(svalue(objCLine, index=TRUE))
+                        PlotParameters$XOffset$Shift <<- as.numeric(svalue(XOffsetobj))
+                        if (is.na(PlotParameters$XOffset)){
+                            gmessage("Please enter a numeric value for the X-shift", title="WARNING", icon="warning")
+                            PlotParameters$XOffset$Shift <<- 0
+                            return()
+                        }
                         CtrlPlot()
-                    })
-   layoutT2[2,3] <- glabel("Y-Offset", container=layoutT2)
-   layoutT2[2,4] <- YOffsetobj <- gedit("", initial.msg = "Y_Off= ",container=layoutT2)
-   addHandlerChanged(YOffsetobj, handler=function(h,...){
-                        PlotParameters$YOffset <<- as.numeric(svalue(YOffsetobj))
+                    }, container=CLGroup3)
+   tkconfigure(XOffsetobj$widget, width=8)
+   enabled(XOffsetobj) <- FALSE
+
+   glabel("Y-Offset", spacinig=3, container=CLGroup3)
+   YOffsetobj <- gedit("", initial.msg = "Y_Off= ", width=7, handler=function(h,...){
+                        PlotParameters$YOffset$CL <<- as.numeric(svalue(objCLine, index=TRUE))
+                        PlotParameters$YOffset$Shift <<- as.numeric(svalue(YOffsetobj))
+                        if (is.na(PlotParameters$YOffset)){
+                            gmessage("Please enter a numeric value for the Y-shift", title="WARNING", icon="warning")
+                            PlotParameters$YOffset$Shift <<- 0
+                            return()
+                        }
                         CtrlPlot()
-                    })
+                    }, container=CLGroup3)
+   tkconfigure(YOffsetobj$widget, width=8)
+   enabled(YOffsetobj) <- FALSE
 
 ###Funct8: Custom XY scale
    T2frame2 <- gframe(text="EXACT X, Y RANGE", horizontal=FALSE, spacing=5, container=T2group1)
@@ -732,12 +816,12 @@ XPSCompare <- function(){
                    CtrlPlot() 
                  }, container = T2_ButtGroup)
 
-   gbutton("  RESET PLOT  ", handler=function(h,...){
+   gbutton("     RESET PLOT     ", handler=function(h,...){
                    ResetPlot()
                    CtrlPlot()
                  }, container = T2_ButtGroup)
 
-   gbutton(" EXIT ", handler=function(h,...){
+   gbutton("      EXIT      ", handler=function(h,...){
 				       dispose(win)
                  }, container = T2_ButtGroup)
 
@@ -766,31 +850,48 @@ XPSCompare <- function(){
 
    layoutRend[1,1] <- T3F_BW_Col <- gframe("COLOR", spacing=5, container=layoutRend)
    T3_BW_Col <- gcombobox(c("B/W", "RainBow"), selected=1, editable=FALSE, handler=function(h,...){
+                             Plot_Args$type <<- "l"
+                             if(svalue(T3_SetSymbols) == "ON") {Plot_Args$type <<- "b"}
                              if(svalue(T3_BW_Col)=="B/W") {
-                                svalue(T3_LineType) <<- "patterns"
+                                svalue(T3_SetLines) <- "ON"
+                                svalue(T3_LineType) <<- "pattern"
+                                svalue(T3_SymType) <<- "multi-symbols"
                                 svalue(TxtColCK) <<- "B/W"
                                 PlotParameters$Colors <<- "black"
-                                Plot_Args$lty <<- LType
+                                Plot_Args$lty <<- rep("solid", 20)
                                 Plot_Args$pch <<- STypeIndx
-                                if (length(svalue(T3_LineType))==0) svalue(T3_SymType) <- "multi-symbols"
-                                if (length(svalue(T3_SymType))==0) svalue(T3_LineType) <- "patterns"
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
                                 Plot_Args$par.settings$superpose.symbol$col <<- "black"
                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
                                 Plot_Args$par.settings$superpose.line$col <<- "black"
-                                Plot_Args$par.settings$superpose.line$lty <<- LType
+                                Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
                                 Plot_Args$par.settings$strip.background$col <<- "grey90"
+                                if(svalue(T3_LineType) == "patterns"){
+                                   Plot_Args$lty <<- LType
+                                   Plot_Args$par.settings$superpose.line$lty <<- LType
+                                }
+
                                 AutoKey_Args$col <<- "black"
                              } else {
-                                svalue(T3_LineType) <<- "solid"
                                 svalue(TxtColCK) <<- "RainBow"
-                                Plot_Args$lty <<- "solid"
-                                Plot_Args$pch <<- STypeIndx[1]
+                                Plot_Args$lty <<- rep("solid", 20)
+                                Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
                                 PlotParameters$Colors <<- Colors
-                                Plot_Args$par.settings$superpose.symbol$fill <<- Colors
                                 Plot_Args$par.settings$superpose.line$col <<- Colors
-                                Plot_Args$par.settings$superpose.line$lty <<- "solid"
+                                Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
                                 Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
                                 AutoKey_Args$col <<- Colors
+                                if(svalue(T3_LineType) == "patterns"){
+                                   Plot_Args$lty <<- LType
+                                   Plot_Args$par.settings$superpose.line$lty <<- LType
+                                }
+                                if(svalue(T3_SymType) == "multi-symbols"){
+                                   Plot_Args$pch <<- STypeIndx
+                                   Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                }
                              }
                              CtrlPlot() }, container=T3F_BW_Col)
 
@@ -817,29 +918,48 @@ XPSCompare <- function(){
    layoutRend[3,1] <- T3F_SetLines <- gframe("LINE TYPE", spacing=5, container=layoutRend)
    T3_LineType <- gcombobox(c("solid", "patterns"), selected=2, editable=FALSE, handler=function(h,...){
                              Plot_Args$type <<- "l"
+                             if(svalue(T3_SetSymbols) == "ON") {Plot_Args$type <<- "b"}
                              palette <- svalue(T3_BW_Col)
                              if (svalue(T3_LineType)=="solid") {
                                 svalue(T3_BW_Col) <<- "RainBow"
-                                Plot_Args$lty <<- "solid"
-                                Plot_Args$pch <<- STypeIndx[1]
+                                Plot_Args$lty <<- rep("solid", 20)
+                                Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
                                 PlotParameters$Colors <<- Colors
-                                Plot_Args$par.settings$superpose.symbol$fill <<- Colors
                                 Plot_Args$par.settings$superpose.line$col <<- Colors
-                                Plot_Args$par.settings$superpose.line$lty <<- "solid"
+                                Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
                                 Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
                                 AutoKey_Args$col <<- Colors
+                                if (svalue(T3F_SetSymbols) == "multi-symbols"){
+                                    Plot_Args$pch <<- STypeIndx
+                                    Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                }
                              }
                              if (svalue(T3_LineType)=="patterns") {
-                                svalue(T3_BW_Col) <<- "B/W"
+                                ColStyle <- svalue(T3_BW_Col)
                                 PlotParameters$Colors <<- "black"
                                 Plot_Args$lty <<- LType
-                                Plot_Args$pch <<- STypeIndx
-                                Plot_Args$par.settings$superpose.symbol$col <<- "black"
-                                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                                Plot_Args$par.settings$superpose.line$col <<- "black"
+                                Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
+                                Plot_Args$par.settings$superpose.line$col <<- rep("black", 20)
                                 Plot_Args$par.settings$superpose.line$lty <<- LType
+                                Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
+                                Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
                                 Plot_Args$par.settings$strip.background$col <<- "gray90"
-                                AutoKey_Args$col <<- "black"
+                                AutoKey_Args$col <<- rep("black", 20)
+                                if (ColStyle == "RainBow"){
+                                    PlotParameters$Colors <<- Colors
+                                    Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                    Plot_Args$par.settings$superpose.line$col <<- Colors
+                                    Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
+                                    AutoKey_Args$col <<- Colors
+                                }
+                                if (svalue(T3_SymType) == "multi-symbols"){
+                                    Plot_Args$pch <<- STypeIndx
+                                    Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                }
                              }
                              CtrlPlot()
                            }, container=T3F_SetLines)
@@ -851,33 +971,53 @@ XPSCompare <- function(){
                            }, container=T3F_LinWidth)
 
 
-   layoutRend[4,1] <- T3F_SetSymbols <- gframe("SYMBOLS", spacing=5, container=layoutRend)
+   layoutRend[4,1] <- T3F_Symbols <- gframe("SYMBOLS", spacing=5, container=layoutRend)
    T3_SymType <- gcombobox(c("single-symbol", "multi-symbols"), selected=2, editable=FALSE, handler=function(h,...){
-                              if (svalue(T3_SymType)=="single-symbol") {
-                                 svalue(T3_BW_Col) <<- "RainBow"
-                                 Plot_Args$lty <<- "solid"
-                                 Plot_Args$pch <<- STypeIndx[1]
-                                 PlotParameters$Colors <<- Colors
-                                 Plot_Args$par.settings$superpose.symbol$fill <<- Colors
-                                 Plot_Args$par.settings$superpose.line$col <<- Colors
-                                 Plot_Args$par.settings$superpose.line$lty <<- "solid"
-                                 Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
-                                 AutoKey_Args$col <<- Colors
-                              }
-                              if (svalue(T3_SymType)=="multi-symbols") {
-                                 svalue(T3_BW_Col) <<- "B/W"
-                                 PlotParameters$Colors <<- "black"
-                                 Plot_Args$lty <<- LType
-                                 Plot_Args$pch <<- STypeIndx
-                                 Plot_Args$par.settings$superpose.symbol$col <<- "black"
-                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                                 Plot_Args$par.settings$superpose.line$col <<- "black"
-                                 Plot_Args$par.settings$superpose.line$lty <<- LType
-                                 Plot_Args$par.settings$strip.background$col <<- "gray90"
-                                 AutoKey_Args$col <<- "black"
-                              }
-                              CtrlPlot()
-                            }, container=T3F_SetSymbols)
+                             Plot_Args$type <<- "p"
+                             if(svalue(T3_SetLines) == "ON") {Plot_Args$type <<- "b"}
+                             if (svalue(T3_SymType)=="single-symbol") {
+                                svalue(T3_BW_Col) <<- "RainBow"
+                                Plot_Args$lty <<- rep("solid", 20)
+                                Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
+                                PlotParameters$Colors <<- Colors
+                                Plot_Args$par.settings$superpose.line$col <<- Colors
+                                Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+                                Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
+                                AutoKey_Args$col <<- Colors
+                                if(svalue(T3_LineType) == "patterns"){
+                                   Plot_Args$lty <<- LType
+                                   Plot_Args$par.settings$superpose.line$lty <<- LType
+                                }
+                             }
+                             if (svalue(T3_SymType)=="multi-symbols") {
+                                PlotParameters$Colors <<- "black"
+                                Plot_Args$lty <<- rep("solid", 20)
+                                Plot_Args$pch <<- STypeIndx
+                                Plot_Args$cex <<- as.numeric(svalue(T3_SymSize))
+                                Plot_Args$par.settings$superpose.line$col <<- rep("black", 20)
+                                Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
+                                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                Plot_Args$par.settings$strip.background$col <<- "gray90"
+                                AutoKey_Args$col <<- rep("black", 20)
+                                ColStyle <- svalue(T3_BW_Col)
+                                if (ColStyle == "RainBow"){
+                                    PlotParameters$Colors <<- Colors
+                                    Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                    Plot_Args$par.settings$superpose.line$col <<- Colors
+                                    Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
+                                    AutoKey_Args$col <<- Colors
+                                }
+                                if(svalue(T3_LineType) == "patterns"){
+                                   Plot_Args$lty <<- LType
+                                   Plot_Args$par.settings$superpose.line$lty <<- LType
+                                }
+                             }
+                             CtrlPlot()
+                           }, container=T3F_Symbols)
 
    layoutRend[4,2] <- T3F_SymSize <- gframe("SYMSIZE", spacing=5, container=layoutRend)
    T3_SymSize <- gcombobox(SymSize, selected=4, editable=FALSE, handler= function(h,...){
@@ -909,14 +1049,15 @@ XPSCompare <- function(){
                              Plot_Args$par.settings$strip.background$col <<- StripCol
                              CtrlPlot() }, container=T3F_PanStripCol)
 
-   gbutton(" RESET PLOT ", handler=function(h,...){
+   T3group2 <- ggroup(horizontal=TRUE, container=T3group1)
+   gbutton("    RESET PLOT    ", handler=function(h,...){
                              ResetPlot()
                              CtrlPlot()
-                            }, container=T3group1)
+                            }, container=T3group2)
 
-   gbutton(" EXIT ", handler=function(h,...){
+   gbutton("      EXIT      ", handler=function(h,...){
 				                  dispose(win)
-                       }, container = T3group1)
+                       }, container = T3group2)
 
 
 # --- TAB4 ---
@@ -926,124 +1067,57 @@ XPSCompare <- function(){
    T4group1 <- ggroup(label="AXES", horizontal=FALSE, container=nb)
    layoutAxis <- glayout(homogeneous=FALSE, spacing=3, container=T4group1)
 
-   layoutAxis[1,1] <- T4F_LBTR <- gframe("TICKS", spacing=5, container=layoutAxis)
-   T4_LBTR <- gcombobox(c("LeftBottom", "TopRight", "Both"), selected=1, editable=FALSE, handler= function(h,...){
-                             if (svalue(T4_LBTR,index=TRUE)==1) {
-                                Plot_Args$scales$tck <<- c(1,0)
-                                Plot_Args$scales$alternating <<- c(1)
-                             } else if (svalue(T4_LBTR,index=TRUE)==2) {
-                                Plot_Args$scales$tck <<- c(0,1)
-                                Plot_Args$scales$alternating <<- c(2)
-                             } else if (svalue(T4_LBTR,index=TRUE)==3) {
-                                Plot_Args$scales$tck <<- c(1,1)
-                                Plot_Args$scales$alternating <<- c(3)
-                             }
-                             CtrlPlot()
-                             }, container=T4F_LBTR)
-
-
-   layoutAxis[1,2] <- T4F_XScale <- gframe("X SCALE", spacing=5, container=layoutAxis)
-   T4_XScale <- gcombobox(c("Regular", "Power", "Log.10", "Log.e"), selected=1, editable=FALSE, handler= function(h,...){
-                             if (svalue(T4_XScale,index=TRUE)==1) {
+   layoutAxis[1,1] <- T4F_XScale <- gframe("X SCALE", spacing=5, container=layoutAxis)
+   T4_XScale <- gcombobox(c("Standard", "Power", "Log.10", "Log.e", "X*10^n", "Xe+0n"), selected=1, editable=FALSE, handler= function(h,...){
+                             if (svalue(T4_XScale, index = TRUE) == 1) {
                                 Plot_Args$scales$x$log <<- FALSE
                                 Plot_Args$xscale.components <<- xscale.components.subticks
-                             } else if (svalue(T4_XScale,index=TRUE)==2) {
-                                Plot_Args$scales$X$log <<- 10    # 10^ power scale
+                             } else if (svalue(T4_XScale, index = TRUE) == 2) {
+                                Plot_Args$scales$x$log <<- 10    # 10^ power scale
                                 Plot_Args$xscale.components <<- xscale.components.logpower
-                             } else if (svalue(T4_XScale,index=TRUE)==3) {
-                                Plot_Args$scales$X$log <<- 10    # log10 scale
+                             } else if (svalue(T4_XScale, index = TRUE) == 3) {
+                                Plot_Args$scales$x$log <<- 10    # log10 scale
                                 Plot_Args$xscale.components <<- xscale.components.log10ticks
-                             } else if (svalue(T4_XScale,index=TRUE)==4) {
-                                Plot_Args$scales$X$log <<- "e"   # log e scale
+                             } else if (svalue(T4_XScale, index = TRUE) == 4) {
+                                Plot_Args$scales$x$log <<- "e"   # log e scale
                                 Plot_Args$xscale.components <<- xscale.components.subticks
+                             } else if (svalue(T4_XScale, index = TRUE) == 5) {
+                                Plot_Args$scales$x$log <<- "Xpow10"
+                                Plot_Args$scales$x$rot <<- 0
+                                Plot_Args$scales$y$rot <<- 90
+                             } else if (svalue(T4_XScale, index = TRUE) == 6) {
+                                Plot_Args$scales$x$log <<- "Xe+0n"
+                                Plot_Args$scales$x$rot <<- 0
+                                Plot_Args$scales$y$rot <<- 90
                              }
                              CtrlPlot() }, container=T4F_XScale)
 
-   layoutAxis[1,3] <- T4F_YScale <- gframe("Y SCALE", spacing=5, container=layoutAxis)
-   T4_YScale <- gcombobox(c("Regular", "Power", "Log.10", "Log.e"), selected=1, editable=FALSE, handler= function(h,...){
-                             if (svalue(T4_YScale,index=TRUE)==1) {
+   layoutAxis[1,2] <- T4F_YScale <- gframe("Y SCALE", spacing=5, container=layoutAxis)
+   T4_YScale <- gcombobox(c("Standard", "Power", "Log.10", "Log.e", "Y*10^n", "Ye+0n"), selected=1, editable=FALSE, handler= function(h,...){
+                             if (svalue(T4_YScale, index = TRUE) == 1) {
                                 Plot_Args$scales$y$log <<- FALSE
                                 Plot_Args$yscale.components <<- yscale.components.subticks
-                             } else if (svalue(T4_YScale,index=TRUE)==2) {
+                             } else if (svalue(T4_YScale, index = TRUE) == 2) {
                                 Plot_Args$scales$y$log <<- 10
                                 Plot_Args$yscale.components <<- yscale.components.logpower
-                             } else if (svalue(T4_YScale,index=TRUE)==3) {
+                             } else if (svalue(T4_YScale, index = TRUE) == 3) {
                                 Plot_Args$scales$y$log <<- 10
                                 Plot_Args$yscale.components <<- yscale.components.log10ticks
-                             } else if (svalue(T4_YScale,index=TRUE)==4) {
+                             } else if (svalue(T4_YScale, index = TRUE) == 4) {
                                 Plot_Args$scales$y$log <<- "e"
                                 Plot_Args$yscale.components <<- yscale.components.subticks
+                             } else if (svalue(T4_YScale, index = TRUE) == 5) {
+                                Plot_Args$scales$y$log <<- "Ypow10"
+                                Plot_Args$scales$x$rot <<- 0
+                                Plot_Args$scales$y$rot <<- 90
+                             } else if (svalue(T4_YScale, index = TRUE) == 6) {
+                                Plot_Args$scales$y$log <<- "Ye+0n"
+                                Plot_Args$scales$x$rot <<- 0
+                                Plot_Args$scales$y$rot <<- 90
                              }
                              CtrlPlot() }, container=T4F_YScale)
-
-   layoutAxis[2,1] <- T4F_TitSize <- gframe("TITLE SIZE", spacing=5, container=layoutAxis)
-   T4_TitSize <- gcombobox(FontSize, selected=5, editable=FALSE, handler= function(h,...){
-                             if (PlotParameters$OverlayMode=="Single-Panel" || PlotParameters$OverlayMode=="TreD") {
-                                 Plot_Args$main$cex <<- svalue(T4_TitSize)
-                             } else if (PlotParameters$OverlayMode=="Multi-Panel") {
-                                 Plot_Args$par.strip.text$cex <<- as.numeric(svalue(T4_TitSize))
-                             }
-                             CtrlPlot() }, container=T4F_TitSize)
-
-   layoutAxis[2,2] <- T4F_PanelTitles <- gframe("CHANGE MULTI-PANEL TITLES", spacing=5, container=layoutAxis)
-   T4_PanelTitles <- gbutton(text="Change Titles", spacing=5, handler=function(h,...){
-                                TitleWin <- gwindow(title="MultiPanel Labels", visible=FALSE) #open a new window to contain a gdf() to change the titles of the panels
-                                TitleGroup <- ggroup(horizontal=FALSE, container=TitleWin)
-                                glabel("                     EDIT TITLES                           ", container=TitleGroup) #long lable to obtain a reasonable window dimension
-
-                                LL=length(PanelTitles)
-                                PTitles <- data.frame(TITLES=PanelTitles, stringsAsFactors=FALSE)
-                                TitleDFrame <- gdf(items=PTitles, container=TitleGroup)  #here no handler it does not work in linux
-                                size(TitleDFrame) <- c(100,200)   #size needed to obtain a non-null size for the gdf()
-                                addHandlerChanged(TitleDFrame, handler=function(h,...){  #addHandlerChanged to add a handler to gdf() working also in linux
-                                      PanelTitles <<- h$obj[]
-                                })
-                                gbutton("     SAVE TITLES AND EXIT      ", handler=function(h,...){
-                                      Plot_Args$PanelTitles <<- PanelTitles
-                                      dispose(TitleWin)
-                                      CtrlPlot()
-                                }, container = TitleGroup)
-                                visible(TitleWin) <- TRUE
-                       }, container=T4F_PanelTitles)
-
-
-
-   layoutAxis[3,1] <- T4F_AxNumSize <- gframe("AXIS NUMBER SIZE", spacing=5, container=layoutAxis)
-   T4_AxNumSize <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
-                             Plot_Args$scales$cex <<- svalue(T4_AxNumSize)
-                             CtrlPlot() }, container=T4F_AxNumSize)
-
-   layoutAxis[3,2] <- T4F_AxLabSize <- gframe("AXIS LABEL SIZE", spacing=5, container=layoutAxis)
-   T4_AxLabSize <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
-                             Plot_Args$xlab$cex <<- svalue(T4_AxLabSize)
-                             Plot_Args$ylab$cex <<- svalue(T4_AxLabSize)
-                             CtrlPlot() }, container=T4F_AxLabSize)
                              
-   layoutAxis[3,3] <- T4F_AxLabOrient <- gframe("AXIS NHUMBERg ORIENTATION", spacing=5, container=layoutAxis)
-   T4_AxLabOrient <- gcombobox(AxLabOrient, selected=1, editable=FALSE, handler= function(h,...){
-                             LabOrient <- svalue(T4_AxLabOrient)
-                             if (LabOrient == "Horizontal"){LabOrient <- 0}
-                             if (LabOrient == "Rot-20"){LabOrient <- 20}
-                             if (LabOrient == "Rot-45"){LabOrient <- 45}
-                             if (LabOrient == "Rot-70"){LabOrient <- 70}
-                             if (LabOrient == "Vertical"){LabOrient <- 90}
-                             Plot_Args$scales$rot <<- LabOrient
-                             CtrlPlot() }, container=T4F_AxLabOrient)
-
-
-   layoutAxis[4,1] <- T4F_XAxNameChange <- gframe("CHANGE X-LABEL", spacing=5, container=layoutAxis)
-   T4_XAxNameChange <- gedit("", handler=function(h,...){
-                             if(svalue(T4_XAxNameChange)==""){return()}
-                             Plot_Args$xlab$label <<- svalue(T4_XAxNameChange)
-                             CtrlPlot() } , container=T4F_XAxNameChange)
-
-   layoutAxis[4,2] <- T4F_YAxNameChange <- gframe("CHANGE Y-LABEL", spacing=5, container=layoutAxis)
-   T4_YAxNameChange <- gedit("",handler=function(h,...){
-                             if(svalue(T4_YAxNameChange)==""){return()}
-                             Plot_Args$ylab$label <<- svalue(T4_YAxNameChange) # in 2D Y is the vertical axis
-                             CtrlPlot() }, container=T4F_YAxNameChange)
-
-   layoutAxis[6,1] <- T4F_XStep <- gframe("X STEP", spacing=5, container=layoutAxis)
+   layoutAxis[1,3] <- T4F_XStep <- gframe("X STEP", spacing=5, container=layoutAxis)
    T4_XStep <- gcheckbox("Custom X ticks", checked=FALSE, handler=function(h,...){
                              if(svalue(T4_XStep)==FALSE) {return()}
                              Core.Line <- svalue(T1CLineListCK)
@@ -1064,17 +1138,51 @@ XPSCompare <- function(){
                              gbutton(text=" EXIT ", handler= function(h, ...){
                                                     dispose(winTick)
                                                     Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
-                                                    AT <- list()
+                                                    x_at <- list()
+                                                    x_labels <- list()
                                                     for(ii in 1:NCL){
-                                                       AT[[ii]] <- seq(from=RngXmin[[Core.Line[ii]]], to=RngXmax[[Core.Line[ii]]], by=Tick.Increment[ii])
+                                                       x_at[[ii]] <- seq(from=RngXmin[[Core.Line[ii]]], to=RngXmax[[Core.Line[ii]]], by=Tick.Increment[ii])
+                                                       x_labels[[ii]] <- as.character(x_at[[ii]])
                                                     }
-                                                    Plot_Args$scales$x$at <<- AT
+                                                    Plot_Args$scales$x <<- list(at = x_at, labels = x_labels, log=FALSE)
                                                     CtrlPlot()
                                                }, container=DFgroup)
-                                               visible(winTick) <- TRUE
+                             visible(winTick) <- TRUE
                              }, container=T4F_XStep)
 
-   layoutAxis[6,2] <- T4F_YStep <- gframe("Y STEP", spacing=5, container=layoutAxis)
+
+
+   layoutAxis[2,1] <- T4F_TitSize <- gframe("TITLE SIZE", spacing=5, container=layoutAxis)
+   T4_TitSize <- gcombobox(FontSize, selected=5, editable=FALSE, handler= function(h,...){
+                             if (PlotParameters$OverlayMode=="Single-Panel" || PlotParameters$OverlayMode=="TreD") {
+                                 Plot_Args$main$cex <<- svalue(T4_TitSize)
+                             } else if (PlotParameters$OverlayMode=="Multi-Panel") {
+                                 Plot_Args$par.strip.text$cex <<- as.numeric(svalue(T4_TitSize))
+                             }
+                             CtrlPlot() }, container=T4F_TitSize)
+
+   layoutAxis[2,2] <- T4F_PanelTitles <- gframe("CHANGE PANEL TITLES", spacing=5, container=layoutAxis)
+   T4_PanelTitles <- gbutton(text="Change Titles", spacing=5, handler=function(h,...){
+                                TitleWin <- gwindow(title="MultiPanel Labels", visible=FALSE) #open a new window to contain a gdf() to change the titles of the panels
+                                TitleGroup <- ggroup(horizontal=FALSE, container=TitleWin)
+                                glabel("                     EDIT TITLES                           ", container=TitleGroup) #long lable to obtain a reasonable window dimension
+
+                                LL=length(PanelTitles)
+                                PTitles <- data.frame(TITLES=PanelTitles, stringsAsFactors=FALSE)
+                                TitleDFrame <- gdf(items=PTitles, container=TitleGroup)  #here no handler it does not work in linux
+                                size(TitleDFrame) <- c(100,200)   #size needed to obtain a non-null size for the gdf()
+                                addHandlerChanged(TitleDFrame, handler=function(h,...){  #addHandlerChanged to add a handler to gdf() working also in linux
+                                      PanelTitles <<- h$obj[]
+                                })
+                                gbutton("     SAVE TITLES AND EXIT      ", handler=function(h,...){
+                                      Plot_Args$PanelTitles <<- PanelTitles
+                                      dispose(TitleWin)
+                                      CtrlPlot()
+                                }, container = TitleGroup)
+                                visible(TitleWin) <- TRUE
+                       }, container=T4F_PanelTitles)
+
+   layoutAxis[2,3] <- T4F_YStep <- gframe("Y STEP", spacing=5, container=layoutAxis)
    T4_YStep <- gcheckbox("Custom Y ticks ", checked=FALSE, handler=function(h,...){
                              if(svalue(T4_YStep)==FALSE) {return()}
                              Core.Line <- svalue(T1CLineListCK)
@@ -1095,28 +1203,70 @@ XPSCompare <- function(){
                              gbutton(text=" EXIT ", handler= function(h, ...){
                                                     dispose(winTick)
                                                     Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
-                                                    AT <- list()
+                                                    y_at <- list()
+                                                    y_labels <- list()
                                                     for(ii in 1:NCL){  #reshape the Y limits using rounded values
                                                        Ndigit <- nchar(RngYmin[[Core.Line[ii]]])
                                                        Y1 <- as.integer(RngYmin[[Core.Line[ii]]]/(10^(Ndigit-1)))* 10^(Ndigit-1)
                                                        Ndigit <- nchar(RngYmax[[Core.Line[ii]]])
                                                        Y2 <- as.integer(RngYmax[[Core.Line[ii]]]/(10^(Ndigit-2)))* 10^(Ndigit-2)+10^(Ndigit-2)
-                                                       AT[[ii]] <- seq(from=Y1, to=Y2, by=Tick.Increment[ii])
+                                                       y_at[[ii]] <- seq(from=Y1, to=Y2, by=Tick.Increment[ii])
+                                                       y_labels[[ii]] <- as.character(y_at[[ii]])
                                                     }
-                                                    Plot_Args$scales$y$at <<- AT
+                                                    Plot_Args$scales$y <<- list(at = y_at, labels = y_labels, log=FALSE)
                                                     CtrlPlot()
                                                }, container=DFgroup)
                                                visible(winTick) <- TRUE
                              }, container=T4F_YStep)
 
-   gbutton(" RESET PLOT ", handler=function(h,...){
+
+   layoutAxis[3,1] <- T4F_AxNumSize <- gframe("AXIS NUMBER SIZE", spacing=5, container=layoutAxis)
+   T4_AxNumSize <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
+                             Plot_Args$scales$cex <<- svalue(T4_AxNumSize)
+                             CtrlPlot() }, container=T4F_AxNumSize)
+
+   layoutAxis[3,2] <- T4F_AxLabSize <- gframe("AXIS LABEL SIZE", spacing=5, container=layoutAxis)
+   T4_AxLabSize <- gcombobox(FontSize, selected=3, editable=FALSE, handler= function(h,...){
+                             Plot_Args$xlab$cex <<- svalue(T4_AxLabSize)
+                             Plot_Args$ylab$cex <<- svalue(T4_AxLabSize)
+                             CtrlPlot() }, container=T4F_AxLabSize)
+                             
+   layoutAxis[3,3] <- T4F_AxLabOrient <- gframe("AXIS NUMBER ORIENTATION", spacing=5, container=layoutAxis)
+   T4_AxLabOrient <- gcombobox(AxLabOrient, selected=1, editable=FALSE, handler= function(h,...){
+                             LabOrient <- svalue(T4_AxLabOrient)
+                             if (LabOrient == "Horizontal"){Plot_Args$scales$rot <<- 0}
+                             if (LabOrient == "Rot-20"){Plot_Args$scales$rot <<- 20}
+                             if (LabOrient == "Rot-45"){Plot_Args$scales$rot <<- 45}
+                             if (LabOrient == "Rot-70"){Plot_Args$scales$rot <<- 70}
+                             if (LabOrient == "Vertical"){Plot_Args$scales$rot <<- 90}
+                             if (LabOrient == "Parallel"){
+                                 Plot_Args$scales$x$rot <<- 0
+                                 Plot_Args$scales$y$rot <<- 90
+                             }
+                             CtrlPlot() }, container=T4F_AxLabOrient)
+
+
+   layoutAxis[4,1] <- T4F_XAxNameChange <- gframe("CHANGE X-LABEL", spacing=5, container=layoutAxis)
+   T4_XAxNameChange <- gedit("", handler=function(h,...){
+                             if(svalue(T4_XAxNameChange)==""){return()}
+                             Plot_Args$xlab$label <<- svalue(T4_XAxNameChange)
+                             CtrlPlot() } , container=T4F_XAxNameChange)
+
+   layoutAxis[4,2] <- T4F_YAxNameChange <- gframe("CHANGE Y-LABEL", spacing=5, container=layoutAxis)
+   T4_YAxNameChange <- gedit("",handler=function(h,...){
+                             if(svalue(T4_YAxNameChange)==""){return()}
+                             Plot_Args$ylab$label <<- svalue(T4_YAxNameChange) # in 2D Y is the vertical axis
+                             CtrlPlot() }, container=T4F_YAxNameChange)
+
+   T4group2 <- ggroup(horizontal=TRUE, container=T4group1)
+   gbutton("    RESET PLOT    ", handler=function(h,...){
                              ResetPlot()
                              CtrlPlot()
-                             }, container=T4group1)
+                             }, container=T4group2)
 
-   gbutton(" EXIT ", handler=function(h,...){
+   gbutton("      EXIT      ", handler=function(h,...){
 				                         dispose(win)
-                             }, container = T4group1)
+                             }, container = T4group2)
 
 
 
@@ -1242,36 +1392,32 @@ XPSCompare <- function(){
                                 CtrlPlot()
                        }, container=layoutLeg)
 
-   layoutLeg[4,2] <- Annotate <- gbutton(text=" Annotate ", handler=function(h,...){
-                                xx <- Plot_Args$xlim   #in the case of zoom Xlim, Ylim are not null
-                                yy <<- Plot_Args$ylim
-                                if (is.null(xx)){    #no zoom is present
-                                   xx <- Xlim  #get the X range from OverlayEngine
-                                   yy <- Ylim  #get the Y range from OverlayEngine
-                                }
-                                XPSLattAnnotate(xx, yy)
-                       }, container=layoutLeg)
-
-
+   T5group2 <- ggroup(horizontal=TRUE, container=T5group1)
    gbutton(" RESET PLOT ", handler=function(h,...){
                                 ResetPlot()
                                 CtrlPlot()
-                       }, container=T5group1)
+                       }, container=T5group2)
 
 
    gbutton(" EXIT ", handler=function(h,...){
 				                    dispose(win)
-                       }, container = T5group1)
+                       }, container = T5group2)
 
 
 #----- END NOTEBOOK -----
-
-   enabled(objFunctFact) <- FALSE
    svalue(nb) <- 5
    svalue(nb) <- 4
    svalue(nb) <- 3
    svalue(nb) <- 2
    svalue(nb) <- 1
+   addHandlerChanged(nb, handler=function(h, ...){
+                           if (svalue(nb) > 1 || plotted==FALSE) {
+                               CtrlPlot()
+                               plotted <<- TRUE
+                               return()
+                           }
+                     })
+
    tcl("update", "idletasks")
    visible(win) <- TRUE
 }

@@ -15,7 +15,7 @@
 
 XPSOverlay <- function(){
 
-#---- calls the function to plot spectra folloowing option selection -----
+#---- calls the function to plot spectra following option selection -----
    CtrlPlot <- function(){
             Limits <- XPSovEngine(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim)
             Xlim <<- Limits[1:2]
@@ -98,48 +98,56 @@ XPSOverlay <- function(){
 
    SetLinesPoints <- function(){
          if ( svalue(T3_SetLines) == "OFF" && svalue(T3_SetSymbols) == "OFF") {
-            Plot_Args$type <<- " "  #both: line and symbols
+            Plot_Args$type <<- " "  #cancel line and symbols and legends
             AutoKey_Args$lines <<- FALSE
             AutoKey_Args$points <<- FALSE
-            AutoKey_Args$col <<- "white"
-            PlotParameters$Colors <<- "white"
-            Plot_Args$par.settings$superpose.symbol$col <<- "white"
-            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+            AutoKey_Args$col <<- rep("white", 20)
+            PlotParameters$Colors <<- rep("white", 20)
+            Plot_Args$lty <<- LType
+            Plot_Args$par.settings$superpose.symbol$col <<- rep("white", 20)
+            Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+            Plot_Args$par.settings$superpose.line$col <<- rep("white", 20)
          }
 
          if ( svalue(T3_SetLines) == "ON" && svalue(T3_SetSymbols) == "OFF") {
-            Plot_Args$type <<- "l"
+            Plot_Args$type <<- "l"  # lines only
             AutoKey_Args$lines <<- TRUE
             AutoKey_Args$points <<- FALSE
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
-            PlotParameters$FitCol <<- FitColors
             Plot_Args$lty <<- LType
             Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
-            Plot_Args$par.settings$superpose.line$lty <<- "solid"
+            Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+            if (svalue(T3F_SetLines) == "pattern") {
+                Plot_Args$par.settings$superpose.line$lty <<- LType
+            }
             if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
                PlotParameters$Colors <<- "black"
-               Plot_Args$par.settings$superpose.line$col <<- "black" #B/W plot
+               Plot_Args$par.settings$superpose.line$col <<- rep("black", 20) #B/W plot
                Plot_Args$par.settings$superpose.line$lty <<- LType
             }
          }
 
          if ( svalue(T3_SetLines) == "OFF" && svalue(T3_SetSymbols) == "ON") {
-            Plot_Args$type <<- "p"  #both: line and symbols
+            Plot_Args$type <<- "p"  # symbols only
             AutoKey_Args$lines <<- FALSE
             AutoKey_Args$points <<- TRUE
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
-            PlotParameters$FitCol <<- FitColors
-            Plot_Args$pch <<- STypeIndx
+            Plot_Args$pch <<- rep(STypeIndx[1], 20)
+            Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
             Plot_Args$par.settings$superpose.symbol$col <<- Colors
-            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
-            if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+            if (svalue(T3F_SetSymbols) == "multi-symbols") {
+                Plot_Args$pch <<- STypeIndx
+                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+            }
+            if (svalue(T3_BW_Col) == "B/W") {
                PlotParameters$Colors <<- "black"
+               Plot_Args$pch <<- STypeIndx
+               Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-               Plot_Args$par.settings$superpose.symbol$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
             }
          }
 
@@ -150,20 +158,25 @@ XPSOverlay <- function(){
             Plot_Args$lty <<- LType
             Plot_Args$pch <<- STypeIndx
             if (svalue(T3_BW_Col)=="B/W") {
-               AutoKey_Args$col <<- "black"
+               AutoKey_Args$col <<- rep("black", 20)
                PlotParameters$Colors <<- "black"
                Plot_Args$par.settings$superpose.line$lty <<- LType
-               Plot_Args$par.settings$superpose.line$col <<- "black" #B/W plot
+               Plot_Args$par.settings$superpose.line$col <<- rep("black", 20) #B/W plot
                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-               Plot_Args$par.settings$superpose.symbol$col <<- "black"
+               Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
             } else {
                AutoKey_Args$col <<- Colors
                PlotParameters$Colors <<- Colors
-               PlotParameters$FitCol <<- FitColors
-               Plot_Args$par.settings$superpose.line$lty <<- "solid"
                Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
-               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+               Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+               if (svalue(T3F_SetLines) == "pattern") {
+                   Plot_Args$par.settings$superpose.line$lty <<- LType
+               }
                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+               if (svalue(T3F_SetSymbols) == "multi-symbols") {
+                   Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+               }
             }
          }
          CtrlPlot()
@@ -461,7 +474,7 @@ setFileCheckBox <- function(){
 
 #--- general options
    PlotParameters <- list()
-   PlotParameters$Aligne <- FALSE
+   PlotParameters$Align <- FALSE
    PlotParameters$RTFLtd <- FALSE #restrict plot to RTF region
    PlotParameters$Normalize <- FALSE
    PlotParameters$NormPeak <- 0
@@ -491,7 +504,7 @@ setFileCheckBox <- function(){
 
    DefaultPlotParameters <- PlotParameters
 
-#--- comandi diretti a lattice
+#--- commands for lattice
    Plot_Args <- list( x=formula("y ~ x"), data=NULL, PanelTitles=list(), groups=NULL,layout=NULL,
                     xlim=NULL, ylim=NULL,
                     pch=STypeIndx,cex=1,lty=LType,lwd=1,type="l",
@@ -741,10 +754,10 @@ setFileCheckBox <- function(){
                     CtrlPlot()
                  }, container=T2group2)
 
-###Funct2: Y-Aligne
+###Funct2: Y-Align
 
-   objFunctAlign <- gcheckbox("Aligne bkg to 0",checked=FALSE, handler=function(h,...){
-                    PlotParameters$Aligne <<- svalue(objFunctAlign)
+   objFunctAlign <- gcheckbox("Align bkg to 0",checked=FALSE, handler=function(h,...){
+                    PlotParameters$Align <<- svalue(objFunctAlign)
                     CtrlPlot()
                  }, container=T2group2)
 
@@ -1121,9 +1134,9 @@ setFileCheckBox <- function(){
                                 Plot_Args$par.settings$strip.background$col <<- "grey90"
                                 AutoKey_Args$col <<- "black"
                              } else {
-                                svalue(T3_LineType) <<- "solid"
+#                                svalue(T3_LineType) <<- "solid"
                                 svalue(TxtColCK) <<- "RainBow"
-                                Plot_Args$lty <<- "solid"
+#                                Plot_Args$lty <<- "solid"
                                 Plot_Args$pch <<- STypeIndx[1]
                                 PlotParameters$Colors <<- Colors
                                 Plot_Args$par.settings$superpose.symbol$fill <<- Colors
@@ -1300,36 +1313,116 @@ setFileCheckBox <- function(){
 
 
    layoutAxis[1,2] <- T4F_XScale <- gframe("X SCALE", spacing=5, container=layoutAxis)
-   T4_XScale <- gcombobox(c("Regular", "Power", "Log.10", "Log.e"), selected=1, editable=FALSE, handler= function(h,...){
-                             if (svalue(T4_XScale,index=TRUE)==1) {
-                                Plot_Args$scales$x$log <<- FALSE
+   T4_XScale <- gcombobox(c("Standard", "Power", "Log.10", "Log.e", "X ^10"), selected=1, editable=FALSE, handler= function(h,...){
+                             Plot_Args$xlab$label <<- FName[[SpectIndx]]@units[1]
+                             if (svalue(T4_XScale,index=TRUE) == 1) {
+                                svalue(T4_YScale,index=TRUE) <<- 1
+                                Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), tick.number=5, relation="same",
+                                                     x=list(log=FALSE), y=list(log=FALSE), axs="i")
+                                Xlabel <- FName[[SpectIndx]]@units[1]
+                                Plot_Args$xlab <<- list(label=NULL, rot=0, cex=1.2)
                                 Plot_Args$xscale.components <<- xscale.components.subticks
-                             } else if (svalue(T4_XScale,index=TRUE)==2) {
+                             } else if (svalue(T4_XScale,index=TRUE) == 2) {
                                 Plot_Args$scales$x$log <<- 10    # 10^ power scale
                                 Plot_Args$xscale.components <<- xscale.components.logpower
-                             } else if (svalue(T4_XScale,index=TRUE)==3) {
+                             } else if (svalue(T4_XScale,index=TRUE) == 3) {
+                                Xlim <- sort(range(FName[[SpectIndx]]@.Data[[1]]))
+                                if (Xlim[1] < 0) {
+                                    gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$x$log <<- 10    # log10 scale
                                 Plot_Args$xscale.components <<- xscale.components.log10ticks
-                             } else if (svalue(T4_XScale,index=TRUE)==4) {
+                             } else if (svalue(T4_XScale,index=TRUE) == 4) {
+                                Xlim <- sort(range(FName[[SpectIndx]]@.Data[[1]]))
+                                if (Xlim[1] < 0) {
+                                    gmessage("Cannot plot negatige X-values !", title="WRONG X VALUES", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$x$log <<- "e"   # log e scale
                                 Plot_Args$xscale.components <<- xscale.components.subticks
+                             } else if (svalue(T4_XScale,index=TRUE) == 5) { #X^10 scale
+                                Plot_Args$scales$x$log <<- FALSE
+                                Plot_Args$scales$y$log <<- FALSE
+                                x_labels <- NULL
+                                x_at <- NULL
+                                x_tk <- 0
+                                Xmin <- min(FName[[SpectIndx]]@.Data[[1]])
+                                Xmax <- max(FName[[SpectIndx]]@.Data[[1]])
+                                Nmax <- floor(log10(abs(Xmax))) #number of digits composing integer(Ymax)
+                                Nmin <- floor(log10(abs(Xmin))) #number of digits composing integer(Ymin)
+                                Xmin <- round(Xmin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
+                                Xmax <- round(Xmax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
+                                Step <- 10^Nmax/2
+                                if (2*(Xmax-Xmin)/10^Nmax > 5) {Step <- 10^Nmax}
+                                while(x_tk < Xmax){
+                                     x_tk <- x_tk + Step
+                                     x_at <- c(x_at, x_tk)
+                                     x_labels <- c(x_labels, as.character(x_tk/10^Nmax))
+                                }
+                                x_labels <- formatC(x_labels, digits = 1, format = "f") #tick labels in exponential format
+                                Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
+                                Plot_Args$xlab$label
+                                Xlabel <- FName[[SpectIndx]]@units[1]
+                                Xlabel <- unlist(strsplit(Xlabel, "]"))[1]
+                                Plot_Args$xlab$label <<- paste(Xlabel, "*10^", Nmax, "]", sep="")
                              }
                              CtrlPlot() }, container=T4F_XScale)
 
    layoutAxis[1,3] <- T4F_YScale <- gframe("Y SCALE", spacing=5, container=layoutAxis)
-   T4_YScale <- gcombobox(c("Regular", "Power", "Log.10", "Log.e"), selected=1, editable=FALSE, handler= function(h,...){
-                             if (svalue(T4_YScale,index=TRUE)==1) {
-                                Plot_Args$scales$y$log <<- FALSE
+   T4_YScale <- gcombobox(c("Standard", "Power", "Log.10", "Log.e", "Y ^10"), selected=1, editable=FALSE, handler= function(h,...){
+                             Plot_Args$ylab$label <<- FName[[SpectIndx]]@units[2]
+                             if (svalue(T4_YScale,index=TRUE) == 1) {
+                                svalue(T4_XScale,index=TRUE) <<- 1
+                                Ylabel <- FName[[SpectIndx]]@units[1]
+                                Plot_Args$ylab <<- list(label=Ylabel, rot=90, cex=1.2)
+                                Plot_Args$scales <<- list(cex=1, tck=c(1,0), tick.number=5, alternating=c(1), relation="same",
+                                                          y=list(log=FALSE), axs="i")
                                 Plot_Args$yscale.components <<- yscale.components.subticks
-                             } else if (svalue(T4_YScale,index=TRUE)==2) {
+                             } else if (svalue(T4_YScale,index=TRUE) == 2) {
                                 Plot_Args$scales$y$log <<- 10
                                 Plot_Args$yscale.components <<- yscale.components.logpower
-                             } else if (svalue(T4_YScale,index=TRUE)==3) {
+                             } else if (svalue(T4_YScale,index=TRUE) == 3) {
+                                Xlim <- sort(range(FName[[SpectIndx]]@.Data[[2]]))
+                                if (Ylim[1] < 0) {
+                                    gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$y$log <<- 10
                                 Plot_Args$yscale.components <<- yscale.components.log10ticks
-                             } else if (svalue(T4_YScale,index=TRUE)==4) {
+                             } else if (svalue(T4_YScale,index=TRUE) == 4) { #log e scale
+                                Xlim <- sort(range(FName[[SpectIndx]]@.Data[[2]]))
+                                if (Ylim[1] < 0) {
+                                    gmessage("Cannot plot negatige Y-values !", title="WRONG Y VALUES", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$y$log <<- "e"
                                 Plot_Args$yscale.components <<- yscale.components.subticks
+                             } else if (svalue(T4_YScale,index=TRUE) == 5) { #Y^10 scale
+                                Plot_Args$scales$y <<- list(log=TRUE)
+                                y_labels <- NULL
+                                y_at <- NULL
+                                y_tk <- 0
+                                Ymin <- min(FName[[SpectIndx]]@.Data[[2]])
+                                Ymax <- max(FName[[SpectIndx]]@.Data[[2]])
+                                Nmax <- floor(log10(abs(Ymax))) #number of digits composing integer(Ymax)
+                                Nmin <- floor(log10(abs(Ymin))) #number of digits composing integer(Ymin)
+                                Ymin <- round(Ymin, digits= -Nmin) #Rounding to a negative number of digits means rounding to a power of ten
+                                Ymax <- round(Ymax, digits= -Nmax) #Rounding to a negative number of digits means rounding to a power of ten
+                                Step <- 10^Nmax/2
+                                if ((Ymin+Step) > Ymax) {Step <- 10^(Nmax-1)/4}
+                                if (2*(Ymax-Ymin)/10^Nmax > 5) {Step <- 10^Nmax/2}
+                                if (2*(Ymax-Ymin)/10^Nmax > 7) {Step <- 10^Nmax}
+                                while(y_tk < Ymax){
+                                     y_tk <- y_tk + Step
+                                     y_at <- c(y_at, y_tk)
+                                     y_labels <- c(y_labels, as.character(y_tk/10^Nmax))
+                                }
+                                y_labels <- formatC(y_labels, digits = 1, format = "f") #tick labels in exponential format
+                                Plot_Args$scales$y <<- list(at = y_at, labels = y_labels)
+                                Ylabel <- FName[[SpectIndx]]@units[2]
+                                Ylabel <- unlist(strsplit(Ylabel, "]"))[1]
+                                Plot_Args$ylab$label <<- paste(Ylabel, "*10^", Nmax, "]", sep="")
                              }
                              CtrlPlot() }, container=T4F_YScale)
 
@@ -1496,17 +1589,17 @@ setFileCheckBox <- function(){
                           }
                           AutoKey_Args$text <<- Legends  #load the Legends in the slot of the AutoKey_Args = List of parameters defining legend properties
                           if (svalue(legendCK)==TRUE) {
-		           	           Plot_Args$auto.key <<- AutoKey_Args  #Save the AutoKey_Args list of par in Plot_Args$auto.key
+		           	            Plot_Args$auto.key <<- AutoKey_Args  #Save the AutoKey_Args list of par in Plot_Args$auto.key
                              if (svalue(T3_SetLines)=="ON") {   #selezionate LINEE
                                 Plot_Args$par.settings$superpose.line$col <<- "black" #B/W plot
-                                Plot_Args$par.settings$superpose.line$lty <<- LType
+                                Plot_Args$par.settings$superpose.line$lty <<- Plot_Args$lty
                                 if (PlotParameters$OverlayMode=="Multi-Panel") {
                                    Plot_Args$par.settings$superpose.line$lty <<- "solid"
                                    Plot_Args$scales$relation <<- "free"
                                 }
  		           	              if (svalue(T3_BW_Col)=="RainBow") {                    #COLOR plot
                                    Plot_Args$par.settings$superpose.line$col <<- Colors
-                                   Plot_Args$par.settings$superpose.line$lty <<- "solid"
+                                   Plot_Args$par.settings$superpose.line$lty <<- Plot_Args$lty
                                 }
                              }
                              if (svalue(T3_SetSymbols)=="ON") {   #selezionate SIMBOLI
@@ -1594,7 +1687,7 @@ setFileCheckBox <- function(){
 
    layoutLeg[3,1] <- T5F_TSizeCK <- gframe(text="Text Size", spacing=5, container=layoutLeg)
    TSizeCK <- gcombobox(LegTxtSize,selected=1, toolkit = guiToolkit(), handler=function(h,...){
-		           	        Plot_Args$auto.key$cex <<- as.numeric(svalue(TSizeCK))
+		           	            Plot_Args$auto.key$cex <<- as.numeric(svalue(TSizeCK))
                           CtrlPlot()
                        }, container=T5F_TSizeCK)
 
@@ -1604,30 +1697,30 @@ setFileCheckBox <- function(){
                                gmessage("WARNING: legend position option not available for MULTIPANEL OR 3D-Plot", title = "Legend Position",  icon = "warning")
                            } else {
                               Dist <- as.numeric(svalue(DistCK))
-			                     switch(svalue(LegPosCK),
-                                 "OutsideTop" = { Plot_Args$auto.key$space <<- "top"
+			                           switch(svalue(LegPosCK),
+                              "OutsideTop" = { Plot_Args$auto.key$space <<- "top"
                                                Plot_Args$auto.key$y <<- 1+Dist },
-				                     "OutsideRight" = { Plot_Args$auto.key$space <<- "right"
+				                          "OutsideRight" = { Plot_Args$auto.key$space <<- "right"
                                                     Plot_Args$par.settings$layout.widths$right.padding <<- 8-Dist*40
                                                     Plot_Args$par.settings$layout.widths$key.right <<- Dist*10 },
-				                     "OutsideLeft" = { Plot_Args$auto.key$space <<- "left"
+				                          "OutsideLeft" = { Plot_Args$auto.key$space <<- "left"
                                                     Plot_Args$par.settings$layout.widths$left.padding <<- 8-Dist*40
                                                     Plot_Args$par.settings$layout.widths$key.left <<- Dist*10 },
-			                      "OutsideBottom" = { Plot_Args$auto.key$space <<- "bottom"
+			                           "OutsideBottom" = { Plot_Args$auto.key$space <<- "bottom"
                                                   Plot_Args$auto.key$y <<- 1-Dist },
-				                     "InsideTopRight" = { Plot_Args$auto.key$space <<- NULL
+				                          "InsideTopRight" = { Plot_Args$auto.key$space <<- NULL
                                                    Plot_Args$auto.key$corner <<- c(1,1)
                                                    Plot_Args$auto.key$x <<- 1-Dist
                                                    Plot_Args$auto.key$y <<- 1-Dist },
-				                     "InsideTopLeft" =  { Plot_Args$auto.key$space <<- NULL
+				                          "InsideTopLeft" =  { Plot_Args$auto.key$space <<- NULL
                                                    Plot_Args$auto.key$corner <<- c(0,1)
                                                    Plot_Args$auto.key$x <<- Dist
                                                    Plot_Args$auto.key$y <<- 1-Dist },
-                                 "InsideBottomRight" = { Plot_Args$auto.key$space <<- NULL
+                              "InsideBottomRight" = { Plot_Args$auto.key$space <<- NULL
                                                       Plot_Args$auto.key$corner <<- c(1,0)
                                                       Plot_Args$auto.key$x <<- 1-Dist
                                                       Plot_Args$auto.key$y <<- Dist },
-				                     "InsideBottomLeft"  = {	Plot_Args$auto.key$space <<- NULL
+				                          "InsideBottomLeft"  = {	Plot_Args$auto.key$space <<- NULL
                                                       Plot_Args$auto.key$corner <<- c(0,0)
                                                       Plot_Args$auto.key$x <<- Dist
                                                       Plot_Args$auto.key$y <<- Dist },

@@ -171,7 +171,7 @@ setMethod("hasFit", "XPSCoreLine", function(object) as.logical(length(slot(objec
 ##==============================================================================
 #' @title show
 #' @description Method to show XPSCoreLine elements
-#' @param object an object of class 'XPSCoreLine'
+#' @param object XPSCoreLine
 #' @examples
 #' \dontrun{
 #'  show(test.RData)
@@ -194,11 +194,28 @@ setMethod("show", signature(object="XPSCoreLine"),
 ##==============================================================================
 # Conversions for XPSCoreLine  data.frame
 ##==============================================================================
-# setAs() this function is already present in R
-# here we define the setAs() function for RxpsG objects
-#setAs already documented in R
-
-setAs(from="XPSCoreLine", to="data.frame", function(from) {
+###
+#' @title setAsData.Frame function for XPSCoreLine
+#' @description setAsData.Frame attempts to coerce an XPSCoreline to a data.frame type. 
+#'  Mainly used for plot function.
+#' @param from = an XPSCoreLine object
+#' @param to = a data.frame object
+#' @return 'setAsData.Frame' returns a data.frame object
+setGeneric("setAsData.Frame", function(from, to="data.frame") standardGeneric("setAsData.Frame"))
+#' @title setAsData.Frame
+#' @description method to coerce an object of class 'XPSCoreLine' 
+#'  in an object of class 'data.frame'
+#' @param from = an XPSCoreLine object
+#' @param to = a data.frame object
+#' @return 'setAsData.Frame' returns a data.frame object
+#' @examples
+#' \dontrun{
+#'  MyDataFrame <- setAsData.Frame(test[["C1s"]], to="data.frame")
+#' }
+#' @export
+#'
+setMethod("setAsData.Frame", signature(from = "XPSCoreLine"), 
+     function (from, to="data.frame") {
 
      if ( ! hasRegionToFit(from) ) { X <- data.frame(x=from[[1]], y=from[[2]]) }
      else { X <- data.frame(x=from@RegionToFit$x, y=from@RegionToFit$y) }
@@ -221,9 +238,28 @@ setAs(from="XPSCoreLine", to="data.frame", function(from) {
 ##==============================================================================
 # Conversions for XPSCoreLine matrix
 ##==============================================================================
-setAs("XPSCoreLine", "matrix", function(from) {
+###
+#' @title setAsMatrix function for XPSCoreLine
+#' @description setAsMatrix attempts to coerce an XPSCoreline to a matrix type. 
+#'  Mainly used for plot function.
+#' @param from = an XPSCoreLine object
+#' @param to = a matrix object
+#' @return 'setAsMatrix' returns a matrix object
+setGeneric("setAsMatrix", function(from, to="matrix") standardGeneric("setAsMatrix"))
+#' @title setAsMatrix
+#' @description method to coerce an object of class 'XPSCoreLine' in an object of class 'matrix'
+#' @param from = an XPSCoreLine object
+#' @param to = matrix object
+#' @return 'setAsMatrix' returns a matrix object
+#' @examples
+#' \dontrun{
+#'  MyMatix <- setAsMatrix(test[["C1s"]], to="matrix")
+#' }
+#' @export
+#'
+setMethod("setAsMatrix", signature(from = "XPSCoreLine"), function (from, to="matrix") {
 
-     return( as.matrix(as(from, "data.frame") ) )
+     return( as.matrix(setAsData.Frame(from, "data.frame") ) )
   }
 )
 
@@ -232,15 +268,16 @@ setAs("XPSCoreLine", "matrix", function(from) {
 # Conversions for XPSCoreLine "list"
 ##==============================================================================
 ###
-#' @title asList Method for XPSCoreLine
-#' @description asList attempts to coerce its argument to be of list type. Mainly used for plot function.
-#' @param from = a XPSCoreLine object
+#' @title asList function for XPSCoreLine
+#' @description asList attempts to coerce its argument to an object of class list. 
+#'  Mainly used for plot function.
+#' @param from = an XPSCoreLine object
 #' @param select one or few or \code{"all"} (default) of \code{c("MAIN", "RTF", "BASE", "COMPONENTS", "FIT")}
 #' @return 'asList' returns the selected slots of a XPSCoreLine coerced in list format
 setGeneric("asList", function(from, select="all") standardGeneric("asList"))
 #' @title asList
 #' @description method to coerce an object of class 'XPSCoreLine' in an object of class 'list'
-#' @param from = a XPSCoreLine object
+#' @param from = an XPSCoreLine object
 #' @param select one or few or \code{"all"} (default) of \code{c("MAIN", "RTF", "BASE", "COMPONENTS", "FIT")}
 #' @return 'asList' returns the selected slots of a XPSCoreLine coerced in list format
 #' @examples
@@ -249,10 +286,8 @@ setGeneric("asList", function(from, select="all") standardGeneric("asList"))
 #' }
 #' @export
 #'
-setMethod("asList", signature(from = "XPSCoreLine"),
-   function (from, select="all") {
-       if (select[1] == "all") select <- c("MAIN", "RTF", "BASE", "COMPONENTS", "FIT")
-
+setMethod("asList", signature(from = "XPSCoreLine"), function (from, select="all") {
+     if (select[1] == "all") select <- c("MAIN", "RTF", "BASE", "COMPONENTS", "FIT")
        X <- Y <- list()
      ## main curve
      if ("MAIN" %in% select) {
@@ -261,8 +296,8 @@ setMethod("asList", signature(from = "XPSCoreLine"),
      }
      ## RegionToFit
      if (("RTF" %in% select) && hasRegionToFit(from) ) {
-        X$RTF=from@RegionToFit$x
-        Y$RTF=from@RegionToFit$y
+        X$RTF <- from@RegionToFit$x
+        Y$RTF <- from@RegionToFit$y
      }
      ## Baseline
      if ( ("BASE" %in% select) && hasBaseline(from) ) {
@@ -281,7 +316,7 @@ setMethod("asList", signature(from = "XPSCoreLine"),
      if (("FIT" %in% select) && hasFit(from) ) {
         X$FIT <- from@RegionToFit$x
         Y$FIT <- as.vector(from@Baseline$y + from@Fit$y)
-     }
+     }   
      return(list(x=X,y=Y))
   }
 )
@@ -397,8 +432,9 @@ setGeneric("XPSsetRegionToFit", function(object, limits, ...) standardGeneric("X
 #' @param ...  further parameters to the XPSsetRegionToFit function
 #' @examples
 #' \dontrun{
-#'  test[["C1s"]] <- XPSsetRegionToFit(test[["C1s"]], limits=pos)   #pos is a list composed by pos$x1, pos$x2, pos$y1, pos$y2
-#' }                                                                #provided by locator(n=2)
+#'  test[["C1s"]] <- XPSsetRegionToFit(test[["C1s"]], limits=pos)   
+    #pos is a list composed by pos$x1, pos$x2, pos$y1, pos$y2 provided by locator(n=2)
+#' }                                                                
 #' @export
 #'
 setMethod("XPSsetRegionToFit", signature(object="XPSCoreLine"),
@@ -827,10 +863,10 @@ setMethod("XPSsetRSF", signature(object="XPSCoreLine"),
                  analyzer <- "kratos"     # if Kratos
                }
                rsf <- getElementValue(element, orbital, analyzer, what="RSF") #vedi XPSElement.r
-               LL <- length(unique(rsf)) # removes equal values: if LL>1 multiple RSF value associated to the same coreline
+               LL <- length(unique(rsf)) # removes equal values: if LL > 1 multiple RSF value associated to the same coreline
 
-#------ Check  (modified Giorgio2019)
-               if ( is.null(rsf) || is.na(rsf) || rsf==0 || LL>1) {
+#------ Check  
+               if ( is.null(rsf) || is.na(prod(rsf)) || prod(rsf)==0 || LL > 1 ) { #prod() needed when length(rsf) > 1
                   rsf <- NA
                   RSFwin <- gwindow("SET RSF", visible=FALSE)
                   size(RSFwin)<- c(300,200)
@@ -906,7 +942,7 @@ setGeneric("XPScalc", function(object, table=TRUE) standardGeneric("XPScalc"))
 #' @param table Print table Logic
 #' @examples
 #' \dontrun{
-#'  test[["C1s"]] <- XPScalc(test[["C1s"]], table=TRUE) #TRUE=prints the quantificaiton results
+#'  test[["C1s"]] <- XPScalc(test[["C1s"]], table=TRUE) #TRUE=prints the quantification
 #' }
 #' @export
 #'
@@ -1012,14 +1048,16 @@ setMethod("XPSpkgCtrl", signature(object = "XPSCoreLine"),
       attr(class(object), "package") <- ".GlobalEnv"
 #check if Baseline is present set the Formal class 'baseline' to [package ".GlobalEnv"]
       if(hasBaseline(object)){
-         if (attr(class(object@Baseline[[3]]), "package") == "baseline"){
-             attr(class(object@Baseline[[3]]), "package") <- ".GlobalEnv"
+         if (! is.null( attr(class(object@Baseline[[3]]), "package") )){
+             if (attr(class(object@Baseline[[3]]), "package") == "baseline"){
+                 attr(class(object@Baseline[[3]]), "package") <- ".GlobalEnv"
+             }
          }
-      }
-      CompNames <- names(object@Components)  #It may happen that FitComponents attribute(package)== Rxps
+         CompNames <- names(object@Components)  #It may happen that FitComponents attribute(package)== Rxps
 #set the Package attribute of the FIT Components to .GlobalEnv
-      for (ii in seq_along(CompNames)){
-          attr(class(object@Components[[ii]]), "package") <- ".GlobalEnv"
+         for (ii in seq_along(CompNames)){
+              attr(class(object@Components[[ii]]), "package") <- ".GlobalEnv"
+         }
       }
       return(object)
    }
@@ -1040,7 +1078,7 @@ setMethod("XPSpkgCtrl", signature(object = "XPSCoreLine"),
 #'   unprocessed CoreLine. For processed one it plots the RegionToFit defined by
 #'   the Boundaries extremes, the baseline, any FitComponent and Fit if they are present.
 #' @param x The \code{XPS} numeric matrix containing a XPS CoreLine to be plotted
-#' @param y (not used) Xdata, Ydata are contained in the XPSCoreLine object
+#' @param y Xdata, Ydata are contained in the XPSCoreLine object
 #' @seealso \code{\link{matplot}}, \code{\link{par}}
 #'
 setGeneric("plot", function(x="XPSCoreLine", y="missing") standardGeneric("plot")) #variables must be x, y, ... coherently with plot defined in R
@@ -1066,6 +1104,7 @@ setGeneric("plot", function(x="XPSCoreLine", y="missing") standardGeneric("plot"
 #' @export
 #'
 setMethod("plot", signature(x="XPSCoreLine", y="missing"),
+
   function(x,
            type = "l",
            ltype = "solid",
@@ -1078,14 +1117,10 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            ylab=x@units[2],
            ...
            ){
-
        TestName <- x@Symbol
        assign("MatPlotMode", TRUE, envir=.GlobalEnv)  #basic matplot function used to plot data
-       X <- as(x,"matrix") #as(x,"matrix") is generic. x is a XPSCoreline which is defined as a LIST
-       #However for LIST objects a setMethod("asList", select="all") is defined. Then calling the generic as(x,"matrix")
-       #will apply the method described in asList() which by default extracts "all" the defined data (.Data$x,$y
-       #RegionToFit$x,$y, Baseline$x,$y, Components$x,$y, Fit$y)
-       ## subset the matrix for xlim
+       X <- NULL
+       X <- setAsMatrix(from=x, to="matrix")  
        if ( is.null(ylim) ) {
           ylim <- sort(range(X[,2]))
        }
@@ -1098,8 +1133,6 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
        XX <- X[,1]  ## x-axis vector first column
        YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
 
-#---- check if the CoreLine is of type 'VBtop', 'VBFermi' or 'Derivative'
-#     and plots marker points instead of the best fit
        if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
 
        patt <- paste("\U0394.D.", 1, sep="")  #patt == Delta.D.1.
@@ -1141,22 +1174,10 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
              }
           }
        }
+#---- check if the CoreLine is of type 'VBtop', 'VBFermi' or 'Derivative'
+#     and plots marker points instead of the best fit
        # if it is a SPECIAL CoreLine print Markers (VBt, VBf, MaxMinD)
        if(TestName == "VBt" || TestName == "VBf" || grepl(patt, TestName)==TRUE){
-#---- colors of Baseline, Fit Components and Fit  (modified Giorgio2013)
-#          YY <- YY[,1:2]  #selects original and Baseline data
-#          color <- c("black", "sienna")
-#          matplot(x=XX,
-#          y=YY,
-#          type=type,
-#          lty=c("solid", "dashed"),
-#          col=color,
-#          xlim=xlim,
-#          ylim=ylim,
-#          main=main,
-#          xlab=xlab,
-#          ylab=ylab,
-#          ... )
           pos <- list(x=NULL, y=NULL)
           TestName <- NULL
           TestName <- sapply(x@Components, function(z) c(TestName, z@funcName))
@@ -1264,7 +1285,7 @@ setClass("XPSSample",
 ## Methods  concerning Class=XPSSample
 ##==============================================================================
 #' @title initialize
-#' @description Fdefines a method to initialize objects of class 'XPSSample'
+#' @description define a method initialize for objects of class 'XPSSample'
 #' @param .Object an object of class 'XPSSample'
 #' @param data a list containing x, y original data
 #' @param Project a character string containing information about the experiment
@@ -1341,7 +1362,7 @@ setMethod("[", "XPSSample",
 ## with another XPSSample dataset
 ##=========================================================
 #' @title combine
-#' @description defines a method to combine two XPSSamples
+#' @description define a method to combine two XPSSamples
 #' @param x object of class XPSSample to be combined
 #' @param ... additional parameters
 #' @return XPSSample
@@ -1376,21 +1397,17 @@ setMethod("c","XPSSample",
 ##=========================================================
 # shows the XPS-Sample content
 ##=========================================================
-# @title show
-# @description defines a method to print details of objects of class XPSSample
-# @param object an object of class XPSSample
-# setGeneric("show", function(object = "XPSSample")  standardGeneric("show"))
-
 #' @title show
-#' @description defines a method to print details of objects of class XPSSample
-#' @param object an object of class 'XPSSample'
+#' @description show method to print details of objects of class XPSSample
+#' @param object XPSSample
 #' @examples
 #' \dontrun{
 #'  show(XPSSample.RData)
 #' }
 #' @export
-setMethod("show", signature(object = "XPSSample"),
-   function(object) {
+#'
+setMethod("show", signature=("XPSSample"),
+   def=function(object) {
 
      ## header
      main <- paste(" An object of class", class(object))
@@ -1551,28 +1568,30 @@ setMethod("XPSpkgCtrl", signature(object = "XPSSample"),
 #' @param x XPSSample
 #' @param y (not used) Xdata, Ydata are contained in the XPSSample object
 #' @param ...  further parameters to the plot function
-setGeneric("plot", function(x="XPSSample", y="missing") standardGeneric("plot"))  #variables must be x, y, ... coherently with plot defined in R
 
+setGeneric("plot", function(x="XPSSample", y="missing") standardGeneric("plot"))  #variables must be x, y, ... coherently with plot defined in R
 #' @title 'plot'
 #' @description definition of method 'plot' for objects of class 'XPSSample'
 #' @param x XPSSample
 #' @param y (not used) Xdata, Ydata are contained in the XPSSample object
 #' @param ...  further parameters to the plot function
+#' @aliases missing
 #' @examples
 #' \dontrun{
-#' plot(test.RData)
+#' plot(test)
 #' }
 #' @export
 #'
 setMethod("plot", signature(x="XPSSample", y="missing"),
    function(x, ... ) {
-
       assign("MatPlotMode", TRUE, envir=.GlobalEnv)  #basic matplot function used to plot data
 
       ### set the title for the graphic window
+      WinSize <- as.numeric(XPSSettings$General[4])
       Gdev <- unlist(XPSSettings$General[6])         #retrieve the Graphic-Window type
       Gdev <- strsplit(Gdev, "title")
-      Gdev <- paste(Gdev[[1]][1], " title='",activeFName,"')", sep="")     #add the correct window title
+      Gdev <- paste(Gdev[[1]][1], ", title='",activeFName,"', width=", WinSize, ", height=", WinSize, ")", sep="")  #add the correct window title and Win-Size
+      ### nreset graphic window
       graphics.off() #switch off the graphic window
       eval(parse(text=Gdev),envir=.GlobalEnv) #switches the new graphic window ON
 
@@ -1585,7 +1604,9 @@ setMethod("plot", signature(x="XPSSample", y="missing"),
       if (length(x) > 12) {
             x <- x[1:12]
             warning("Only the first 12 XPSCoreLines are shown.")
-        }
+      }
+      ### plot(XPSSample) calls plot(CoreLine)  via lapply()     
+      par(type="l", lty=1)
       tmp <- lapply(x, plot, ...)
       par(mfrow=c(1,1))  #set single panel figure for CoreLine or generic data plots
    }
