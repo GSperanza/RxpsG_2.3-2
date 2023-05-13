@@ -1,4 +1,4 @@
-#XPSAnalReport() function to make a report containing the list of fitting components 
+#XPSAnalReport() function to make a report containing the list of fitting components
 #and relative abundance for the selected coreline
 
 #' @title XPSAnalReport provides information about a Core Line fit
@@ -149,12 +149,12 @@ XPSAnalReport <- function(){
 #--- No Baseline No Fit ---
          TabTxt <<- c(TabTxt, paste("*** ", CoreLine@Symbol, ": no fit present", sep=" "), "\n")
          PE <- RetrivePE(CoreLine)
-         TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "Energy Step: ",E_stp, sep=""), "\n")
+         TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "   Energy Step: ",E_stp, sep=""), "\n")
       } else if (length(CoreLine@Baseline) > 0 && N_comp==0) {
 #--- Baseline only No Fit ---
          TabTxt <<- c(TabTxt, paste("*** ", CoreLine@Symbol, "Coreline only Baseline ", CoreLine@Baseline$type[1], " present: ", sep=" "), "\n")
          PE <- RetrivePE(CoreLine)
-         TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "Energy Step: ",E_stp, sep=""), "\n")
+         TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "   Energy Step: ",E_stp, sep=""), "\n")
          if (RSF==0){
             sumCoreLine <- sum(CoreLine@RegionToFit$y-CoreLine@Baseline$y*E_stp) #Spectral area of the core-line
          } else {
@@ -174,7 +174,7 @@ XPSAnalReport <- function(){
          if ("VBtop" %in% fnName){
              TabTxt <<- c(TabTxt, paste("***  ", CoreLine@Symbol, " Core-Line Fit Info: ", sep=""), "\n")
              PE <- RetrivePE(CoreLine)
-             TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "Energy Step: ",E_stp, sep=""), "\n")
+             TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "   Energy Step: ",E_stp, sep=""), "\n")
              TabTxt <<- c(TabTxt, " \n")
              TabTxt <<- c(TabTxt, paste("     BaseLine applied: ",CoreLine@Baseline$type[1], sep=""), "\n")
              TabTxt <<- c(TabTxt, " \n")
@@ -208,7 +208,7 @@ XPSAnalReport <- function(){
 # width of colum<ns("Components", "FitFunct.", "Area(cps)", "Intensity", "FWHM", "BE(eV)", "TOT.(%)")
              TabTxt <<- c(TabTxt, paste("***  ", CoreLine@Symbol, " Core-Line Fit Info: ", sep=""), "\n")
              PE <- RetrivePE(CoreLine)
-             TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "Energy Step: ",E_stp, sep=""), "\n")
+             TabTxt <<- c(TabTxt, paste("Pass Energy: ", PE, "   Energy Step: ",E_stp, sep=""), "\n")
              TabTxt <<- c(TabTxt, " \n")
              TabTxt <<- c(TabTxt, paste("     BaseLine applied: ",CoreLine@Baseline$type[1], sep=""), "\n")
              TabTxt <<- c(TabTxt, " \n")
@@ -467,6 +467,9 @@ XPSAnalReport <- function(){
                          svalue(QuantRprt) <- FALSE
                          ResetVars()
                      }, container=RGroup3)
+
+   gseparator(horizontal=TRUE, container=RFrame2)
+   gseparator(horizontal=TRUE, container=RFrame2)
 
    RGroup4 <- ggroup(horizontal=TRUE, spacing=1, container=RFrame2)
    glabel("Other: ", container=RGroup4)
