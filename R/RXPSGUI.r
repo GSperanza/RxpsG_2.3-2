@@ -359,7 +359,7 @@ CtrlSurname <- function(FName){
             XPSExportAscii()
       }, container=groupMenu),
 
-      gaction("   Split XPS Data File", handler=function(h,...){
+      gaction("   Split PXT Data File", handler=function(h,...){
             XPSSplit()
             setFileWin("UPDATE")
       }, container=groupMenu),
@@ -409,11 +409,11 @@ CtrlSurname <- function(FName){
                assign("activeSpectIndx", "", envir=.GlobalEnv)
 
                setFileWin("UPDATE")
-#               Gdev <- unlist(XPSSettings$General[6])         #retrieve the Graphic-Window type
-#               Gdev <- strsplit(Gdev, "title")
-#               Gdev <- paste(Gdev[[1]][1], " title='",activeFName,"')", sep="")     #add the correct window title
-#               graphics.off() #switch off the graphic window
-#               eval(parse(text=Gdev),envir=.GlobalEnv)          #open graphic window
+               Gdev <- unlist(XPSSettings$General[6])         #retrieve the Graphic-Window type
+               Gdev <- strsplit(Gdev, "title")
+               Gdev <- paste(Gdev[[1]][1], " title=' ')", sep="")     #add the correct window title
+               graphics.off() #switch off the graphic window
+               eval(parse(text=Gdev),envir=.GlobalEnv)          #open graphic window
             } else {
               return()
             }
@@ -728,7 +728,7 @@ CtrlSurname <- function(FName){
    switch (OS,
            "linux" =   {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ')" },
            "windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ')"},
-           "darwin"  = {Gdev <- "quartz()" })
+           "darwin"  = {Gdev <- "quartz(xpos=700, ypos=20, title=' ')" })
    XPSSettings$General[6] <- Gdev
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
       gmessage("Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")

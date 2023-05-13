@@ -36,7 +36,7 @@ XPSSaveRetrieveBkp <- function(opt){
        },
        "retrieve"={
           FNameList <- load(Bkp.pthName,envir=.GlobalEnv)   #load the data in the .GlobalEnv not in the local memory
-                                                          #assign not necessary
+          assign("activeFName", FNameList[1], envir=.GlobalEnv)                                                  #assign not necessary
        } )
 
 }

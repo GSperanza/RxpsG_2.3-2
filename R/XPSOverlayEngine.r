@@ -215,7 +215,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     }
 
 #--- Here Y alignment
-    if (PlotParameters$Aligne) {
+    if (PlotParameters$Align) {
        LL<-length(Y)
        if ( all(sapply(Y, function(z) !is.na(charmatch("BASE", names(z))))) ) {
 			       minybase <- sapply(Y, function(z) min(z$BASE))
@@ -359,23 +359,23 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     if (PlotParameters$OverlayMode=="Multi-Panel") {
        #define row and columns of the panel matrix
        Nspettri<-length(XPSSampNames)
-       Ncol<-1
-       Nrow<-1
-       rr<-FALSE
+       Ncol <- 1
+       Nrow <- 1
+       rr <- FALSE
        while(Nspettri>Ncol*Nrow) {
           if (rr){
-             Nrow<-Nrow+1
-             rr<-FALSE
+             Nrow <- Nrow+1
+             rr <- FALSE
           } else {
-             Ncol<-Ncol+1
-             rr<-TRUE
+             Ncol <- Ncol+1
+             rr <- TRUE
           }
        }
 
-       Plot_Args$xlim<-NULL  #X range is defined inside xyplot
-       Plot_Args$ylim<-NULL  #Y range is defined inside xyplot
+       Plot_Args$xlim <- NULL  #X range is defined inside xyplot
+       Plot_Args$ylim <- NULL  #Y range is defined inside xyplot
        if (PlotParameters$Reverse) { #If reverse is TRUE limits must be given through a list containing:
-          Plot_Args$xlim<-Xlimits    #Xlimits[[1]]=X1max, X1min
+          Plot_Args$xlim <- Xlimits    #Xlimits[[1]]=X1max, X1min
        }                             #Xlimits[[2]]=X2max, X2min
                                     #   ...
        cx<-unlist(cx)
@@ -510,7 +510,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
           }
           Cloud_Args$col <- Plot_Args$col <- PlotParameters$Colors
        }
-
+cat("\n 333")
 #---axis options---
        if (length(Plot_Args$main$label) == 0) { Plot_Args$main$label <- SpectName }
        if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[SpectName]]@units[1] }
@@ -528,7 +528,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
        Cloud_Args$scales<-list(cex=Plot_Args$scales$cex, tck=c(1,0), alternating=c(1), relation="free",
                                x=list(log=LogOnOff), y=list(log=LogOnOff),z=list(log=LogOnOff),
                                arrows=FALSE)
-
+cat("\n 444")
 #---3D rendering---
        Cloud_Args$aspect<-as.numeric(PlotParameters$TreDAspect)
        Cloud_Args$screen<-list(x=-60,

@@ -1,5 +1,3 @@
-#   Fit components moved manually with Graphic Event Handler
-
 #' @title XPSMoveComp
 #' @description XPSMoveComp function to modify component position and intensity in a fit
 #'   this function provides a userfriendly interface change position and intensity of each
@@ -43,42 +41,6 @@ XPSMoveComp <- function(){
             }
        }
        return()
-   }
-
-
-  my.coords <- function(buttons, x, y) { #converts the normalized device coords in user coords
-      xx <- grconvertX(x, from="ndc", to="user")
-      yy <- grconvertY(y, from="ndc", to="user")
-
-      Xlim1 <- min(Object@RegionToFit[[1]])   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(Object@RegionToFit[[1]])
-      Ylim1 <- min(Object@RegionToFit[[2]])
-      Ylim2 <- max(Object@RegionToFit[[2]])
-
-      if (xx < 0.95*Xlim1 ) {xx <- Xlim1}
-      if (xx > 1.05*Xlim2 ) {xx <- Xlim2}
-      if (yy < 0.95*Ylim1 ) {yy <- Ylim1}
-      if (yy > 1.05*Ylim2 ) {yy <- Ylim2}
-
-      Estep <- abs(Object@RegionToFit[[1]][1] - Object@RegionToFit[[1]][2])
-      Xindx <- which(Object@RegionToFit[[1]] > xx-Estep/2 & Object@RegionToFit[[1]] < xx+Estep/2)
-      yy_BasLin <- yy-Object@Baseline$y[Xindx]  #spectral intensity at xx without Baseline
-      coords <<- c(xx, yy, yy_BasLin)
-
-      if (buttons == 0) { LBmousedown() }
-      if (buttons == 2) { RBmousedown() }
-
-      return()
-  }
-
-  keydown <- function(key) {  #blocks the mouseHandler
-     cat("\n Key pressed", key)
-     if (key == "q") {
-        EXIT <<- TRUE
-        eventEnv <<- NULL
-        NULL
-        return(1)
-     }
   }
 
   LBmousedown <- function() {   #Left mouse button down
@@ -304,13 +266,11 @@ XPSMoveComp <- function(){
                                replot()   #plot spectrum without marker
                                refresh <<- FALSE #now plot also the component marker
                                replot()   #replot spectrum and marker
-                               if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-                                   if (ShowMsg==TRUE){
-                                       gmessage("Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
-                                       tcl("update", "idletasks") #closes the gmessage window
-                                   }
-                                   GetCurPos(single=FALSE)
+                               if (ShowMsg==TRUE){
+                                   gmessage("Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
+                                   tcl("update", "idletasks") #closes the gmessage window
                                }
+                               GetCurPos(single=FALSE)
                            },  container = MCGroup3)
            LL <- length(ComponentList)
            NCol <- ceiling(LL/5)   #gradio will be split in solumns of 5 elements
@@ -351,21 +311,21 @@ XPSMoveComp <- function(){
                                    GetCurPos(single=FALSE)
                                }
                            },  container = MCGroup3)
-     }
-     if (O.Sys == "linux"){ #in Linux locator is activated to read cursor positions
-         txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
-                      "\n=> Left click with the mouse to enter the cursor coordinates.",
-                      "\n=> Right click to stop position selection and cursor position reading when not required.",
-                      "\n",
-                      "=> Do not show these WARNING messages again press YES, let WARNINGS active press NO", sep="")
-         ShowMsg <<- !gconfirm(msg=txt, title="WARNING", icon="question", width=30) #ShowMsg==FALSE if answer=YES
-         tcl("update", "idletasks") #closes the gmessage window
-         GetCurPos(single=FALSE)
-     }
-
+       }
+       txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
+                    "\n=> Left click with the mouse to enter the cursor coordinates.",
+                    "\n=> Right click to stop position selection and cursor position reading when not required.",
+                    "\n",
+                    "=> Do not show these WARNING messages again press YES, let WARNINGS active press NO", sep="")
+       ShowMsg <<- !gconfirm(msg=txt, title="WARNING", icon="question", width=30) #ShowMsg==FALSE if answer=YES
+       tcl("update", "idletasks") #closes the gmessage window
+       GetCurPos(single=FALSE)
   }
 
-  LoadCoreLine<-function(){
+  LoadCoreLine <- function(){
+      XPSSample <<- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
+      Indx <<- activeSpectIndx
+      Object <<- XPSSample[[Indx]]
       Xlimits <<- range(Object@RegionToFit$x)
       Ylimits <<- range(Object@RegionToFit$y)
       Object@Boundaries$x <<- Xlimits
@@ -451,7 +411,8 @@ XPSMoveComp <- function(){
 
   reset.vars <- function(){
      XPSSample <<- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
-     Indx <- activeSpectIndx
+     Indx <<- 1
+     assign("activeSpectIndx", 1, envir=.GlobalEnv)
      if(activeSpectIndx > length(XPSSample)) { Indx <<- 1 }
      OldXPSSample <<- XPSSample
      Object <<- XPSSample[[Indx]]
@@ -460,7 +421,9 @@ XPSMoveComp <- function(){
      FNameList <<- XPSFNameList()
      SpectList <<- XPSSpectList(activeFName)
      FComp <<- 1
-     FitComp <<- NULL
+     if (is.null(FitComp) == FALSE){
+         delete(MCGroup3, FitComp)
+     }
      UpdateCompMenu <<- TRUE     
      coords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
      CompCoords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
@@ -471,7 +434,6 @@ XPSMoveComp <- function(){
      ShowMsg <<- TRUE
      WinSize <<- as.numeric(XPSSettings$General[4])
      hscale <<- hscale <- as.numeric(WinSize)
-     WinScale  <<- NULL
 
      if (length(ComponentList)==0) {
         gmessage("ATTENTION NO FIT FOUND: change coreline please!" , title = "WARNING",  icon = "warning")
@@ -481,6 +443,7 @@ XPSMoveComp <- function(){
         return()
      }
   }
+
 
 # --- Variable definitions ---
      XPSSample <- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
@@ -498,7 +461,6 @@ XPSMoveComp <- function(){
 
      WinSize <- as.numeric(XPSSettings$General[4])
      hscale <- hscale <- as.numeric(WinSize)
-     WinScale  <- NULL
 
      coords <- c(xx=NA, yy=NA, yy_BasLin=NA)
      CompCoords <- c(xx=NA, yy=NA, yy_BasLin=NA)
@@ -537,14 +499,12 @@ XPSMoveComp <- function(){
 
      if (Check.PE() == FALSE) { return() }
      O.Sys <- unname(tolower(Sys.info()["sysname"]))
-     eventEnv <- NULL
 
 #--- GWidget definition ---
      MCWindow <- gwindow("XPS MOVE COMPONENT", parent=c(50,10), visible = FALSE)
      addHandlerDestroy(MCWindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
-#-----                         stopping mouse handler
-                               setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                               eventEnv <<- NULL
+                               XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
+                               assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(XPSSample[[Indx]])         #replot the CoreLine
                            })
 
@@ -573,7 +533,7 @@ XPSMoveComp <- function(){
                                                    assign("activeSpectName", SpectName,envir=.GlobalEnv) #set activeSpectName == last selected spectrum
                                                    assign("activeSpectIndx", Indx,envir=.GlobalEnv) #set the activeIndex == last selected spectrum
                                                    point.index <<- 1
-                                                   UpdateCompMenu <- TRUE
+                                                   UpdateCompMenu <<- TRUE
                                                    LoadCoreLine()
                                                 }, container = MCFrame1)
                                refresh <<- FALSE #now plot also the component marker
@@ -596,7 +556,7 @@ XPSMoveComp <- function(){
                                assign("activeSpectName", SpectName,envir=.GlobalEnv) #set activeSpectName == last selected spectrum
                                assign("activeSpectIndx", Indx,envir=.GlobalEnv) #set the activeIndex == last selected spectrum
                                point.index <<- 1
-                               UpdateCompMenu <- TRUE
+                               UpdateCompMenu <<- TRUE
                                LoadCoreLine()
                            }, container = MCFrame2)
      svalue(Core.Lines) <- SpectList[Indx]
@@ -732,8 +692,9 @@ XPSMoveComp <- function(){
      Buttlyt[4,1] <- gbutton("        EDIT PARAMETERS        ", handler=editFitFrame, container = Buttlyt)
 
      Buttlyt[4,2] <- gbutton("          RE-LOAD DATA         ", handler=function(h,...){
-                               UpdateCompMenu <- FALSE
+                               UpdateCompMenu <<- FALSE
                                LoadCoreLine()
+                               svalue(FitComp, index=TRUE) <- 1
                                OldXPSSample <<- XPSSample
                           }, container = Buttlyt)
 
@@ -750,34 +711,11 @@ XPSMoveComp <- function(){
 
      Buttlyt[5,2] <- gbutton("               EXIT            ", handler=function(h,...){
 #-----            stopping mouse handler
-                               setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                               eventEnv <<- NULL
                                dispose(MCWindow)    #Disposing MCWindow will activate GDestroyHandler which re-opens the graphic window
                                XPSSample <- get(activeFName, envir=.GlobalEnv) #Update XPSSample with all changes before plotting
                                XPSSaveRetrieveBkp("save")
                                plot(XPSSample[[Indx]])         #replot the CoreLine
                           }, container = Buttlyt)
-
-     LabBox <- ggroup(spacing=1, horizontal=TRUE, container=SelectGroup)
-     glabel("Graphical Window size: ", container=LabBox)
-     WSvalue <- glabel(text=as.character(hscale), container=LabBox)
-     WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = hscale, horizontal=TRUE, handler=function(h,...){
-                               WinSize <- svalue(WSize)
-                               svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                               WinSize <<- dev.size()*WinSize   #rescale the graphic window
-#                               graphics.off()
-#                               OS <- Sys.info["sysname"]
-#                               switch (OS,
-#                                  "Linux" =   {x11(type='Xlib', xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                                  "Windows" = {x11(xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                                  "MacOS-X" = {quartz(title=' ')},  #quartz() does allow setting the opening position
-#                                  "Mac OS"  = {quartz(title=' ')},
-#                                  "macOS"   = {quartz(title=' ')},
-#                                  "Darwin"  = {quartz(title=' ')})
-#                               refresh <<- FALSE #now plot also the component marker
-#                               devset()
-                               replot(Object)
-                          }, container=SelectGroup)
 
      StatBar <- gstatusbar("status", container = MCWindow)
 
@@ -803,16 +741,8 @@ XPSMoveComp <- function(){
      tcl("update", "idletasks") #Complete the idle tasks
 
 #--- Interactive mouse control ---
-     if (O.Sys == "windows"){
+     if (length(ComponentList) > 0) {
          ComponentMenu()
-         devset <- function(){ #returns the ID of the current active graphic device
-                   if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
-                }
-         setGraphicsEventHandlers(prompt="Waiting for mouse clicks", which = dev.cur())
-         eventEnv <- getGraphicsEvent(onMouseDown = my.coords, onKeybd = keydown)
-     }
-     if (O.Sys == "linux" && length(ComponentList)>0 && visible(MCWindow)){
-        ComponentMenu()
      }
 }
 

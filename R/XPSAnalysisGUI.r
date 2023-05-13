@@ -13,7 +13,7 @@
 
 XPSAnalysis <- function() {
 
-  GetCurPos <- function(single){
+  GetCurPos <- function(SingClick){
        tabMain <- svalue(nbMain)
        coords <<- NULL
        EXIT <- FALSE
@@ -22,7 +22,7 @@ XPSAnalysis <- function() {
             if (is.null(pos)) {
                 EXIT <- TRUE
             } else {
-                if ( single ){ EXIT <- TRUE }
+                if ( SingClick ){ EXIT <- TRUE }
                 if (tabMain == 1 && SetZoom == TRUE) {
                     coords <<- unlist(pos)
                     RBmousedown()  #selection of the zoom area
@@ -223,6 +223,7 @@ XPSAnalysis <- function() {
 
 
   Set.Coreline <- function(h, ...) {
+     svalue(BaselineType) <- ""
      coreline <<- svalue(Core.Lines)
      coreline <<- unlist(strsplit(coreline, "\\."))   #"number." and "CL name" are separated
      assign("activeSpectName",coreline[2], envir=.GlobalEnv)
@@ -276,7 +277,7 @@ XPSAnalysis <- function() {
                                replot()
                                gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
                                tcl("update", "idletasks") #closes the gmessage window
-                               GetCurPos(single=FALSE)
+                               GetCurPos(SingClick=FALSE)
                             }, container = T2Frame3)
              add(T2Frame3, FitComp)
          }
@@ -289,6 +290,7 @@ XPSAnalysis <- function() {
 
   Make.Baseline <- function(){     #deg, Wgt, splinePoints
      #Now generate the Base-Line
+     cat("\n ==> Generating Baseline")
      if (BType == "") {
          gmessage("Select the Base-Line please", title="WARNING", icon="warning")
          return() 
@@ -359,7 +361,7 @@ XPSAnalysis <- function() {
                                        replot()
                                        gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
                                        tcl("update", "idletasks") #closes the gmessage window
-                                       GetCurPos(single=FALSE)
+                                       GetCurPos(SingClick=FALSE)
                                     }, container = T2Frame3)
                 add(T2Frame3, FitComp)
 	               Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
@@ -407,7 +409,7 @@ XPSAnalysis <- function() {
                                       replot()
                                       gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
                                       tcl("update", "idletasks") #closes the gmessage window
-                                      GetCurPos(single=FALSE)
+                                      GetCurPos(SingClick=FALSE)
                                    }, container = T2Frame3)
 
  			        svalue(plotFit) <<- "normal"
@@ -497,7 +499,6 @@ XPSAnalysis <- function() {
                                assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(Object[[activeSpectIndx]])         #replot the CoreLine
                            })
-
   MainGroup <- ggroup(container = MainWindow, horizontal = TRUE)
 
   ## XPS Sample & Core lines
@@ -521,7 +522,7 @@ XPSAnalysis <- function() {
 #----- Notebook -----------------------------
   nbMain <- gnotebook(expand = FALSE, container = Pgroup1)
 
-  size(nbMain) <- c(410,330)  #this are the minimal dimensions of the notebook to visualize all the widgets
+  size(nbMain) <- c(440, 350)  #this are the minimal dimensions of the notebook to visualize all the widgets
 
 #----- TAB1: Baseline -----
   T1group1 <- ggroup(container = nbMain, label = "Baseline", horizontal=FALSE, spacing=2)
@@ -536,7 +537,7 @@ XPSAnalysis <- function() {
                                       Sel <- Sel[-which(Sel == BType)]  #recognize previous selectionand eliminate
                                       svalue(BaselineType) <- Sel       #update gcheckboxgroup with only the last selection
                                    } else {
-                                      gmessage("\nSelect BaseLine edges. Right button to stop slection", title="WARNING", icon="warning")
+                                      gmessage("\nSet BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
                                       tcl("update", "idletasks")     #closes the gmessage window
                                    }
                                    BType <<- svalue(BaselineType)    #save the last selection
@@ -550,11 +551,11 @@ XPSAnalysis <- function() {
                                        return()
                                    }
                                    if (hasBoundaries(Object[[coreline]]) == FALSE) {
-                                       gmessage("Please select the edges of the BaseLine!", title="WARNING", icon="warning")
+                                       gmessage("Set BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
                                        return()
                                    }
                                    if (BType == "spline" && length(splinePoints)==0) { #splinePoints not defined skip XPSBaseline()
-                                       gmessage("Please select the spline points with the right mouse button!", title="WARNING", icon="warning")
+                                       gmessage("Please select the spline points with the RIGHT mouse button!", title="WARNING", icon="warning")
                                        return()
                                    }
                                    splinePoints <<- list(x=NULL, y=NULL)
@@ -692,7 +693,7 @@ XPSAnalysis <- function() {
                                    )  #end switch
                                    Make.Baseline()
                                    replot()
-                                   GetCurPos(single=FALSE)
+                                   GetCurPos(SingClick=FALSE)
                    },container = T1Frame1)
   for(ii in 1:10) {
       tkpack.forget(BaselineType$widgets[[ii]]$button)  # unparent widgets (uses library call)
@@ -766,7 +767,7 @@ XPSAnalysis <- function() {
                    enabled(MZbutton)<-TRUE
                    enabled(ZObutton)<-TRUE
                    replot()
-                   GetCurPos(single=FALSE)
+                   GetCurPos(SingClick=FALSE)
                 }, container = T1Frame4)
 
   MZbutton<-gbutton("  MAKE ZOOM  ", handler = function(h, ...){
@@ -855,7 +856,7 @@ XPSAnalysis <- function() {
   T2Frame2 <- gframe(text = " Set Fit Components ", horizontal=FALSE, container = T2group2)
   glabel(" Press 'Add' to add Fit Components", container=T2Frame2)
   add_btn <- gbutton("Add", handler = function(h, ...){
-                                GetCurPos(single=FALSE)
+                                GetCurPos(SingClick=FALSE)
                           }, container = T2Frame2)
 
   del_btn <- gbutton("Delete", container = T2Frame2, expand=FALSE, handler = del.component )
@@ -870,7 +871,7 @@ XPSAnalysis <- function() {
                                replot()
                                gmessage("\nSelect the Fit Component to move. \nRight button to stop slection", title="WARNING", icon="warning")
                                tcl("update", "idletasks") #closes the gmessage window
-                               GetCurPos(single=FALSE)
+                               GetCurPos(SingClick=FALSE)
                            }, container = T2Frame3)
 
   T2Frame4 <- gframe(text = " Display ", container = T2group3, horizontal=TRUE)

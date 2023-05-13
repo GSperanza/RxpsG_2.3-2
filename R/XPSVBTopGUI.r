@@ -14,40 +14,37 @@
 
 XPSVBTop <- function() {
 
-  devset <- function(){ #returns the ID of the current active graphic device
-      if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
+
+  GetCurPos <- function(SingClick){
+       coords <<- NULL
+       EXIT <- FALSE
+       while(EXIT == FALSE){
+cat("\n Waiting Mouse")
+            pos <- locator(n=1)
+            if (is.null(pos)) {
+cat("\n EXIT Mouse")
+                EXIT <- TRUE
+            } else {
+                if ( SingClick ){ 
+                    coords <<- c(pos$x, pos$y)
+                    EXIT <- TRUE
+                } else {
+                    Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
+                    Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
+                    Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
+                    Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
+
+                    if (pos$x < Xlim1 ) {pos$x <- Xlim1}
+                    if (pos$x > Xlim2 ) {pos$x <- Xlim2}
+                    if (pos$y < Ylim1 ) {pos$y <- Ylim1}
+                    if (pos$y > Ylim2 ) {pos$y <- Ylim2}
+                    coords <<- c(pos$x, pos$y)
+                    LBmousedown()  #selection of the BaseLine Edges
+                }
+            }
+       }
+       return()
   }
-
-  my.coords <- function(buttons, x, y) { #converts the normalized device coords in user coords
-      xx <- grconvertX(x, from="ndc", to="user")
-      yy <- grconvertY(y, from="ndc", to="user")
-      coords <<- c(xx, yy)
-
-      Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
-      Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
-      Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
-
-      if (xx < Xlim1 ) {xx <- Xlim1}
-      if (xx > Xlim2 ) {xx <- Xlim2}
-      if (yy < Ylim1 ) {yy <- Ylim1}
-      if (yy > Ylim2 ) {yy <- Ylim2}
-      if (buttons == 0) { LBmousedown() }
-      if (buttons == 2) { cat("\n Please use Left Mouse Button") }
-      return()
-  }
-
-  keydown <- function(key) {  #blocks the mouseHandler
-     cat("\n Key pressed", key)
-     if (key == "q") {
-        EXIT <<- TRUE
-        eventEnv$onMouseMove <<- NULL
-        enentEnv <<- NULL
-        NULL
-        return()
-     }
-  }
-
 
   LBmousedown <- function() {
      tab1 <- svalue(nbMain)
@@ -110,8 +107,11 @@ XPSVBTop <- function() {
          if (coreline == 0) {
             gmessage(msg="Please select the VB spectrum", title = "WARNING: WRONG CORELINE SELECTION",  icon = "warning")
          }
-         point.coords$x <<- c(point.coords$x, coords[1])
-         point.coords$y <<- c(point.coords$y, coords[2])
+#         point.coords$x <<- c(point.coords$x, coords[1])
+#         point.coords$y <<- c(point.coords$y, coords[2])
+         point.coords$x <<- coords[1]
+         point.coords$y <<- coords[2]
+         add.FitFunct()
          replot()
      }
      if (tab1 == 2 && tab2 == 3) { ### tab=VB Fit, Hill Sigmoid Fit
@@ -225,12 +225,6 @@ XPSVBTop <- function() {
          }
          Object[[coreline]]@RSF <<- 0 #set the VB sensitivity factor to zero to avoid error wornings
 
-         LL <- length(Object[[coreline]]@.Data[[1]])
-         Object[[coreline]]@Boundaries$x <<- c(Object[[coreline]]@.Data[[1]][1], Object[[coreline]]@.Data[[1]][LL])
-         Object[[coreline]]@Boundaries$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
-         Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])  #Define RegionToFit see XPSClass.r
-         Object[[coreline]] <<- XPSbaseline(Object[[coreline]], "Shirley", deg, splinePoints )
-         VBintg <<- sum(Object[[coreline]]@RegionToFit$y - Object[[coreline]]@Baseline$y)/LL #Integral of BKG subtracted VB / number of data == average intensity of VB points
 # reset zoom
          svalue(baseline.zoom) <- FALSE
 # if boundaries already defined
@@ -315,7 +309,7 @@ XPSVBTop <- function() {
      if (coreline != 0 && hasBaseline(Object[[coreline]])) {
          Xrange <- Object[[coreline]]@Boundaries$x
          Sigma <- abs(Xrange[2]-Xrange[1])/7
-         if (! is.null(point.coords$x[1]) && tab2==2 ) {   #NON-Linear Fit
+         if (!is.null(point.coords$x[1]) && tab2==2 ) {   #NON-Linear Fit
 #Fit parameter are set in XPSAddComponent()
              Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(Fit.type),
                                              peakPosition = list(x = point.coords$x, y = point.coords$y), sigma=Sigma)
@@ -326,9 +320,22 @@ XPSVBTop <- function() {
              point.coords <<- list(x=NULL,y=NULL)
              replot()
          }
-         if (! is.null(point.coords$x[1]) && tab2==3 ) {   #Hill Sigmoid Fit
+         if (!is.null(point.coords$x[1]) && tab2==3 ) { #Hill Sigmoid Fit
 #Fit parameter are set in XPSAddComponent()
-
+             if(length(point.coords$x) > 3){
+                gmessage("Attention: more than the Max, Flex, Min points were defined. Only the first three points will be taken", title="WARNING", icon="warning")
+                point.coords$x <<- point.coords$x[1:3]
+                point.coords$y <<- point.coords$y[1:3]
+             }
+             if(Object[[coreline]]@Flags[[2]] == TRUE){ #Binding energy
+                idx <- order(point.coords$x, decreasing=TRUE)
+                point.coords$x <<- point.coords$x[idx]  #point.coords could be entered in sparse order
+                point.coords$y <<- point.coords$y[idx]  #here we will have MAX, FLEX, MIN positions
+             } else {                                   #Kinetic energy
+                idx <- order(point.coords$x, decreasing=FALSE)
+                point.coords$x <<- point.coords$x[idx]
+                point.coords$y <<- point.coords$y[idx]
+             }
              Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "HillSigmoid",
                                              peakPosition = list(x = point.coords$x, y = point.coords$y), ...)
              Object[[coreline]]@Fit$y <<- Object[[coreline]]@Components[[1]]@ycoor-Object[[coreline]]@Baseline$y #subtract the Baseline
@@ -703,22 +710,15 @@ XPSVBTop <- function() {
   MarkSym <- 10
   SymSiz <- 1.8
 
-
-
-
-
   WinSize <- as.numeric(XPSSettings$General[4])
-  cat("\n Please set the background extremes to define the VB integral ")
 
 
 #====== Widget definition =======
 
   VBwindow <- gwindow("XPS VB Top GUI", parent=c(50, 10), visible = FALSE)
   addHandlerDestroy(VBwindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
-#-----                           stopping mouse handler
-                                 setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                                 eventEnv$onMouseMove <<- NULL
-                                 eventEnv <<- NULL
+                                 XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
+                                 assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                  plot(Object) #replot the CoreLine
                            })
   VBGroup <- ggroup(container = VBwindow, horizontal = TRUE)
@@ -748,7 +748,6 @@ XPSVBTop <- function() {
 
   Core.Lines <- gcombobox(c("0.All spectra", SpectList), selected=1, handler = set.coreline, container = SelectFrame)
 
-
 #===== Notebook==================
   nbMain <- gnotebook(container = MainGroup, expand = FALSE)
   size(nbMain) <- c(400, 430)
@@ -756,20 +755,30 @@ XPSVBTop <- function() {
 #----- TAB1: Baseline -----
   T1group1 <- ggroup(label = "Baseline", horizontal=FALSE, container = nbMain)
 
-  T1Frame1 <- gframe(text = " Process ", horizontal=FALSE, container = T1group1)
+  T1Frame1 <- gframe(text = " Processing ", horizontal=FALSE, container = T1group1)
 
   T1Frame2 <- gframe(text = " WARNING! ", horizontal=FALSE, container = T1Frame1)
   WarnLab1 <- glabel("Check the Shirley BKG and set it properly below the WHOLE VB", container = T1Frame2)
   WarnLab2 <- glabel("Modify BKG Markers and press 'Define the VB Integral'", container = T1Frame2)
   T1group2 <- ggroup(horizontal=TRUE, spacing = 15, container = T1Frame2)
-  OK_btn1 <- gbutton(" Define the VB Integral ", handler = function(h, ...) {
+  OK_btn1 <- gbutton(" Set the Baseline ", handler = function(h, ...) {
+                   svalue(WarnLab1) <- "Set the EXTENSION and LEVEL of the Background \nto Select the VBtop Region and Define the VB Integral"
+                   svalue(WarnLab2) <- "Then press \n'Define the VB region proximal to the Fermi Edge' to proceed"
+                   LL <- length(Object[[coreline]]@.Data[[1]])
+                   Object[[coreline]]@Boundaries$x <<- c(Object[[coreline]]@.Data[[1]][1], Object[[coreline]]@.Data[[1]][LL])
+                   Object[[coreline]]@Boundaries$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
+                   Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])  #Define RegionToFit see XPSClass.r
+                   Object[[coreline]] <<- XPSbaseline(Object[[coreline]], "Shirley", deg, splinePoints )
+                   VBintg <<- sum(Object[[coreline]]@RegionToFit$y - Object[[coreline]]@Baseline$y)/LL #Integral of BKG subtracted VB / number of data == average intensity of VB points
+                   gmessage("Please set the background ends. \nAlways Left Button to Enter Positions Right Button to Stop", title="WARNING", icon="warning")
+                   cat("\n Please set the background ends to define the VB integral ")
+                   GetCurPos(SingClick=FALSE)   #activates locator to define the edges of the Baseline for VB background subtraction
+
                    VBbkgOK <<- TRUE
                    BType <<- "linear"
                    reset.baseline()  #reset baseline from Shirley to linear BKG
                    MarkSym <<- 9
                    SymSiz <<- 1.5
-                   svalue(WarnLab1) <- "Set the EXTENSION and LEVEL of the Background \nto select the VB top region only"
-                   svalue(WarnLab2) <- "Modify BKG Markers and press \n'Define the VB region proximal to the Fermi edge'"
                    enabled(OK_btn2) <<- TRUE
                    enabled(OK_btn1) <- FALSE
                    replot()
@@ -785,7 +794,10 @@ XPSVBTop <- function() {
   addSpring(T1group2)
 
   T1Frame3 <- gframe(text = "DEFINE THE ANALYSIS REGION", horizontal=FALSE, container = T1Frame1)
-  OK_btn2 <- gbutton("Define VB region proximal to the Fermi edge", handler = function(h, ...) {
+  OK_btn2 <- gbutton("Define VB region proximal to the Fermi Edge", handler = function(h, ...) {
+                   svalue(WarnLab1) <- "Set the Extension of the VB-portion analyze /nin Proximity of the Fermi Level"
+                   svalue(WarnLab2) <- "Extension of the VB must allow fitting the \n descending tail towards 0 eV"
+                   GetCurPos(SingClick=FALSE)   #Activates the locator to define the region proximal to the Fermi
                    slot(Object[[coreline]],"Boundaries") <<- point.coords
                    Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])  #Define RegionToFit see XPSClass.r
                    VBlimOK <<- TRUE
@@ -801,33 +813,10 @@ XPSVBTop <- function() {
   gwin23 <- gframe(text = " Plot ", container = T1Frame1)
   baseline.zoom <- gcheckbox("zoom Y scale", checked=FALSE, container=gwin23, handler= replot )
 
-  #--- Plot Dimensions ---
-  WSgroup <- ggroup(horizontal=TRUE, spacing=3, container=T1Frame1)
-  WSvalue <- glabel(text=as.character(WinSize), container=WSgroup)
-  glabel("Graphical Window size: ", container=WSgroup)
-  WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
-                        WinSize <- svalue(WSize)
-                        svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
-#                        graphics.off()
-#                        OS <- Sys.info["sysname"]
-#                        switch (OS,
-#                           "Linux" =   {x11(type='Xlib', xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                           "Windows" = {x11(xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                           "MacOS-X" = {quartz(title=' ')},  #quartz() does allow setting the opening position
-#                           "Mac OS"  = {quartz(title=' ')},
-#                           "macOS"   = {quartz(title=' ')},
-#                           "Darwin"  = {quartz(title=' ')})
-#                        refresh <<- FALSE #now plot also the component marker
-#                        devset()
-                        replot()
-
-                }, container=T1Frame1)
-
-
 
 #----- TAB2: Fit Functions -----
   T2group1 <- ggroup(label = "VB Fit", horizontal=FALSE, container = nbMain)
+
 
   ## plot type : Residual or simple
   T2Frame1 <- gframe(text = " Plot ", spacing=1, container = T2group1)
@@ -844,21 +833,24 @@ XPSVBTop <- function() {
   T21Frame1 <- gframe(text = " Linear Fit Regions ", horizontal=FALSE, container = T2group2)
   T21group1 <- ggroup( horizontal=TRUE, container = T21Frame1)
 
-  Lbl1 <- glabel("Left Mouse Butt. to Set two Fit Region Edges      ", container=T21group1)
+  Lbl1 <- glabel("Left Mouse Butt. to Set Edges Right to Stop    ", container=T21group1)
   font(Lbl1) <- list(family="sans", size=11)
 
   Hlp21_btn1 <- gbutton("?", handler = function(h, ...){
-                              txt <- paste("Two regions has to be defined to perform the linear fits: \n",
+                              txt <- paste("Two regions must to be defined to perform the linear fits: \n",
                                         "the first on the descending tail near to the Fermi edge and \n",
                                         "the second on the flat background. Using the left mouse button,\n",
-                                        "define the two edges of the first and second regions.\n",
+                                        "define the two edges of the first and the second regions.\n",
                                         "Green crosses will indicate the region boundaries. Then press the\n",
                                         "button FIT and a linear fit will be performed in the selected\n",
                                         "regions. Press ESTIMATE VB TOP button to obtain the abscissa\n",
-                                        "of to the line intersection which is taken as position of the VBtop.")
+                                        "of to the fit intersection which is taken as position of the VBtop.")
                               gmessage(msg=txt,icon="info")
                            }, container = T21group1 )
 
+  SetPts21_Btn1 <- gbutton("Set Linear Region Edges", expand=FALSE, handler = function(h, ...){
+                              GetCurPos(SingClick=FALSE)
+                           }, container = T21Frame1 )
   Reset21_Btn1 <- gbutton("Reset Fit Regions", expand=FALSE, handler = reset.LinRegions, container = T21Frame1 )
 
   Fit21_btn1 <- gbutton("Fit", expand=FALSE, handler = MakeFit, container = T21Frame1 )
@@ -895,20 +887,19 @@ XPSVBTop <- function() {
   Fit.type <- gcombobox(FitFunct, selected = 1, handler = function(h, ...){
                               svalue(sb) <- sprintf("Selected component type %s", svalue(h$obj))
                            }, container = T22group1 )
-  Lbl2 <- glabel("Add fit components        ", container=T22group1)
+  Lbl2 <- glabel("Left Mouse Butt to Add Fit Comp. Right to Stop  ", container=T22group1)
   font(Lbl2) <- list(family="sans", size=11)
 
   Hlp22_btn1 <- gbutton("?", expand=FALSE, handler = function(h, ...){
                               txt <- paste("The idea is to use the fit of the descending tail of the VB to \n",
                                        "get rid from noise and obtain a better estimate the VBtop.\n",
                                        "First select the desired component lineshape (Gaussian is suggested)\n",
-                                       "Click with the left mouse button in the position to add the component\n",
-                                       "Press ADD FIT COMPONENT to add a fit component;\n",
-                                       "Press DELETE FIT COMPONENT to delete a fit component;\n",
+                                       "Then click with the left mouse button in the positions to add fit components\n",
+                                       "Click with the right mouse button to stop adding fit components\n",
+                                       "Press DELETE FIT COMPONENT to delete a reduntant fit component\n",
                                        "Press RESET FIT to restart the procedure.\n",
                                        "Add as many components as needed to model the VB in the defined region\n",
                                        "Press the FIT button to make the fit which must correctly reproduce the VB tail\n",
-                                       "  otherwise press RESET FIT to restart the fitting procedure\n",
                                        "Pressing the ESTIMATE VB TOP button, a predefined treshold based on the VB \n",
                                        "  integral intensity, is the utilized to estimate the VB top position \n",
                                        "Pressing the RESET ALL button one resets the whole analysis and restarts from very beginning")
@@ -918,7 +909,9 @@ XPSVBTop <- function() {
 
   T22Frame3 <- gframe(text = " Options ", horizontal=FALSE, spacing=1, container = T2group3)
 
-  add22_btn1 <- gbutton("Add Fit Component", spacing=1, handler = add.FitFunct, container = T22Frame3)
+  add22_btn1 <- gbutton("Add Fit Component", spacing=1, handler = function(h, ...){
+                              GetCurPos(SingClick=FALSE)
+                           }, container = T22Frame3)
 
   del22_btn1 <- gbutton("Delete Component", spacing=1, handler = del.FitFunct, container = T22Frame3 )
 
@@ -935,22 +928,6 @@ XPSVBTop <- function() {
 
   VBTop22_btn1 <- gbutton("Estimate VB Top", spacing=1, handler = CalcVBTop, container = T22Frame3 )
 
-#  undo_btn2 <- gbutton("Save Analysis in a Separate File", spacing=1, handler = function(h,...){
-#                              tmp <- new("XPSSample",
-#                                          Project = " ",
-#                                          Comments = " ",
-#                                          User=Sys.getenv('USER'),
-#                                          Filename="VBFit" )
-#                              tmp[[1]] <- Object[[coreline]]
-#                              assign("VBFit",tmp, envir=.GlobalEnv)
-#                              tmp <- NULL
-#                              tmp <- as(Object[[coreline]], "matrix")  #export spectrum and fit
-#                              tmp <- round(tmp,digits=2) #round to 4 decimal digits
-#                              write.table(tmp, file = "X:/LAVORI/1ARTICOLI/2018/Adesione Grafene/XPS-VB/VBfit.txt", sep=" ", eol="\n",
-#                                                     dec=".", row.names=FALSE, col.names=FALSE)
-#                              cat("\n Data saved")
-#                           }, container = T22Frame3 )
-
   Reset22_btn2<- gbutton("Reset All", spacing=1, handler = function(h, ...){
                               ResetVars()
                               enabled(OK_btn1) <- TRUE
@@ -966,16 +943,15 @@ XPSVBTop <- function() {
   T23Frame1 <- gframe(text = " Options ", horizontal=FALSE, container = T2group4)
   T23group1 <- ggroup( horizontal=TRUE, container = T23Frame1)
 
-  Lbl3 <- glabel("Left Mouse Butt. to Set Sigmoid Max, Flex Point, Min   ", container=T23group1)
+  Lbl3 <- glabel("Left Mouse Butt. to Set Sigmoid Max, \nFlex Point, Min.  Right Butt. to Stop     ", container=T23group1)
   font(Lbl3) <- list(family="sans", size=11)
 
   Hlp23_btn1 <- gbutton("?", expand=FALSE, handler = function(h, ...){
-                              txt <- paste("Selecting this option, a Hill Sigmoid is utilized to fit the descending tail of the VB\n",
-                                       "Three points are needed to define the Sigmoid: the Sigmoid maximum M (max of the\n",
-                                       "  VB in the selected region near to the Fermi edge, the sigmoid flex point FP in \n",
-                                       "  the middle of the descending tail and the sigmoid minimum m (background level).\n",
-                                       "Click the left mouse button in the position where to add the M, FP and m points\n",
-                                       "Press ADD HILL SIGMOID to add the Hill Sigmoid fitting curve\n",
+                              txt <- paste("Three points are needed to define a Hill Sigmoid: the Sigmoid maximum M (max of the\n",
+                                       "  VB in the selected region, the sigmoid flex point FP in the middle of the descending\n",
+                                       "  tail and the sigmoid minimum m (background level).\n",
+                                       "Press 'Add Hill Sigmoid' and Click with the Left Mouse button to add the M, FP and m points\n",
+                                       "Click with the right mouse button to stop entering positions and add the ADD HILL SIGMOID\n",
                                        "Press the FIT button to model the VB using the Hill Sigmoid",
                                        "Press RESET FIT to restart the fitting procedure\n",
                                        "Pressing the ESTIMATE VB TOP button, the VB top is determined matematically as\n",
@@ -985,7 +961,10 @@ XPSVBTop <- function() {
                               gmessage(msg=txt,icon="info")
                            }, container = T23group1 )
 
-  add23_btn1 <- gbutton("Add Hill Sigmoid", handler = add.FitFunct, container = T23Frame1)
+  add23_btn1 <- gbutton("Add Hill Sigmoid", handler = function(h, ...){
+                              GetCurPos(SingClick=FALSE)
+                              add.FitFunct()
+                           }, container = T23Frame1)
   Fit23_btn1 <- gbutton("Fit", expand=FALSE, handler = MakeFit, container = T23Frame1 )
   Reset23_btn1 <- gbutton("Reset Fit", expand=FALSE, handler = function(h, ...){
                               point.coords <<- list(x=NULL,y=NULL)
@@ -1027,10 +1006,6 @@ XPSVBTop <- function() {
                       answ <- gconfirm(msg="VBtop estimation not performed. Would you proceed?", title="WARNING", icon="warning")
                       if (answ == FALSE) return()
                   }
-#-----            stopping mouse handler
-                  setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                  eventEnv$onMouseMove <<- NULL
-                  eventEnv <<- NULL
                   LL <- length(Object)
                   activeSpecIndx <- LL+1
                   Object[[LL+1]] <<- Object[[coreline]]
@@ -1045,11 +1020,6 @@ XPSVBTop <- function() {
               }, container = ButtGroup)
 
   gbutton("           EXIT           ", handler=function(h,...){
-#-----            stopping mouse handler
-                  setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                  eventEnv$onMouseMove <<- NULL
-                  eventEnv <<- NULL
-
                   dispose(VBwindow)
                   plot(Object)
               }, container = ButtGroup)
@@ -1065,11 +1035,5 @@ XPSVBTop <- function() {
   svalue(nbVBfit) <- 1
   svalue(nbMain) <- 2
   svalue(nbMain) <- 1
-
-#--- Interactive mouse control ---
-  setGraphicsEventHandlers(prompt="Waiting for mouse clicks", onMouseDown = my.coords, onKeybd = keydown, which = dev.cur())
-  eventEnv <- getGraphicsEventEnv()
-  devset()
-  getGraphicsEvent()
-
+  
 }

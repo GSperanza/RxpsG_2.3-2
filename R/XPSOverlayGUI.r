@@ -998,7 +998,8 @@ setFileCheckBox <- function(){
                    x2 <- as.numeric(svalue(x2))
                    y1 <- as.numeric(svalue(y1))
                    y2 <- as.numeric(svalue(y2))
-                   if (FName[[SpectIndx]]@Flags) { #Binding energy set
+                   
+                   if (FName[[SpectIndx]]@Flags[2]) { #Binding energy set
                        Plot_Args$xlim <<- sort(c(x1, x2), decreasing=TRUE)
                        Plot_Args$ylim <<- sort(c(y1, y2))
                    } else {

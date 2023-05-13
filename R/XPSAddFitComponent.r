@@ -109,6 +109,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
    if (type=="HillSigmoid"){   #creation of an empty component of type VBtop: needed to store VBtop Position
       num <- length(names(Object@Components)) + 1
       # Set the x,y coord   peakPosition$x[1]=A, peakPosition$x[2]=FlexPos, peakPosition$x[3]=B
+
       X <- peakPosition$x[2]   #this corresponds to the mu parameter = position of the Sigmoid flex point
       RTF_x <- Object@RegionToFit$x
       idx <- findXIndex(RTF_x, X)
@@ -118,6 +119,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
       LL <- length(RTF_x)
       XXX <- seq(1, LL) #temporary positive abscissa to generate the Hill Sigmoid
       newX <- XXX[idx]
+
       slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
       # set Amplitude:start,min,max
       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="h", value = c(Y, 0, Y*1.5)) 
@@ -135,7 +137,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	     # name of this component
 	     names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
 	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=XXX, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
-      Object@Fit <- list(x=XXX, y=RTF_y, idx=idx)  #save new absissas and index of flexpoint
+      Object@Fit <- list(x=XXX, y=Object@Components[[num]]@ycoor, idx=idx)  #save new absissas and index of flexpoint
 	     return(Object)
    }
 
@@ -243,7 +245,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	  # Set the x,y coord
 	  X <- peakPosition$x   #this corresponds to the mu parameter = position of the fitting comp.
 	  # substract the baseline value correspondent to the X position
-   idx<-findXIndex(Object@Baseline$x, X)
+   idx <- findXIndex(Object@Baseline$x, X)
 	  Y <- peakPosition$y - Object@Baseline$y[idx]
 
 	  # increase the number of components

@@ -96,25 +96,30 @@ Lorentz <- function(x, h, mu, sigma) {
 #' @export
 
 Voigt <- function(x, h, mu, sigma, lg) {
-  sigma <- 2*sigma #this to account for the decimation by 2
-  LL <- length(x)
-  dE <- x[2]-x[1]
-  #extension of the RegionToFit since convolve uses a too limited zero padding
-  LL2 <- floor(LL/4) #number of point to add at the edge o the energy scale
-  xx1 <- seq(from=(x[1]-LL2*dE), to=x[1], by=dE)
-  xx2 <- x[2:(LL-1)]
-  xx3 <- seq(from=x[LL], to=(x[LL]+LL2*dE), by=dE)
-  xx <- c(xx1, xx2, xx3)
-#  xx <- c(seq(from=(x[1]-LL2*dE), to=x[1], by=dE), x[2:(LL-1)], seq(from=x[LL], to=(x[LL]+LL2*dE), by=dE))
-  Cnv <- convolve(Gauss(xx, h, mu, (1-lg)*sigma),
+  if (lg > 0.95){   #For lg to small or to when (1-lg)~1 convolve has problems
+      Cnv <- Lorentz(x, h, mu, sigma) #with lg<0.05 we essentially we have a Gaussian
+  } else if (lg < 0.05){
+      Cnv <- Gauss(x, h, mu, sigma)   #with lg>0.095 we essentially have a Lorentzian
+  } else {
+      sigma <- 2*sigma #this to account for the decimation by 2
+      LL <- length(x)
+      dE <- x[2]-x[1]
+      #extension of the RegionToFit since convolve uses a too limited zero padding
+      LL2 <- floor(LL/4) #number of point to add at the edge o the energy scale
+      xx1 <- seq(from=(x[1]-LL2*dE), to=x[1], by=dE)
+      xx2 <- x[2:(LL-1)]
+      xx3 <- seq(from=x[LL], to=(x[LL]+LL2*dE), by=dE)
+      xx <- c(xx1, xx2, xx3)
+      Cnv <- convolve(Gauss(xx, h, mu, (1-lg)*sigma),
                 rev(Lorentz(xx, h, mu, lg*sigma)), type="o")
-  #Cnv is long 2*LL => decimation to reduce Cnv length to LL
-  LLc <- length(Cnv)
-  xx <- seq(from=1, to=LLc, by=2)
-  Cnv <- Cnv[xx]
-  LLc <- length(Cnv)        #Convolve exits with LL-1 values, with decimation may loose one point
-  Cnv <- Cnv[(LL2+1):(LLc-LL2)] #eliminates the RegionToFit Extensions
-  Cnv <- (Cnv/max(Cnv))*h   #convolution normalization to set the correct amplitude = h
+      #Cnv is long 2*LL => decimation to reduce Cnv length to LL
+      LLc <- length(Cnv)
+      xx <- seq(from=1, to=LLc, by=2)
+      Cnv <- Cnv[xx]
+      LLc <- length(Cnv)        #Convolve exits with LL-1 values, with decimation may loose one point
+      Cnv <- Cnv[(LL2+1):(LLc-LL2)] #eliminates the RegionToFit Extensions
+      Cnv <- (Cnv/max(Cnv))*h   #convolution normalization to set the correct amplitude = h
+  }
   return(Cnv)
 }
 
@@ -570,8 +575,7 @@ Sigmoid <- function(x, h, mu, k, c) {
 
 HillSigmoid <- function(x, h, mu, pow, A, B) { #decreases with incresing x values
                                                #i.e. decreas\ing the KE towards the Fermi
-#    return( A-(A-B)*x^pow/(mu^pow+x^pow) )    #HillSigmoind.Right decreases
-    return( A-A*x^pow/(mu^pow+x^pow) )         #HillSigmoind.Right decreases
+    return( (A-B)-(A-B)*x^pow/(mu^pow+x^pow) ) #HillSigmoind.Right decreases
 }
 
 
