@@ -13,16 +13,25 @@
 
 XPSMoveComp <- function(){
 
-  GetCurPos <- function(single){
+  GetCurPos <- function(SingClick){
        coords <<- NULL
        EXIT <- FALSE
+       enabled(FitComp) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(MCFrame4) <- FALSE   #prevent exiting Analysis if locatore active
        Estep <- abs(Object@RegionToFit[[1]][1] - Object@RegionToFit[[1]][2])
+cat("\n 1111")
        while(EXIT == FALSE){
             pos <- locator(n=1)
             if (is.null(pos)) {
+                enabled(FitComp) <- TRUE
+                enabled(MCFrame4) <- TRUE
                 EXIT <- TRUE
             } else {
-                if ( single ){ EXIT <- TRUE }
+                if (SingClick){
+                     enabled(FitComp) <- TRUE
+                     enabled(MCFrame4) <- TRUE
+                     EXIT <- TRUE
+                }
                 if (SetZoom == TRUE) {  #define zoom area
                     xx <- pos$x
                     yy <- pos$y
@@ -270,7 +279,7 @@ XPSMoveComp <- function(){
                                    gmessage("Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
                                    tcl("update", "idletasks") #closes the gmessage window
                                }
-                               GetCurPos(single=FALSE)
+                               GetCurPos(SingClick=FALSE)
                            },  container = MCGroup3)
            LL <- length(ComponentList)
            NCol <- ceiling(LL/5)   #gradio will be split in solumns of 5 elements
@@ -308,7 +317,7 @@ XPSMoveComp <- function(){
                                        gmessage("Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
                                        tcl("update", "idletasks") #closes the gmessage window
                                    }
-                                   GetCurPos(single=FALSE)
+                                   GetCurPos(SingClick=FALSE)
                                }
                            },  container = MCGroup3)
        }
@@ -319,7 +328,7 @@ XPSMoveComp <- function(){
                     "=> Do not show these WARNING messages again press YES, let WARNINGS active press NO", sep="")
        ShowMsg <<- !gconfirm(msg=txt, title="WARNING", icon="question", width=30) #ShowMsg==FALSE if answer=YES
        tcl("update", "idletasks") #closes the gmessage window
-       GetCurPos(single=FALSE)
+       GetCurPos(SingClick=FALSE)
   }
 
   LoadCoreLine <- function(){
@@ -503,6 +512,7 @@ XPSMoveComp <- function(){
 #--- GWidget definition ---
      MCWindow <- gwindow("XPS MOVE COMPONENT", parent=c(50,10), visible = FALSE)
      addHandlerDestroy(MCWindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
+                               EXIT <<- TRUE
                                XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                                assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(XPSSample[[Indx]])         #replot the CoreLine
@@ -570,6 +580,7 @@ XPSMoveComp <- function(){
      Buttlyt <- glayout(spacing=5, container=MCFrame4)
 
      Buttlyt[1,1] <- LMFitbutton <- gbutton("          FIT Lev.Marq.        ", handler=function(h,...){
+                               svalue(FitComp) <- -1
                                FComp <<- svalue(FitComp)
                                FComp <<- as.numeric(unlist(strsplit(FComp, split="C")))   #index selected component
                                FComp <<- FComp[2]
@@ -588,7 +599,8 @@ XPSMoveComp <- function(){
                            }, container = Buttlyt)
 
      Buttlyt[1,2] <- MFFitbutton <- gbutton("           FIT Modfit          ", handler=function(h,...){
-                               if( is.na(match("FME", Pkgs)) == TRUE ){       #check if the package 'FME' is installed 
+                               svalue(FitComp) <- -1
+                               if( is.na(match("FME", Pkgs)) == TRUE ){       #check if the package 'FME' is installed
                                   txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
                                   gmessage(msg=txt, title="WARNING", icon="error")
                                   return()
@@ -638,7 +650,7 @@ XPSMoveComp <- function(){
                                                 "\n => When Zoom Region OK, right click and press  MAKE ZOOM", sep="")
                                    gmessage(msg, title="WARNING", icon="warning")
                                    tcl("update", "idletasks") #closes the gmessage window
-                                   GetCurPos(single=FALSE)
+                                   GetCurPos(SingClick=FALSE)
                                }
                            }, container = Buttlyt)
 
@@ -692,6 +704,7 @@ XPSMoveComp <- function(){
      Buttlyt[4,1] <- gbutton("        EDIT PARAMETERS        ", handler=editFitFrame, container = Buttlyt)
 
      Buttlyt[4,2] <- gbutton("          RE-LOAD DATA         ", handler=function(h,...){
+                               svalue(FitComp) <- -1
                                UpdateCompMenu <<- FALSE
                                LoadCoreLine()
                                svalue(FitComp, index=TRUE) <- 1
@@ -700,6 +713,7 @@ XPSMoveComp <- function(){
 
      Buttlyt[5,1] <- gbutton("              SAVE             ", handler=function(h,...){
 #    With button SAVE the Component parameters are updated and are now available for FiTConstraints
+                               svalue(FitComp) <- -1
                                Indx <- get("activeSpectIndx", envir=.GlobalEnv)
                                XPSSample[[Indx]] <<- Object
                                OldXPSSample[[Indx]] <<- XPSSample[[Indx]]

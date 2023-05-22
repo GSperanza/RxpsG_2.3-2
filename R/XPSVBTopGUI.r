@@ -1,3 +1,6 @@
+## =====================================================
+## VBtop: funciton to compute the upper edge of the HOMO
+## =====================================================
 
 #' @title XPSVBTop
 #' @description XPSVBTop function to estimate the position of the Valence Band Top
@@ -9,24 +12,29 @@
 #'  XPSVBTop()
 #' }
 #' @export
-#'
-
+#'                             
 
 XPSVBTop <- function() {
 
-
   GetCurPos <- function(SingClick){
        coords <<- NULL
+       enabled(T1group1) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(T2group1) <- FALSE
+       enabled(ButtGroup) <- FALSE
        EXIT <- FALSE
        while(EXIT == FALSE){
-cat("\n Waiting Mouse")
             pos <- locator(n=1)
             if (is.null(pos)) {
-cat("\n EXIT Mouse")
+                enabled(T1group1) <- TRUE
+                enabled(T2group1) <- TRUE
+                enabled(ButtGroup) <- TRUE
                 EXIT <- TRUE
             } else {
                 if ( SingClick ){ 
                     coords <<- c(pos$x, pos$y)
+                    enabled(T1group1) <- TRUE
+                    enabled(T2group1) <- TRUE
+                    enabled(ButtGroup) <- TRUE
                     EXIT <- TRUE
                 } else {
                     Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
@@ -629,7 +637,7 @@ cat("\n EXIT Mouse")
          TmpVtop <- TmpMu*(1+2/pow)            #bottom knee position of the Hill sigmoid
          idx <- as.integer(TmpVtop)
          bgnd <- Object[[coreline]]@Baseline$y[idx] #baseline value at the TmpVtop point
-         VBtopX <- Object[[coreline]]@RegionToFit$x[1]+dx*(TmpVtop-1) #knee position on the original scalecat("\n 2222", point.coords$x, point.coords$y)
+         VBtopX <- Object[[coreline]]@RegionToFit$x[1]+dx*(TmpVtop-1) #knee position on the original scale
          VBtopY <- A - A*TmpVtop^pow/(TmpMu^pow + TmpVtop^pow)+bgnd   #ordinate correspondent to TmpVtop
          point.coords$x <<- VBtopX
          point.coords$y <<- VBtopY
@@ -717,6 +725,7 @@ cat("\n EXIT Mouse")
 
   VBwindow <- gwindow("XPS VB Top GUI", parent=c(50, 10), visible = FALSE)
   addHandlerDestroy(VBwindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
+                                 EXIT <<- TRUE
                                  XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                                  assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                  plot(Object) #replot the CoreLine
@@ -1001,7 +1010,7 @@ cat("\n EXIT Mouse")
                   XPSSaveRetrieveBkp("save")
               }, container = ButtGroup)
 
-  gbutton("        SAVE & EXIT        ", handler=function(h,...){
+  SaveBtn <- gbutton("        SAVE & EXIT        ", handler=function(h,...){
                   if (VBtEstim == FALSE && length(Object[[coreline]]@Fit) > 0){  #VB fit done but VBtop estimation not
                       answ <- gconfirm(msg="VBtop estimation not performed. Would you proceed?", title="WARNING", icon="warning")
                       if (answ == FALSE) return()
@@ -1019,7 +1028,7 @@ cat("\n EXIT Mouse")
                   plot(Object)
               }, container = ButtGroup)
 
-  gbutton("           EXIT           ", handler=function(h,...){
+  ExitBtn <- gbutton("           EXIT           ", handler=function(h,...){
                   dispose(VBwindow)
                   plot(Object)
               }, container = ButtGroup)

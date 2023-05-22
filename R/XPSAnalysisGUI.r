@@ -1,14 +1,17 @@
-#  XPSAnalysis function to add baseline and fit components for best fit and quantification
+## =======================================================================================
+## XPSAnalysis function to add baseline and fit components for best fit and quantification
+## =======================================================================================
+
 #' @title XPSAnalysis to analyze XPS-Corelines and XPS spectra in general
 #' @description XPSAnalysis() function is an interactive GUI to add BaseLines
 #'   and Fitting components to a CoreLine needed for the best fit and quantification
 #' @return Returns the processed \code{object}.
 #' @examples
 #' \dontrun{
-#' 	XPSAnalysis()
+#'    XPSAnalysis()
 #' }
 #' @export
-#'
+#'                          
 
 
 XPSAnalysis <- function() {
@@ -16,13 +19,24 @@ XPSAnalysis <- function() {
   GetCurPos <- function(SingClick){
        tabMain <- svalue(nbMain)
        coords <<- NULL
+       enabled(BaselineType) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(T2group1) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(ButtFrame) <- FALSE
        EXIT <- FALSE
        while(EXIT == FALSE){
             pos <- locator(n=1)
             if (is.null(pos)) {
+                enabled(BaselineType) <- TRUE
+                enabled(T2group1) <- TRUE
+                enabled(ButtFrame) <- TRUE
                 EXIT <- TRUE
             } else {
-                if ( SingClick ){ EXIT <- TRUE }
+                if ( SingClick ){
+                     enabled(BaselineType) <- TRUE
+                     enabled(T2group1) <- TRUE
+                     enabled(ButtFrame) <- TRUE
+                     EXIT <- TRUE
+                }
                 if (tabMain == 1 && SetZoom == TRUE) {
                     coords <<- unlist(pos)
                     RBmousedown()  #selection of the zoom area
@@ -65,24 +79,24 @@ XPSAnalysis <- function() {
          return()
      }
      if (coreline != 0) { #coreline != "All Spectra"
-	  	     xx <- coords[1]
- 		      yy <- coords[2]
- 		      #compute the distance between consecutive clicks
+           xx <- coords[1]
+            yy <- coords[2]
+            #compute the distance between consecutive clicks
          if (Object[[coreline]]@Flags[1]) { #Binding energy set
              Xlimits <<- sort(c(point.coords$x[1], point.coords$x[2]), decreasing=TRUE)  #point.coords$x in decreasing order
          } else {
              Xlimits <<- sort(c(point.coords$x[1], point.coords$x[2]), decreasing=FALSE) #point.coords$x in increasing order
          }
          if (! is.null(point.coords$x[1]) && tabMain==1 ) { #initially point.coords contains the spectrum boundaries
-	            d.pts <- (point.coords$x - xx)^2  #distance between spectrum edge and marker position
-	            point.index <<- min(which(d.pts == min(d.pts)))  #which is the edge nearest to the marker?
-    	    } else {
+               d.pts <- (point.coords$x - xx)^2  #distance between spectrum edge and marker position
+               point.index <<- min(which(d.pts == min(d.pts)))  #which is the edge nearest to the marker?
+          } else {
              point.index <<- 1
          }
 
          if (tabMain == 1 && SetZoom == FALSE) {  # Baseline notebook page
-		           point.coords$x[point.index] <<- xx   # set the marker position or modify the position for the baseline (
-		           point.coords$y[point.index] <<- yy
+                 point.coords$x[point.index] <<- xx   # set the marker position or modify the position for the baseline (
+                 point.coords$y[point.index] <<- yy
              Object[[coreline]]@Boundaries <<- point.coords
              if (Object[[coreline]]@Flags[1]) {   #Binding energy set
                Xlimits <<- sort(c(point.coords$x[1], point.coords$x[2]), decreasing=TRUE) #pos$x in decreasing order
@@ -93,8 +107,8 @@ XPSAnalysis <- function() {
              Make.Baseline()
          }
          if (tabMain == 1 && SetZoom == TRUE) {   # Baseline notebook page
-		           point.coords$x[point.index] <<- xx   # set the marker position or modify the position for the baseline (
-		           point.coords$y[point.index] <<- yy
+                 point.coords$x[point.index] <<- xx   # set the marker position or modify the position for the baseline (
+                 point.coords$y[point.index] <<- yy
              Object[[coreline]]@Boundaries <<- Corners
              if (Object[[coreline]]@Flags[1]) { #Binding energy scale
                  Xlimits <<- sort(c(Corners$x[1],Corners$x[3]), decreasing=TRUE)  # X zoom limits
@@ -138,8 +152,8 @@ XPSAnalysis <- function() {
      } else if ( SetZoom == TRUE ) {   #RGT click to define zoom area
          point.coords$x[point.index] <<- coords[1]   #add component 3 to abscissa
          point.coords$y[point.index] <<- coords[2]   #add component 3 to ordinate
-   	     xlim <- sort(Xlimits,decreasing=FALSE)
-   	     DY <- (Ylimits[2]-Ylimits[1])/30
+           xlim <- sort(Xlimits,decreasing=FALSE)
+           DY <- (Ylimits[2]-Ylimits[1])/30
          if(xx < xlim[1]) { xx <- xlim[1] }
          if(xx > xlim[2]) { xx <- xlim[2] }
          if(yy < (Ylimits[1]-DY)) { yy <- Ylimits[1] }
@@ -148,7 +162,7 @@ XPSAnalysis <- function() {
              Corners$x <<- c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2])
              Corners$y <<- c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2])
              point.index <<- 3    #to add comp. 3 to points.coord and save the new marker position
-  	      } else if (point.index==3) {
+         } else if (point.index==3) {
              D <- vector("numeric", 4)
              Dmin <- ((point.coords$x[3]-Corners$x[1])^2 + (point.coords$y[3]-Corners$y[1])^2)^0.5  #valore di inizializzazione
              for (ii in 1:4) {
@@ -217,25 +231,31 @@ XPSAnalysis <- function() {
              }
              points(point.coords, col=2, cex=1, lwd=2, pch=1)
          }
-         svalue(stat.Bar) <- sprintf(paste("x =",round(point.coords$x[1],2), " y =",round(point.coords$y[2],2), sep=" "))
+         if (is.null(point.coords$x) || is.null(point.coords$y)){
+             svalue(stat.Bar) <- " "
+         } else {
+             svalue(stat.Bar) <- sprintf(paste("x =",round(point.coords$x[1],2), " y =",round(point.coords$y[2],2), sep=" "))
+         }
      }
   }
 
 
   Set.Coreline <- function(h, ...) {
-     svalue(BaselineType) <- ""
+     svalue(BaselineType, index=TRUE) <- -1
      coreline <<- svalue(Core.Lines)
      coreline <<- unlist(strsplit(coreline, "\\."))   #"number." and "CL name" are separated
      assign("activeSpectName",coreline[2], envir=.GlobalEnv)
      coreline <<- as.integer(coreline[1])
      assign("activeSpectIndx", coreline, envir=.GlobalEnv)
      if (coreline == 0) {    #coreline == "All spectra"
-		       enabled(T2group1) <- FALSE
+             enabled(T2group1) <- FALSE
      } else {
-         enabled(MZbutton)<-FALSE
-         enabled(ZObutton)<-FALSE
-
-         if (length(Object[[coreline]]@Baseline) > 0 ) enabled(T2group1) <- TRUE
+         enabled(ZRbutton) <- FALSE
+         enabled(MZbutton) <- FALSE
+         enabled(ZObutton) <- FALSE
+         if (length(Object[[coreline]]@Baseline) > 0 ){
+             enabled(T2group1) <- TRUE
+         }
          # Zoom disabled
          SetZoom <<- FALSE
          # if boundaries already defined
@@ -245,7 +265,7 @@ XPSAnalysis <- function() {
             point.coords$y <<- c(Object[[coreline]]@RegionToFit$y[1], Object[[coreline]]@RegionToFit$y[LL])
             Xlimits <<- range(Object[[coreline]]@RegionToFit$x)
             Ylimits <<- range(Object[[coreline]]@RegionToFit$y)
-         } else if (hasBoundaries(Object[[coreline]]) ) {
+         } else if (!hasBoundaries(Object[[coreline]]) ) {
             LL <- length(Object[[coreline]]@.Data[[1]])
             point.coords$x <<- c(Object[[coreline]]@.Data[[1]][1], Object[[coreline]]@.Data[[1]][LL])
             point.coords$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
@@ -265,9 +285,8 @@ XPSAnalysis <- function() {
              svalue(nbMain) <- 1
          }
          if (hasComponents(Object[[coreline]]) ) {
-             enabled(T2group1) <- TRUE
-           	 svalue(nbMain) <- 2
-      		     svalue(nbComponents) <- 1
+             svalue(nbMain) <- 2
+             svalue(nbComponents) <- 1
              CompNames <<- names(Object[[coreline]]@Components)
              delete(T2Frame3, FitComp)
              FitComp <<- gcombobox(CompNames, selected=-1, handler=function(h, ...){
@@ -318,42 +337,42 @@ XPSAnalysis <- function() {
            idx2 <- findXIndex(Object[[coreline]]@.Data[[1]], point.coords$x[2])
            point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][idx2]
            Ylimits <<- c(min(Object[[coreline]]@.Data[[2]][idx1:idx2]), max(Object[[coreline]]@.Data[[2]][idx1:idx2]))
-	          Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
+             Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
            splinePoints <<- list(x=NULL, y=NULL)  #reset preivous baseline
         } else {  #a zoom is present: we preserve Xlimits and Ylimits and point.coords values
            Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
            splinePoints <<- list(x=NULL, y=NULL)  #reset preivous baseline
         }
-	       enabled(T2group1) <- FALSE
-	    }
-	    Object[[coreline]]@Boundaries <<- point.coords
+          enabled(T2group1) <- FALSE
+       }
+       Object[[coreline]]@Boundaries <<- point.coords
   }
 
 
   update.outputArea <- function(...) {
-  	  if (coreline != 0 ) {
-  	   	  if (svalue(disp_area)) { XPScalc(Object[[coreline]]) }
-  	   	  if (hasFit(Object[[coreline]]) && svalue(disp_quant)) {
-		           XPSquantify(Object)
-	        }
-  	  }
+     if (coreline != 0 ) {
+           if (svalue(disp_area)) { XPScalc(Object[[coreline]]) }
+           if (hasFit(Object[[coreline]]) && svalue(disp_quant)) {
+                 XPSquantify(Object)
+           }
+     }
   }
 
   add.component <- function() {
      if (coreline != 0 && hasBaseline(Object[[coreline]]) ) {
-    	    if (is.null(point.coords$x[1])) {
+          if (is.null(point.coords$x[1])) {
              return() 
          } else {
              LL <- length(point.coords$x)
              for(ii in 1:LL){
-               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
+                     Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
                                                  peakPosition = list(x = point.coords$x[point.index], y = point.coords$y[point.index]))
-#               		Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
+#                    Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = svalue(fit.Funct),
 #                                                 peakPosition = list(x = point.coords$x[ii], y = point.coords$y[ii]))
 ##  to update fit remove Component@Fit and make the sum of Component@ycoor including the newone
-	                tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
-	                CompNames <<- names(Object[[coreline]]@Components)
-	                delete(T2Frame3, FitComp)
+                   tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
+                   CompNames <<- names(Object[[coreline]]@Components)
+                   delete(T2Frame3, FitComp)
                  FitComp <<- gcombobox(CompNames, selected=-1, handler=function(h, ...){
                                        compIndx <- svalue(FitComp)
                                        compIndx <- unlist(strsplit(compIndx, split="C"))   #indice della componente scelta class numeric
@@ -364,45 +383,46 @@ XPSAnalysis <- function() {
                                        GetCurPos(SingClick=FALSE)
                                     }, container = T2Frame3)
                 add(T2Frame3, FitComp)
-	               Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
-           		   replot()
+                  Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
+                  replot()
              }
-#        		   point.coords <<- list(x=NULL,y=NULL)
-     	   }
+#                 point.coords <<- list(x=NULL,y=NULL)
+         }
      }
   }
 
-
   del.component <- function(h, ...) {
      if (gconfirm(msg="All Constraints will be lost! Proceed anyway?", title="DELETE", icon="warning")) {
- 	       LL<-length(Object[[coreline]]@Components)
- 	       for (ii in 1:LL) { #remove all CONSTRAINTS
+          LL<-length(Object[[coreline]]@Components)
+          for (ii in 1:LL) { #remove all CONSTRAINTS
                Object[[coreline]]<<-XPSConstrain(Object[[coreline]],ii,action="remove",variable=NULL,value=NULL,expr=NULL)
          }
          if (coreline != 0 && hasComponents(Object[[coreline]]) ) {
-  		         delWin <- gwindow("DELETE FIT COMPONENT", parent = c(50,10), visible = FALSE)
-  		         size(delWin) <-c(250, 150)
-  		         delGroup <- ggroup(horizontal=FALSE, container=delWin)
-  		         glabel("Select the fit component to delete", container=delGroup)
-  		         gseparator(container=delGroup)
-                         compId <- gcombobox(c(CompNames,"All"), selected=1, container = delGroup)
-  		         buttonGroup <- ggroup(horizontal=TRUE, container=delGroup)
-             gbutton("OK", handler=function(...){
-                  if (svalue(compId) != "All"){
-                      indx <- as.numeric(svalue(compId, index=TRUE))
-      		      Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=indx )
-	              CompNames <<- names(slot(Object[[coreline]],"Components"))
-	              if (length(Object[[coreline]]@Components) > 0 ) {
-                          #plot update:
-                          tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
-                          Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
-                      }
-                  } else {
-                          Object[[coreline]] <<- XPSremove(Object[[coreline]], "components")
-                          CompNames <<- ""
-                  }
-                  delete(T2Frame3,FitComp)
-                  FitComp <<- gcombobox(CompNames, selected=-1, handler=function(h, ...){  #Update component selection in MOVE COMP panel
+               delWin <- gwindow("DELETE FIT COMPONENT", parent = c(50,10), visible = FALSE)
+               size(delWin) <-c(250, 150)
+               delGroup <- ggroup(horizontal=FALSE, container=delWin)
+               glabel("Select the fit component to delete", container=delGroup)
+               gseparator(container=delGroup)
+               IdxGroup <- ggroup(horizontal=FALSE, container=delGroup)
+               compIdx <- gcombobox(c(CompNames,"All"), selected=1, container = IdxGroup)
+               gbutton("REMOVE", handler=function(...){
+                          if (svalue(compIdx) != "All"){
+                              indx <- as.numeric(svalue(compIdx, index=TRUE))
+                              Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=indx )
+                              CompNames <<- names(slot(Object[[coreline]],"Components"))
+                              if (length(Object[[coreline]]@Components) > 0 ) {
+                                 #update fit without deteted component
+                                 tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
+                                 Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
+                              }
+                              delete(IdxGroup, compIdx)
+                              compIdx <<- gcombobox(c(CompNames,"All"), selected=1, container = IdxGroup)
+                          } else {
+                              Object[[coreline]] <<- XPSremove(Object[[coreline]], "components")
+                              CompNames <<- ""
+                          }
+                          delete(T2Frame3,FitComp)
+                          FitComp <<- gcombobox(CompNames, selected=-1, handler=function(h, ...){  #Update component selection in MOVE COMP panel
                                       compIndx <- svalue(FitComp)
                                       compIndx <- unlist(strsplit(compIndx, split="C"))    #index of the selected component
                                       compIndx <<- as.integer(compIndx[2])
@@ -410,14 +430,18 @@ XPSAnalysis <- function() {
                                       gmessage("\nNew Position Left mouse button. \nRight button to stop slection", title="WARNING", icon="warning")
                                       tcl("update", "idletasks") #closes the gmessage window
                                       GetCurPos(SingClick=FALSE)
-                                   }, container = T2Frame3)
-
- 			        svalue(plotFit) <<- "normal"
-		                point.coords <<- list(x=NULL,y=NULL)
-			        replot()
-		                dispose(delWin)
-		           }, container=buttonGroup)
-                 gbutton("EXIT", handler=function(...) dispose(delWin), container=buttonGroup)
+                                }, container = T2Frame3)
+                          svalue(plotFit) <<- "normal"
+                          point.coords <<- list(x=NULL,y=NULL)
+                          replot()
+                 }, container=delGroup)
+                 gbutton("SAVE", handler=function(H, ...){
+                                     assign(activeFName, Object, envir = .GlobalEnv)
+                                     replot()
+                          }, container=delGroup)
+                 gbutton("EXIT", handler=function(h, ...) {
+                                     dispose(delWin)
+                          }, container=delGroup)
                  visible(delWin) <- TRUE
          }
      }
@@ -427,24 +451,24 @@ XPSAnalysis <- function() {
      compIndx <- svalue(FitComp)
      compIndx <- unlist(strsplit(compIndx, split="C"))   #index selected component
      compIndx <- as.integer(compIndx[2])
-   	 if (coreline != 0) {
-  	 	    xx <- point.coords$x[point.index]
-  	 	    yy <- point.coords$y[point.index]
-		       varmu <- sort(getParam(Object[[coreline]]@Components[[compIndx]],variable="mu"))
-		       minmu <- varmu$start-varmu$min
-		       maxmu <- varmu$max-varmu$start
-		       newmu <- c(xx, xx-minmu, xx+maxmu)
-		       newy <- yy - Object[[coreline]]@Baseline$y[max(which(Object[[coreline]]@Baseline$x>xx))+1]
+       if (coreline != 0) {
+          xx <- point.coords$x[point.index]
+          yy <- point.coords$y[point.index]
+             varmu <- sort(getParam(Object[[coreline]]@Components[[compIndx]],variable="mu"))
+             minmu <- varmu$start-varmu$min
+             maxmu <- varmu$max-varmu$start
+             newmu <- c(xx, xx-minmu, xx+maxmu)
+             newy <- yy - Object[[coreline]]@Baseline$y[max(which(Object[[coreline]]@Baseline$x>xx))+1]
 
-      		 Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="mu", value=newmu)
-      		 Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter="start", variable="h", value=newy)
-      		 Object[[coreline]]@Components[[compIndx]] <<- Ycomponent(Object[[coreline]]@Components[[compIndx]], x=Object[[coreline]]@RegionToFit$x, y=Object[[coreline]]@Baseline$y)
+             Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="mu", value=newmu)
+             Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter="start", variable="h", value=newy)
+             Object[[coreline]]@Components[[compIndx]] <<- Ycomponent(Object[[coreline]]@Components[[compIndx]], x=Object[[coreline]]@RegionToFit$x, y=Object[[coreline]]@Baseline$y)
 
-      		 tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
-      		 Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y) )
-      		 Object[[coreline]] <<- sortComponents(Object[[coreline]]) #order components in decreasing order
-      		 update.outputArea()
-  	  }
+             tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
+             Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y) )
+             Object[[coreline]] <<- sortComponents(Object[[coreline]]) #order components in decreasing order
+             update.outputArea()
+     }
   }
 
 
@@ -484,7 +508,6 @@ XPSAnalysis <- function() {
   BLgroup <- list()
   BLvalue <- list()
 
-  eventEnv <- NULL
   O.Sys <- unname(tolower(Sys.info()["sysname"]))
   WinPointers <- NULL
   WinSize <- XPSSettings$General[4]
@@ -495,6 +518,7 @@ XPSAnalysis <- function() {
   ## Start
   MainWindow <- gwindow("XPS Analysis GUI", parent=c(50,10), visible = FALSE)
   addHandlerDestroy(MainWindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
+                               EXIT <<- TRUE
                                XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                                assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(Object[[activeSpectIndx]])         #replot the CoreLine
@@ -525,25 +549,22 @@ XPSAnalysis <- function() {
   size(nbMain) <- c(440, 350)  #this are the minimal dimensions of the notebook to visualize all the widgets
 
 #----- TAB1: Baseline -----
-  T1group1 <- ggroup(container = nbMain, label = "Baseline", horizontal=FALSE, spacing=2)
+  T1group1 <- ggroup(label = "Baseline", horizontal=FALSE, spacing=2, container = nbMain)
 
   T1Frame1 <- gframe(text = " Baseline functions ", horizontal=FALSE, spacing=1, container = T1group1)
 
   BaselineLyt <- glayout(spacing=1, container=T1Frame1)
-  BaselineType <- gcheckboxgroup(items=BaseLines, selected=-1, spacing=1, horizontal = TRUE, handler = function(h, ...){
+  BaselineType <- gradio(items=BaseLines, selected=-1, spacing=1, horizontal = TRUE, handler = function(h, ...){
                                    #now make gcheckboxGroup to work as a RadioButton
                                    Sel <- svalue(BaselineType)
-                                   if (length(Sel) == 2) { #2 clicks made on the checkboxgroup
-                                      Sel <- Sel[-which(Sel == BType)]  #recognize previous selectionand eliminate
-                                      svalue(BaselineType) <- Sel       #update gcheckboxgroup with only the last selection
-                                   } else {
-                                      gmessage("\nSet BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
-                                      tcl("update", "idletasks")     #closes the gmessage window
-                                   }
                                    BType <<- svalue(BaselineType)    #save the last selection
                                    if (coreline == 0) {
                                        gmessage("Please select the Core-Line to analyze!", title="WARNING", icon="warning")
                                        svalue(BaselineType) <- -1
+                                       return()
+                                   }
+                                   if (hasBaseline(Object[[coreline]])){
+                                       gmessage("ATTENTION: BaseLine already Defined! \nPress Reset Baseline Buttomn to Change the Lineshape ", title="WARNING", icon="warning")
                                        return()
                                    }
                                    if (BType=="") {
@@ -693,19 +714,20 @@ XPSAnalysis <- function() {
                                    )  #end switch
                                    Make.Baseline()
                                    replot()
+                                   gmessage("\nSet BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
                                    GetCurPos(SingClick=FALSE)
                    },container = T1Frame1)
   for(ii in 1:10) {
-      tkpack.forget(BaselineType$widgets[[ii]]$button)  # unparent widgets (uses library call)
+      tkpack.forget(BaselineType$widgets[[ii]])  # unparent widgets (uses library call)
   }
   for(ii in 1:3){  #breaks the gcheckgroup in three rows
-      BaselineLyt[1,ii] <- BaselineType$widgets[[ii]]$button  #first row 3 element
+      BaselineLyt[1,ii] <- BaselineType$widgets[[ii]]  #first row 3 element
   }
   for(ii in 1:4){
-      BaselineLyt[2,ii] <- BaselineType$widgets[[(ii+3)]]$button  #second row 4 elements
+      BaselineLyt[2,ii] <- BaselineType$widgets[[(ii+3)]]  #second row 4 elements
   }
   for(ii in 1:3){
-      BaselineLyt[3,ii] <- BaselineType$widgets[[(ii+7)]]$button  #third row 3 elements
+      BaselineLyt[3,ii] <- BaselineType$widgets[[(ii+7)]]  #third row 3 elements
   }
 
   T1group2 <- ggroup(horizontal=FALSE, spacing=1, container = T1Frame1)
@@ -715,7 +737,7 @@ XPSAnalysis <- function() {
   ActionFrame <- gframe(text = " Reset ", spacing=1, container = T1group1)
   gbutton("   Reset Baseline   ", handler = function(h, ...) {
                    splinePoints <<- list(x=NULL, y=NULL)
-		                 svalue(BaselineType) <- -1
+                       svalue(BaselineType) <- -1
                    BType <<- ""  #otherwise conflict between mouseRGT-selected points for zooming and for splinePoints
                    Reset.Baseline()
                    Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
@@ -764,8 +786,9 @@ XPSAnalysis <- function() {
                    Marker <<- list(Points=Corners, col=4, cex=1.2, lwd=2.5, pch=3)
                    SetZoom <<- TRUE    #definition of zoom area disabled
                    FreezeLimits <<- TRUE  #reset spectrum range disabled
-                   enabled(MZbutton)<-TRUE
-                   enabled(ZObutton)<-TRUE
+                   enabled(ZRbutton) <- TRUE
+                   enabled(MZbutton) <- TRUE
+                   enabled(ZObutton) <- TRUE
                    replot()
                    GetCurPos(SingClick=FALSE)
                 }, container = T1Frame4)
@@ -827,13 +850,14 @@ XPSAnalysis <- function() {
                    FreezeLimits <<- FALSE #reset spectrum range enabled
                    Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
                    replot()
-                   enabled(MZbutton) <-FALSE
-                   enabled(ZObutton) <-FALSE
+                   enabled(ZRbutton) <- FALSE
+                   enabled(MZbutton) <- FALSE
+                   enabled(ZObutton) <- FALSE
                 }, container = T1Frame4)
 
 
 #----- TAB2: Components -----
-  T2group1 <- ggroup(container = nbMain, spacing=1, horizontal=FALSE, label = "Components")
+  T2group1 <- ggroup(label = "Components", spacing=2, horizontal=FALSE, container = nbMain)
 
   nbComponents <- gnotebook(container = T2group1, expand = FALSE)
   T2group2  <- ggroup(container = nbComponents, spacing=1, horizontal=FALSE, label = " Add/Delete ")
@@ -885,7 +909,8 @@ XPSAnalysis <- function() {
 
 
 #----- SAVE&CLOSE buttons -----
-  Buttlyt <- glayout(spacing=3, container=Pgroup1)
+  ButtFrame <- gframe(text="Save & Exit", spacing=3, container=Pgroup1)
+  Buttlyt <- glayout(spacing=3, container=ButtFrame)
 
   Buttlyt[1,1] <- gbutton("                 RESET                ", handler = function(h, ...){
                   svalue(BaselineType, index=TRUE) <- 1
@@ -907,18 +932,19 @@ XPSAnalysis <- function() {
                       splinePoints <<- point.coords
                       svalue(nbMain) <<- 1
                   }
-                  enabled(MZbutton)<-FALSE
-                  enabled(ZObutton)<-FALSE
+                  enabled(ZRbutton) <- FALSE
+                  enabled(MZbutton) <- FALSE
+                  enabled(ZObutton) <- FALSE
                   replot()
               }, container = Buttlyt)
 
   Buttlyt[1,2] <- gbutton("                 SAVE                 ", handler = function(h, ...){
                   coreline <- svalue(Core.Lines)
                   coreline <- unlist(strsplit(coreline, "\\."))
-	                 assign(activeFName, Object, envir = .GlobalEnv)
+                  assign(activeFName, Object, envir = .GlobalEnv)
                   assign("activeSpectIndx", as.integer(coreline[1]), envir=.GlobalEnv)
-	                 assign("activeSpectName", coreline[2], envir = .GlobalEnv)
-	                 XPSSaveRetrieveBkp("save")
+                  assign("activeSpectName", coreline[2], envir = .GlobalEnv)
+                  XPSSaveRetrieveBkp("save")
               }, container = Buttlyt)
 
   Buttlyt[2,1] <- gbutton("             SAVE & EXIT              ", handler=function(h,...){
@@ -947,16 +973,16 @@ XPSAnalysis <- function() {
         coreline <- svalue(Core.Lines)
         coreline <- unlist(strsplit(coreline, "\\."))   #split string in correspondence of the point: coreline[1]=index, coreline[2]=spect name
         coreline <- as.numeric(coreline[1])               #this is the coreline index
-  	     if ( nbPage > 1 ) { point.coords <<- list(x = NULL, y = NULL) }
+        if ( nbPage > 1 ) { point.coords <<- list(x = NULL, y = NULL) }
         svalue(plotFit) <- "normal"
         svalue(stat.Bar) <- sprintf("On page %s", h$page.no)
         if (coreline > 0 && length(Object[[coreline]]@RegionToFit) > 0 ) {
             enabled(T2group1) <- TRUE
         }   #baseline already defined enable component selection
-  	  }
+     }
   )
-
   enabled(T2group1) <- FALSE
+  enabled(ZRbutton) <- FALSE
   enabled(MZbutton) <- FALSE
   enabled(ZObutton) <- FALSE
 

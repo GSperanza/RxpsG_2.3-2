@@ -558,7 +558,7 @@ CtrlSurname <- function(FName){
              XPSVBFermi()
       }, container=groupMenu),
 
-      gaction("   Sprucing Up",handler=function(h,...){
+      gaction("   Data Sprucing   ",handler=function(h,...){
              XPSSprucingGUI()
       }, container=groupMenu),
 
@@ -730,14 +730,14 @@ CtrlSurname <- function(FName){
            "windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ')"},
            "darwin"  = {Gdev <- "quartz(xpos=700, ypos=20, title=' ')" })
    XPSSettings$General[6] <- Gdev
+   graphics.off()                            #reset graphic window
+   eval(parse(text=Gdev),envir=.GlobalEnv)
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
       gmessage("Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
       XPSSetWD()
    } else {
-      setwd(XPSSettings$General[7]) 
+      setwd(XPSSettings$General[7])
    }
-   graphics.off()                            #reset graphic window
-   eval(parse(text=Gdev),envir=.GlobalEnv)
    assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
 
 # Recover the R version used by Rstudio and save in .GlobalEnv

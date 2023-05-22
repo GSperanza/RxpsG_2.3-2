@@ -14,27 +14,85 @@
 
 XPSZoomCur <- function(){
 
+  GetCurPos <- function(SingClick){
+       coords <<- NULL
+       enabled(ZMframe1) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(OKbutt) <- FALSE
+       enabled(CPosButt) <- FALSE
+       enabled(ExitButt) <- FALSE
+       EXIT <- FALSE
+       LocPos <<- list(x=0, y=0)
+       Nclk <- SingClick
+       if (Nclk == FALSE) Nclk <- 1
+       while(EXIT == FALSE){  #if pos1 not NULL a mouse butto was pressed
+            LocPos <<- locator(n=Nclk, type="p", pch=3, cex=1.5, col="blue", lwd=2) #to modify the zoom limits
+            if (is.null(LocPos)) {
+                enabled(ZMframe1) <- TRUE
+                enabled(OKbutt) <- TRUE
+                enabled(CPosButt) <- TRUE
+                enabled(ExitButt) <- TRUE
+                EXIT <- TRUE
+            } else {
+                if (SingClick == 1){
+                     enabled(ZMframe1) <- TRUE
+                     enabled(OKbutt) <- TRUE
+                     enabled(CPosButt) <- TRUE
+                     enabled(ExitButt) <- TRUE
+                     EXIT <- TRUE
+                } else if (ZOOM==TRUE) {
+                     if (SingClick == 2) {
+                         Corners <<- LocPos  #plot the zoom area the first time
+                         if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
+                             Corners$x <<- sort(Corners$x, decreasing=TRUE) #pos$x in decrescent ordered => Corners$x[1]==Corners$x[2]
+                         } else {
+                             Corners$x <<- sort(Corners$x, decreasing=FALSE) #pos$x in ascending order
+                         }
+                         Corners$x <<- c(Corners$x[1], Corners$x[1], Corners$x[2], Corners$x[2])
+                         Corners$y <<- c(sort(c(Corners$y[1], Corners$y[2]), decreasing=FALSE),
+                                         sort(c(Corners$y[1], Corners$y[2]), decreasing=FALSE))
+                         SingClick <- FALSE
+                         Nclk <- 1
+                     } else {            #modify the zoom area
+                         FindNearest()
+                     }
+                     XYrange$x <<- c(Corners$x[1], Corners$x[3])
+                     XYrange$y <<- c(Corners$y[1], Corners$y[2])
+                     ReDraw()  #refresh graph
+                     rect(Corners$x[1], Corners$y[1], Corners$x[3], Corners$y[2])
+                     points(Corners, type="p", pch=3, cex=1.5, col="blue", lwd=2)
+                } else {
+                     ReDraw() #refresh graph  to cancel previous cursor markers
+                     points(LocPos, type="p", pch=3, cex=1.5, lwd=2, col="red")
+                     LocPos <<- round(x=c(LocPos$x, LocPos$y), digits=2)
+                     txt <- paste("X: ", as.character(LocPos[1]), ",   Y: ", as.character(LocPos[2]), sep="")
+                     svalue(ZMobj4) <- txt
+                     tcl("update", "idletasks")  #force writing cursor position in the glabel
+                }
+            }
+       }
+  }
+
+
 ReDraw <- function(){   #redraw all spectrum with no restrictions to RegionToFit
    SampData <- as.matrix(FName[[SpectIndx]]@.Data) #Whole coreline in SampData
    plot(x=SampData[[1]], y=SampData[[2]], xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="black")
-   SampData <- as(FName[[SpectIndx]], "matrix") # Regiontofit, Baseline, ecc in a matrix
+   SampData <- setAsMatrix(FName[[SpectIndx]], "matrix") # Regiontofit, Baseline, ecc in a matrix
    NC <- ncol(SampData)
    if (NC > 2) { #a Baseline is present
        BaseLine <- SampData[,3]
        matlines(x=SampData[,1], y=BaseLine, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="sienna")
    }
    if (NC > 3){ #c'e' un fit
-      FitComp <- SampData[,4:NC-1]  #first three column skipped
-      SpectFit <- SampData[,NC]  #fit
-      matlines(x=SampData[,1], y=FitComp, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="blue")
-      matlines(x=SampData[,1], y=SpectFit, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="red")
+       FitComp <- SampData[,4:NC-1]  #first three column skipped
+       SpectFit <- SampData[,NC]  #fit
+       matlines(x=SampData[,1], y=FitComp, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="blue")
+       matlines(x=SampData[,1], y=SpectFit, xlim=XYrange$x, ylim=XYrange$y, type="l", lty="solid", lwd=1, col="red")
    }
 }
 
 
 
 FindNearest <- function(){
-
    D <- NULL
    Dmin <- ((LocPos$x-Corners$x[1])^2 + (LocPos$y-Corners$y[1])^2)^0.5  #init value
    for (ii in 1:4) {
@@ -66,6 +124,7 @@ FindNearest <- function(){
    coord <- list()
    LocPos <- list()
    Corners <- list(x=NULL, y=NULL)
+   ZOOM <- FALSE
    if (is.na(activeFName)){
        gmessage("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
@@ -97,6 +156,12 @@ FindNearest <- function(){
 
    ZMwin <- gwindow("ZOOM/CURSOR OPTION", parent=c(50,10) ,visible=FALSE)
    size(ZMwin) <- c(250, 270)
+   addHandlerDestroy(ZMwin, handler=function(h, ...){  #if MainWindow unproperly closed with X
+                     EXIT <<- TRUE
+                     XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
+                     assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
+                     plot(FName[[SpectIndx]])   #replot the CoreLine
+                 })
 
    ZMgroup <- ggroup(label="", horizontal=FALSE, container=ZMwin)
 
@@ -105,24 +170,29 @@ FindNearest <- function(){
    ZMframe0 <- gframe(text="XPS Sample and Core line Selection", horizontal=FALSE, spacing=5, container=ZMgroup)
    Fidx <- grep(activeFName, FNameList)
    XPS.Sample <- gcombobox(FNameList, selected=Fidx, editable=FALSE, handler=function(h,...){
-                                 activeFName <- svalue(XPS.Sample)
-                                 FName <<- get(activeFName, envir=.GlobalEnv)
-                                 SpectList <<- XPSSpectList(activeFName)
-                                 delete(ZMframe0, Core.Lines)
-                                 Core.Lines <<- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
-                                                          SpectName <- svalue(Core.Lines)
-                                                          SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
-                                                          SpectIndx <<- as.integer(SpectName[1])
-                                                          XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
-                                                          if (length(FName[[SpectIndx]]@RegionToFit)>0) {   #reverse if BE scale
-                                                              XYrange <<- list(x=range(FName[[SpectIndx]]@RegionToFit[1]), y=range(FName[[SpectIndx]]@RegionToFit[2]))
-                                                          }
-                                                          if (FName[[SpectIndx]]@Flags[1]) {   #reverse if BE scale
-                                                              XYrange$x <<- rev(XYrange$x)
-                                                          }
-                                                          ReDraw()
-                                                }, container=ZMframe0)
-                       }, container = ZMframe0)
+                     activeFName <- svalue(XPS.Sample)
+                     FName <<- get(activeFName, envir=.GlobalEnv)
+                     SpectList <<- XPSSpectList(activeFName)
+                     delete(ZMframe0, Core.Lines)
+                     Core.Lines <<- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
+                                              SpectName <- svalue(Core.Lines)
+                                              SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
+                                              SpectIndx <<- as.integer(SpectName[1])
+                                              XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
+                                              if (length(FName[[SpectIndx]]@RegionToFit) > 0) {   #reverse if BE scale
+                                                  XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
+                                                  XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
+                                              } else {
+                                                  XYrange$x <<- range(FName[[SpectIndx]]@.Data[[1]])
+                                                  XYrange$y <<- range(FName[[SpectIndx]]@.Data[[2]])
+                                              }
+                                              if (FName[[SpectIndx]]@Flags[1]) {   #reverse if BE scale
+                                                  XYrange$x <<- rev(XYrange$x)
+                                              }
+                                              ResetXYrange <<- XYrange
+                                              ReDraw()
+                                    }, container=ZMframe0)
+                 }, container = ZMframe0)
 #   svalue(XPS.Sample) <- activeFName
 
    Core.Lines <- gcombobox(SpectList, selected=-1, editable=FALSE, handler=function(h,...){
@@ -131,56 +201,34 @@ FindNearest <- function(){
                      SpectIndx <<- as.integer(SpectName[1])
                      XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
                      if (length(FName[[SpectIndx]]@RegionToFit)>0) {   #reverse if BE scale
-                        XYrange <<- list(x=range(FName[[SpectIndx]]@RegionToFit[1]), y=range(FName[[SpectIndx]]@RegionToFit[2]))
+                        XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
+                        XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
+                     } else {
+                        XYrange$x <<- range(FName[[SpectIndx]]@.Data[[1]])
+                        XYrange$y <<- range(FName[[SpectIndx]]@.Data[[2]])
                      }
                      if (FName[[SpectIndx]]@Flags[1]) {   #reverse if BE scale
                         XYrange$x <<- rev(XYrange$x)
                      }
+                     ResetXYrange <<- XYrange
                      ReDraw()
                  }, container=ZMframe0)
    svalue(Core.Lines) <- paste(SpectIndx, ".",activeSpectName, sep="")
 
-   ZMframe1 <- gframe(text="Define the zoom area", horizontal=FALSE, spacing=5, container=ZMgroup)
+   ZMframe1 <- gframe(text="Define the Zoom Area", horizontal=FALSE, spacing=5, container=ZMgroup)
 
-   ZMobj1 <- gbutton(" Set Zoom Area ", handler=function(h,...){
-                     txt <- "LEFT button to set the zoom area; RIGHT to exit \n Click near markers to modify the zoom area"
+   ZMobj1 <- gbutton(" Set the Zoom Area ", handler=function(h,...){
+                     txt <- " LEFT Mouse Button to Set the TWO Opposite Corners of the Zoom Area\n RIGHT Mouse Button to exit \n Click Near Markers to Modify The zoom area"
                      gmessage(msg=txt , title = "WARNING",  icon = "warning")
-                     pos <- locator(n=2, type="p", pch=3, col="blue", lwd=2) #first the two corners are drawn
-                     rect(pos$x[1], min(pos$y), pos$x[2], max(pos$y))  #marker-Corners are ordered with ymin on Left and ymax on Right
-                     Corners$x <<- c(pos$x[1],pos$x[1],pos$x[2],pos$x[2])
-                     Corners$y <<- c(pos$y[1],pos$y[2],pos$y[1],pos$y[2])
-                     points(Corners, type="p", pch=3, col="blue", lwd=2)
-                     if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
-                         pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=TRUE) #pos$x in decrescent ordered => Corners$x[1]==Corners$x[2]
-                     } else {
-                         pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=FALSE) #pos$x in ascending order
-                     }
-                     pos$y <- sort(c(Corners$y[1],Corners$y[2]), decreasing=FALSE)
-
-                     LocPos <<- list(x=0, y=0)
-                     while (length(LocPos) > 0) {  #if pos1 not NULL a mouse butto was pressed
-                        LocPos <<- locator(n=1, type="p", pch=3, col="red", lwd=2) #to modify the zoom limits
-                        if (length(LocPos$x) > 0) { #if the right mouse button NOT pressed
-                           FindNearest()
-                           if (FName[[SpectIndx]]@Flags[1]) { #Binding energy set
-                              pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=TRUE) #pos$x in decrescent ordered => Corners$x[1]==Corners$x[2]
-                           } else {
-                              pos$x <- sort(c(Corners$x[1],Corners$x[3]), decreasing=FALSE) #pos$x in ascending order
-                           }
-                           pos$y <- sort(c(Corners$y[1],Corners$y[2]), decreasing=FALSE)
-                           ReDraw()  #refresh graph
-                           rect(pos$x[1], pos$y[1], pos$x[2], pos$y[2])
-                           points(Corners, type="p", pch=3, col="blue", lwd=2)
-                        }
-                     }
-                     XYrange <<- pos
-                     plot(FName[[SpectIndx]], xlim=pos$x, ylim=pos$y) #zoom
-
+                     ZOOM <<- TRUE
+                     GetCurPos(SingClick=2)
+                     ZOOM <<- FALSE
+                     plot(FName[[SpectIndx]], xlim=XYrange$x, ylim=XYrange$y) #zoom
                  }, container = ZMframe1)
 
    ZMobj2 <- gbutton("   RESET PLOT    ", handler=function(h,...){
-                    XYrange <<- ResetXYrange
-                    ReDraw()
+                     XYrange <<- ResetXYrange
+                     ReDraw()
                  }, container = ZMframe1)
 
    ZMframe2 <- gframe(text="Manual zoom values", horizontal=FALSE, spacing=5, container=ZMgroup)
@@ -195,7 +243,7 @@ FindNearest <- function(){
    tkconfigure(x2$widget, width=18)
    tkconfigure(y1$widget, width=18)
    tkconfigure(y2$widget, width=18)
-   gbutton("  OK  ", handler=function(h,...){
+   OKbutt <- gbutton("  OK  ", handler=function(h,...){
                      x1 <- as.numeric(svalue(x1))
                      x2 <- as.numeric(svalue(x2))
                      y1 <- as.numeric(svalue(y1))
@@ -214,30 +262,19 @@ FindNearest <- function(){
    ZMlabel <- glabel(text="    ", container=ZMgroup)
    ZMframe3 <- gframe(text="CURSOR POSITION", horizontal=FALSE, spacing=7, container=ZMgroup)
 
-   ZMobj3 <- gbutton("Cursor Position", spacing=5, handler=function(h,...){
-                     gmessage(msg="LEFT click to move marker's position; RIGHT to exit and zoom" , title = "WARNING",  icon = "warning")
-                     pos <- c(1,1) # only to enter in  the loop
-                     while (length(pos) > 0) {  #pos != NULL => mouse right button not pressed
-                         pos <- locator(n=1, type="n")
-                         if (length(pos) > 0) { #right mouse button not pressed
-                            ReDraw() #refresh graph  to cancel previous cursor markers
-                            points(pos, type="p", pch=3, cex=2, lwd=1.8, col="red")
-                            pos <- round(x=c(pos$x, pos$y), digits=2)
-                            txt <- paste("X: ", as.character(pos[1]), ",   Y: ", as.character(pos[2]), sep="")
-                            svalue(ZMobj4) <- txt
-                            tcl("update", "idletasks")  #force writing cursor position in the glabel
-                         }
-                     }
+   CPosButt <- gbutton("Cursor Position", spacing=5, handler=function(h,...){
+                     gmessage(msg="LEFT Mouse Button to Read Marker's Position; RIGHT Mouse Button to Exit" , title = "WARNING",  icon = "warning")
+                     GetCurPos(SingClick=FALSE)
+                     ReDraw()
                  }, container = ZMframe3)
 
    ZMobj4 <- glabel("Cursor position: ", container = ZMframe3)
-   font(ZMobj4) <- list(family = "helvetica", size="11")
+   font(ZMobj4) <- list(family = "Sans", size="11")
 
 
-   ZMobj6 <- gbutton("      CLOSE      ", handler=function(h,...){
+   ExitButt <- gbutton("      EXIT      ", handler=function(h,...){
                     dispose(ZMwin)
                  }, container = ZMgroup)
 
    visible(ZMwin) <- TRUE
-
 }

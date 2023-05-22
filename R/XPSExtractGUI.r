@@ -20,45 +20,49 @@
 
 XPSExtract <- function() {
 
-  devset <- function(){ #returns the ID of the current active graphic device
-      if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
-  }
+  GetCurPos <- function(SingClick){
+       coords <<- NULL
+       enabled(OptFrame) <- FALSE   #prevent exiting Analysis if locatore active
+       enabled(PlotFrame) <- FALSE
+       enabled(ExitFrame) <- FALSE
+       EXIT <- FALSE
+       while(EXIT == FALSE){
+            pos <- locator(n=1)
+            if (is.null(pos)) {
+                enabled(OptFrame) <- TRUE
+                enabled(PlotFrame) <- TRUE
+                enabled(ExitFrame) <- TRUE
+                EXIT <- TRUE
+            } else {
+                if ( SingClick ){
+                    coords <<- c(pos$x, pos$y)
+                    enabled(OptFrame) <- TRUE
+                    enabled(PlotFrame) <- TRUE
+                    enabled(ExitFrame) <- TRUE
+                    EXIT <- TRUE
+                } else {
+                    Xlim1 <- min(range(Object@.Data[[1]]))   #limits coordinates in the Spectrum Range
+                    Xlim2 <- max(range(Object@.Data[[1]]))
+                    Ylim1 <- 0.95*min(range(Object@.Data[[2]]))
+                    Ylim2 <- 1.05*max(range(Object@.Data[[2]]))
 
-  my.coords <- function(buttons, x, y) { #converts the normalized device coords in user coords
-      xx <- grconvertX(x, from="ndc", to="user")
-      yy <- grconvertY(y, from="ndc", to="user")
-      coords <<- c(xx, yy)
-
-      Xlim1 <- min(range(Object@.Data[[1]]))   #limits coordinates in the Spectrum Range
-      Xlim2 <- max(range(Object@.Data[[1]]))
-      Ylim1 <- min(range(Object@.Data[[2]]))
-      Ylim2 <- max(range(Object@.Data[[2]]))
-
-      if (xx < Xlim1 ) {xx <- Xlim1}
-      if (xx > Xlim2 ) {xx <- Xlim2}
-      if (yy < Ylim1 ) {yy <- Ylim1}
-      if (yy > Ylim2 ) {yy <- Ylim2}
-      if (buttons == 0) { LBmousedown() }
-      if (buttons == 2) { cat("\n Please use Left Mouse Button") }
-      return()
-  }
-
-  keydown <- function(key) {  #blocks the mouseHandler
-     cat("\n Key pressed", key)
-     if (key == "q") {
-        EXIT <<- TRUE
-        eventEnv$onMouseMove <<- NULL
-        enentEnv <<- NULL
-        NULL
-        return()
-     }
+                    if (pos$x < Xlim1 ) {pos$x <- Xlim1}
+                    if (pos$x > Xlim2 ) {pos$x <- Xlim2}
+                    if (pos$y < Ylim1 ) {pos$y <- Ylim1}
+                    if (pos$y > Ylim2 ) {pos$y <- Ylim2}
+                    coords <<- c(pos$x, pos$y)
+                    LBmousedown()  #selection of the BaseLine Edges
+                }
+            }
+       }
+       return()
   }
 
   LBmousedown <- function() {
       point.coords$x[point.index] <<- coords[1]   #abscissa
       point.coords$y[point.index] <<- coords[2]   #ordinate
       if (point.index == 1) {
-         point.index<<-2    #to modify the second edge of the selected area
+         point.index <<- 2    #to modify the second edge of the selected area
          Corners$x<<-c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2])
          Corners$y<<-c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2])
       } else if (point.index == 2) {
@@ -117,10 +121,10 @@ XPSExtract <- function() {
           plot(Object, xlim=Xlimits, ylim=Ylimits)
       } else if (point.index == 1 || point.index == 2) { #generic plot
           plot(Object, xlim=Xlimits)
-          points(point.coords, col="red", cex=1, lwd=1.5, pch=3)
+          points(point.coords, col="blue", cex=1.5, lwd=2, pch=3)
       } else if (point.index > 2){   #plot spectrum and frame for region selection
           plot(Object, xlim=Xlimits, ylim=Ylimits)
-          points(Corners, type="p", col="red", cex=1, lwd=1.5, pch=3)
+          points(Corners, type="p", col="blue", cex=1.5, lwd=2, pch=3)
           rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
       }
       svalue(statbar) <- sprintf(paste("x =",round(coords[1],1), " y =",round(coords[2]), sep=" "))
@@ -294,10 +298,9 @@ XPSExtract <- function() {
   Ewindow <- gwindow("XPS extract GUI", parent=c(100, 0), toolkit = "tcltk", visible = FALSE)
   size(Ewindow) <- c(250, 300)
   addHandlerDestroy(Ewindow, handler=function(h, ...){  #if MainWindow unproperly closed with X
-#-----                         stopping mouse handler
-                               setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-                               eventEnv$onMouseMove <<- NULL
-                               eventEnv <<- NULL
+                               EXIT <<- TRUE
+                               XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
+                               assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                                plot(XPSSample) #replot the CoreLine
                            })
   Egroup1 <- ggroup(container = Ewindow, horizontal = TRUE)
@@ -379,10 +382,16 @@ XPSExtract <- function() {
               replot()
          }, container = gframe20)
 
-  gframe22 <- gframe(text = " Options ", horizontal = FALSE, container = Egroup2)
+  OptFrame <- gframe(text = " Options ", horizontal = FALSE, container = Egroup2)
   gbutton("SELECT REGION", handler = function(h, ...){
               OldCoords <<- Object@Boundaries
               SelReg <<- SelReg+1
+              txt <- paste("Left Mouse Button to Define the Region to Extract\n",
+                           "Right Mouse Button to ZOOM\n",
+                           "Then Optimize the Region Selection Clicking near Corners\n",
+                           "When OK Right Mouse Button and then Press the EXTRACT REGION Button", sep="")
+              gmessage(txt, title="WARNING", icon="warning")
+              GetCurPos(SingClick=FALSE)
               rngX <- range(point.coords$x)
               rngX <- (rngX[2]-rngX[1])/20
               rngY <- range(point.coords$y)
@@ -401,24 +410,25 @@ XPSExtract <- function() {
               Ylimits <<- c(point.coords$y[1]-rngY/10, point.coords$y[2]+rngY/10)
               slot(Object,"Boundaries") <<- point.coords
               replot()
-         }, container = gframe22 )
+              GetCurPos(SingClick=FALSE)
+         }, container = OptFrame )
 
   gbutton("EXTRACT REGION", handler = function(h, ...){
               Extract()
               replot()
-         }, container = gframe22 )
+         }, container = OptFrame )
 
   gbutton("UNDO", handler = function(h, ...) {
               undo.plot()
-         }, container = gframe22 )
+         }, container = OptFrame )
 
   gbutton("RESET BOUNDARIES", handler = function(h, ...) {
               Object@.Data[[1]] <<- OldEnergyScale
               Object@Flags[1] <<- OldFlag
               reset.boundaries()
-         }, container = gframe22 )
+         }, container = OptFrame )
 
-  gframe23 <- gframe(text = " Plot ", container = Egroup2)
+  PlotFrame <- gframe(text = " Plot ", container = Egroup2)
 
   SwitchE <- gradio(c("BINDING ENERGY SCALE", "KINETIC ENERGY SCALE"), selected=Eidx, horizontal = TRUE, handler = function(h, ...) {
                      BE.KE <- svalue(SwitchE, index=TRUE)
@@ -445,76 +455,33 @@ XPSExtract <- function() {
                          }
                      }
                      plot(XPSSample[[coreline]])
-         }, container=gframe23 )
-
-  gframe24 <- gframe(text = "Graphic Window Dimensions", horizontal=FALSE, container = Egroup2)
-  Egroup3 <- ggroup(horizontal=TRUE, spacing=3, container=gframe24)
-  glabel("Graphical Window size: ", container=Egroup3)
-  txt <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-  WSvalue <- glabel(text=txt, spacing=3, container=Egroup3)
-
-  WSize <- gslider(from = 0.5, to = 1.5, by = 0.1, value = WinSize, horizontal=TRUE, handler=function(h,...){
-                        WinSize <- svalue(WSize)
-                        svalue(WSvalue) <- paste("Graphical Window size: ", as.character(WinSize), sep="")
-                        WinSize <<- dev.size()*WinSize   #rescale the graphic window
-#                        graphics.off()
-#                        OS <- Sys.info["sysname"]
-#                        switch (OS,
-#                           "Linux" =   {x11(type='Xlib', xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                           "Windows" = {x11(xpos=600, ypos=5, title=' ', width=WinSize[1], height=WinSize[2])},
-#                           "MacOS-X" = {quartz(title=' ')},  #quartz() does allow setting the opening position
-#                           "Mac OS"  = {quartz(title=' ')},
-#                           "macOS"   = {quartz(title=' ')},
-#                           "Darwin"  = {quartz(title=' ')})
-#                        refresh <<- FALSE #now plot also the component marker
-#                        devset()
-                        replot()
-
-         }, container=gframe24)
+         }, container=PlotFrame )
 
 #---- Buttons ----
+  ExitFrame <- gframe(text = " Save & Exit ", container = Egroup2)
   gbutton("SAVE", expand=FALSE, handler = function(h, ...){
               assign(activeFName, XPSSample, envir = .GlobalEnv)
               assign("activeSpectIndx", coreline, envir = .GlobalEnv)
               assign("activeSpectName", XPSSample[[coreline]]@Symbol, envir = .GlobalEnv)
               XPSSaveRetrieveBkp("save")
-         }, container = Egroup2 )
+         }, container = ExitFrame )
 
-
-  gbutton("SAVE & EXIT", expand=FALSE, handler = function(h, ...){
-#-----        stopping mouse handler
-              setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-              eventEnv$onMouseMove <<- NULL
-              eventEnv <<- NULL
-
+  SaveBtn <- gbutton("SAVE & EXIT", expand=FALSE, handler = function(h, ...){
               assign(activeFName, XPSSample, envir = .GlobalEnv)
               assign("activeSpectIndx", coreline, envir = .GlobalEnv)
               assign("activeSpectName", XPSSample[[coreline]]@Symbol, envir = .GlobalEnv)
               dispose(Ewindow)  #this calls the handlerdestroy(Ewindow...)
               XPSSaveRetrieveBkp("save")
               plot(XPSSample)
-         }, container = Egroup2 )
+         }, container = ExitFrame )
 
-  gbutton("EXIT", expand=FALSE, handler = function(h, ...){
-#-----        stopping mouse handler
-              setGraphicsEventHandlers(prompt = "EXIT", onMouseDown = NULL, onKeybd = NULL, which = dev.cur())
-              eventEnv$onMouseMove <<- NULL
-              eventEnv <<- NULL
-
+  ExitBtn <- gbutton("EXIT", expand=FALSE, handler = function(h, ...){
               dispose(Ewindow)
               XPSSaveRetrieveBkp("save")
               plot(XPSSample)
-         }, container = Egroup2 )
+         }, container = ExitFrame )
 
 #---- Status bar
   statbar <- gstatusbar("status", container = Ewindow)
-
   visible(Ewindow) <- TRUE
-
-#--- Interactive mouse control ---
-  setGraphicsEventHandlers(prompt="Waiting for mouse clicks", onMouseDown = my.coords, onKeybd = keydown, which = dev.cur())
-  eventEnv <- getGraphicsEventEnv()
-  devset()
-  getGraphicsEvent()
-
 }
