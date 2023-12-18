@@ -1,4 +1,5 @@
-#RxpsG_2.3-2
+RxpsG_2.3-2
+
 Processing tool for X-ray Photoelectron Spectroscopy Data
 
 R, RStudio installation: (see also: https://cloud.r-project.org/ and https://www.rstudio.com/)
@@ -53,6 +54,8 @@ RxpsG installation:
    and select the RxpsG package then type:
  
    xps()
+
+   ------------------------------------------------------------
 
    This program is free software. You can use it under the
    terms of the  GNU Affero General Public License.
