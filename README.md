@@ -1,4 +1,6 @@
-RxpsG_2.3-2 a processing tool for X-ray Photoelectron Spectroscopy Data
+# RxpsG_2.3-2
+
+RxpsG_2.3-2 is a processing tool for X-ray Photoelectron Spectroscopy Data
 
 R, RStudio installation: (see also: https://cloud.r-project.org/ and https://www.rstudio.com/)
 
