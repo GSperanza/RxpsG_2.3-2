@@ -1,4 +1,4 @@
-RxpsG_2.3-2
+**RxpsG_2.3-2**
 
 Processing tool for X-ray Photoelectron Spectroscopy Data
 
@@ -70,4 +70,5 @@ RxpsG installation:
    
      Giorgio Speranza, Roberto Canteri
      Fondazione Bruno Kessler, Sommarive str. 18
-     38123 Trento Italy.  "
+     38123 Trento Italy.
+     Email: speranza@fbk.eu
