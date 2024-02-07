@@ -1,6 +1,7 @@
 # RxpsG_2.3-2
 
 RxpsG_2.3-2 is a processing tool for X-ray Photoelectron Spectroscopy Data. 
+
 => Please consider the new version RxpsG_3.1: using directly the tclTK functions 
    does not require the 'gWidgets2', 'gWidgets2tcltk' and 'memoise' libraries.
 
